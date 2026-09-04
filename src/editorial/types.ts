@@ -1,4 +1,5 @@
 export type EditorialStage =
+  | "editor_in_chief_order"
   | "scan"
   | "desk"
   | "journalist"
@@ -6,7 +7,19 @@ export type EditorialStage =
   | "editor_in_chief"
   | "publish";
 
-export type Section = "indland" | "udland" | "erhverv" | "kultur" | "sport" | "viden" | "liv";
+export type Section = "indland" | "udland" | "penge" | "kultur" | "viden" | "liv";
+export type SearchType = "text" | "image" | "video" | "map_satellite";
+export type RequestedBy = "editor_in_chief" | "journalist" | "media" | "desk";
+
+export interface EditorialOrder {
+  id: string;
+  instruction: string;
+  section?: Section;
+  articleType?: string;
+  searchType?: SearchType;
+  requestedPublishAt?: string;
+  homepageSlot?: string;
+}
 
 export interface SourceRef {
   url: string;
@@ -14,6 +27,31 @@ export interface SourceRef {
   title?: string;
   publishedAt?: string;
   authoritative?: boolean;
+  sourceKind?: "primary" | "authoritative" | "secondary" | "social" | "other";
+  supports?: string[];
+  notes?: string;
+  retrievedAt?: string;
+}
+
+export interface ScanRequest {
+  requestedBy: RequestedBy;
+  searchType: SearchType;
+  query: string;
+  purpose: string;
+}
+
+export interface ScanResult {
+  kind: "article" | "photo" | "video" | "map" | "satellite";
+  url: string;
+  title?: string;
+  publisher?: string;
+  summary?: string;
+  publishedAt?: string;
+  license?: string;
+  commercialUseAllowed?: boolean;
+  jurisdictionNote?: string;
+  credit?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface NewsCandidate {
@@ -26,11 +64,10 @@ export interface NewsCandidate {
 }
 
 export interface DeskDecision {
-  candidateId: string;
-  publish: boolean;
-  priority: "lead" | "high" | "normal" | "low";
-  section: Section;
-  angle: string;
+  candidateId?: string;
+  accepted: boolean;
+  priority?: "lead" | "high" | "normal" | "low";
+  section?: Section;
   rationale: string;
 }
 
@@ -40,20 +77,28 @@ export interface ArticleDraft {
   deck?: string;
   body: string;
   section: Section;
+  articleType?: string;
   sourceRefs: SourceRef[];
   relatedCandidateIds?: string[];
 }
 
 export interface MediaDecision {
-  kind: "photo" | "generated" | "none";
+  kind: "photo" | "video_grab" | "map" | "satellite" | "generated" | "none";
   url?: string;
   alt?: string;
   credit?: string;
+  license?: string;
+  rightsVerified: boolean;
+  commercialUseAllowed?: boolean;
+  heroPriority?: 1 | 2 | 3 | 4 | 5 | 6;
   generationPrompt?: string;
 }
 
-export interface EditorialApproval {
-  approved: boolean;
+export interface ChiefEditorDecision {
+  article: ArticleDraft;
+  hero: MediaDecision;
+  homepageSlot?: string;
+  publishAt?: string;
   notes: string[];
 }
 
