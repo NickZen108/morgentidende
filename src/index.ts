@@ -1,6 +1,7 @@
 import { SupabaseError, supabaseRequest } from "./lib/supabase";
 import { CATEGORIES, MODELS } from "./editorial/policy";
 import { EditorialStore } from "./editorial/store";
+import { runLiveEditorialOrder } from "./editorial/runtime";
 import type { Category, EditorialOrder, SearchType } from "./editorial/types";
 
 interface Env {
@@ -140,6 +141,16 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     };
     const order = await store.createOrder(input);
     return json({ ok: true, order }, { status: 201 });
+  }
+
+  if (url.pathname.startsWith("/api/editorial/orders/") && url.pathname.endsWith("/run") && request.method === "POST") {
+    const parts = url.pathname.split("/").filter(Boolean);
+    const id = parts.at(-2) ?? "";
+    const store = new EditorialStore(env);
+    const order = await store.getOrder(id);
+    if (!order) return json({ ok: false, error: "not_found" }, { status: 404 });
+    const outcome = await runLiveEditorialOrder(env, order);
+    return json({ ok: true, outcome });
   }
 
   if (url.pathname.startsWith("/api/editorial/orders/") && request.method === "GET") {
