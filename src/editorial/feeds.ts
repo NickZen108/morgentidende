@@ -152,28 +152,28 @@ export const EDITORIAL_FEEDS: readonly EditorialFeed[] = [
 
   // Medical Xpress – high-signal life/health sections
   f("medx-all", "Medical Xpress", "https://medicalxpress.com/rss-feed/", "direct", ["liv", "viden"], ["medicine", "health", "research"]),
-  f("medx-sleep", "Medical Xpress – Sleep & Recovery", "https://medicalxpress.com/rss-feed/sleep-news/", "direct", ["liv", "viden"], ["sleep", "recovery", "circadian"]),
-  f("medx-mental", "Medical Xpress – Psychology & Mental Health", "https://medicalxpress.com/rss-feed/mental-health-news/", "direct", ["liv", "viden"], ["psychology", "mental health", "relationships"]),
-  f("medx-men", "Medical Xpress – Men's Health", "https://medicalxpress.com/rss-feed/mens-health-news/", "direct", ["liv", "viden"], ["men's health", "testosterone", "fitness"]),
-  f("medx-aging", "Medical Xpress – Healthy Aging", "https://medicalxpress.com/rss-feed/healthy-aging-news/", "direct", ["liv", "viden"], ["aging", "longevity", "healthspan"]),
-  f("medx-endocrine", "Medical Xpress – Endocrinology", "https://medicalxpress.com/rss-feed/endocrinology-metabolism-news/", "direct", ["liv", "viden"], ["hormones", "metabolism", "testosterone"]),
-  f("medx-sleep-med", "Medical Xpress – Sleep Medicine", "https://medicalxpress.com/rss-feed/sleep-medicine-news/", "direct", ["liv", "viden"], ["sleep medicine", "recovery"]),
-  f("medx-sports", "Medical Xpress – Sports Medicine", "https://medicalxpress.com/rss-feed/sports-medicine-news/", "direct", ["liv", "viden"], ["exercise", "sports medicine", "recovery"]),
+  f("medx-sleep", "Medical Xpress – Sleep & Recovery", "https://medicalxpress.com/rss-feed/breaking/sleep-news/", "direct", ["liv", "viden"], ["sleep", "recovery", "circadian"]),
+  f("medx-mental", "Medical Xpress – Psychology & Mental Health", "https://medicalxpress.com/rss-feed/breaking/mental-health-news/", "direct", ["liv", "viden"], ["psychology", "mental health", "relationships"]),
+  f("medx-men", "Medical Xpress – Men's Health", "https://medicalxpress.com/rss-feed/breaking/mens-health-news/", "direct", ["liv", "viden"], ["men's health", "testosterone", "fitness"]),
+  f("medx-aging", "Medical Xpress – Healthy Aging", "https://medicalxpress.com/rss-feed/breaking/healthy-aging-news/", "direct", ["liv", "viden"], ["aging", "longevity", "healthspan"]),
+  f("medx-endocrine", "Medical Xpress – Endocrinology", "https://medicalxpress.com/rss-feed/breaking/endocrinology-metabolism-news/", "direct", ["liv", "viden"], ["hormones", "metabolism", "testosterone"]),
+  f("medx-sleep-med", "Medical Xpress – Sleep Medicine", "https://medicalxpress.com/rss-feed/breaking/sleep-medicine-news/", "direct", ["liv", "viden"], ["sleep medicine", "recovery"]),
+  f("medx-sports", "Medical Xpress – Sports Medicine", "https://medicalxpress.com/rss-feed/breaking/sports-medicine-news/", "direct", ["liv", "viden"], ["exercise", "sports medicine", "recovery"]),
 
   // Phys.org
   f("phys-all", "Phys.org", "https://phys.org/rss-feed/", "direct", ["viden"], ["science", "research"]),
   f("phys-bio-med", "Phys.org – Bio & Medicine", "https://phys.org/rss-feed/nanotech-news/bio-medicine/", "direct", ["viden", "liv"], ["biomedicine", "biotech"]),
   f("phys-quantum", "Phys.org – Quantum Physics", "https://phys.org/rss-feed/physics-news/quantum-physics/", "direct", ["viden"], ["physics", "quantum"]),
-  f("phys-space", "Phys.org – Astronomy & Space", "https://phys.org/rss-feed/space-news/", "direct", ["viden"], ["space", "astronomy"]),
-  f("phys-space-exploration", "Phys.org – Space Exploration", "https://phys.org/rss-feed/space-news/space-exploration/", "direct", ["viden"], ["space exploration", "rockets"]),
-  f("phys-environment", "Phys.org – Environment", "https://phys.org/rss-feed/earth-news/environment/", "direct", ["viden", "udland"], ["environment", "climate"]),
-  f("phys-biotech", "Phys.org – Biotechnology", "https://phys.org/rss-feed/biology-news/biotechnology/", "direct", ["viden", "liv"], ["biotechnology", "biology"]),
-  f("phys-economics", "Phys.org – Economics & Business", "https://phys.org/rss-feed/science-news/economics-business/", "direct", ["penge", "viden"], ["economics", "business", "research"]),
+  f("phys-space", "Phys.org – Astronomy & Space", "https://phys.org/rss-feed/breaking/space-news/", "direct", ["viden"], ["space", "astronomy"]),
+  f("phys-space-exploration", "Phys.org – Space Exploration", "https://phys.org/rss-feed/breaking/space-news/space-exploration/", "direct", ["viden"], ["space exploration", "rockets"]),
+  f("phys-environment", "Phys.org – Environment", "https://phys.org/rss-feed/breaking/earth-news/environment/", "direct", ["viden", "udland"], ["environment", "climate"]),
+  f("phys-biotech", "Phys.org – Biotechnology", "https://phys.org/rss-feed/breaking/biology-news/biotechnology/", "direct", ["viden", "liv"], ["biotechnology", "biology"]),
+  f("phys-economics", "Phys.org – Economics & Business", "https://phys.org/rss-feed/breaking/science-news/economics-business/", "direct", ["penge", "viden"], ["economics", "business", "research"]),
 
   // Medicine / regulators
   f("fda-medwatch", "FDA MedWatch", "https://www.fda.gov/AboutFDA/ContactFDA/StayInformed/RSSFeeds/MedWatch/rss.xml", "primary", ["liv", "viden"], ["drug safety", "medicine", "health"]),
   f("ema-news", "European Medicines Agency – News", "https://www.ema.europa.eu/en/news.xml", "primary", ["liv", "viden", "udland"], ["medicine", "regulation", "drug safety"]),
-  f("jama-open", "JAMA Network Open", "https://jamanetwork.com/rss/site_25/0.xml", "research", ["liv", "viden"], ["medicine", "health", "research"]),
+  f("jama-open", "JAMA Network Open", "https://jamanetwork.com/rss/site_214/187.xml", "research", ["liv", "viden"], ["medicine", "health", "research"]),
 
   // Space / energy / climate
   f("nasa", "NASA Breaking News", "https://www.nasa.gov/rss/dyn/breaking_news.rss", "primary", ["viden"], ["space", "nasa", "science"]),

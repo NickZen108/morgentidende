@@ -72,3 +72,13 @@ Islam-critical discovery feeds are radar only. Their own prose is not evidence. 
 ## Runtime status
 
 The curated-feed registry compiles. Scan integration is implemented with bounded feed selection, RSS/Atom parsing, per-feed failure tolerance, BGE-M3 feed ranking and semantic deduplication, discovery-only outbound-link promotion, and Google/Bing fallback. CI passed after the Danish-feed expansion.
+
+
+## Verification pass 2026-09-05
+
+- Corrected JAMA Network Open to the official `New Online` XML feed: `https://jamanetwork.com/rss/site_214/187.xml`.
+- Corrected EMA to the actual RSS endpoint `https://www.ema.europa.eu/en/news.xml`.
+- Corrected Medical Xpress section feeds to their current `/rss-feed/breaking/.../` XML endpoints for sleep, mental health, men's health, healthy aging, endocrinology, sleep medicine and sports medicine.
+- Corrected Phys.org section feeds that currently require `/rss-feed/breaking/.../` for Astronomy & Space, Space Exploration, Environment, Biotechnology and Economics & Business.
+- Phys.org's Bio & Medicine and Quantum Physics feeds were independently confirmed as XML on their existing paths.
+- Danmarks Statistik still exposes current news on `rss.dst.dk`, but legacy paths such as `/pressemeddelelser` now redirect to HTML; do not add them as RSS XML until a current XML endpoint is positively identified.
