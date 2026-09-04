@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Morgentidende</title>
-  <meta name="description" content="Morgentidende – dansk nyhedsavis" />
+  <meta name="description" content="Morgentidende – få begge sider af sagen" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -13,22 +13,55 @@
     <div class="tagline">Danmarks nye avis</div>
   </header>
 
-  <nav class="sections" aria-label="Sektioner">
-    <a href="#">Indland</a><a href="#">Udland</a><a href="#">Erhverv</a><a href="#">Kultur</a><a href="#">Sport</a><a href="#">Viden</a><a href="#">Liv</a>
+  <nav class="categories" aria-label="Kategorier">
+    <a href="#indland">Indland</a>
+    <a href="#udland">Udland</a>
+    <a href="#penge">Penge</a>
+    <a href="#kultur">Kultur</a>
+    <a href="#viden">Viden</a>
+    <a href="#liv">Liv</a>
+    <a href="#kommentar">Kommentar</a>
   </nav>
 
   <main class="shell">
-    <section class="hero">
-      <p class="kicker">MORGENTIDENDE V2</p>
-      <h1>Ny avis. Ny kodebase. Ren arkitektur.</h1>
-      <p class="lead">Denne side er første deploybare version af Morgentidende bygget helt fra bunden. Redaktionel pipeline og artikeldata kobles på trinvis.</p>
+    <section id="lead" class="lead-grid" aria-label="Vigtigste historier">
+      <article class="lead-card placeholder"><p class="kicker">MORGENTIDENDE</p><h1>Nyhederne er på vej</h1><p>Forsiden fyldes automatisk med Chefredaktørens prioriterede artikler.</p></article>
     </section>
 
-    <section class="grid" aria-label="Status">
-      <article><span>01</span><h2>Frontend</h2><p>Ny, separat frontend uden arv fra den gamle kodebase.</p></article>
-      <article><span>02</span><h2>Backend</h2><p>Cloudflare Worker med et minimalt API som udgangspunkt.</p></article>
-      <article><span>03</span><h2>Redaktion</h2><p>Scan → Desk → Journalist → Media → Chefredaktør → Publish.</p></article>
+    <section class="latest-wrap">
+      <div class="section-head"><h2>Seneste</h2><span id="updated"></span></div>
+      <div id="latest" class="story-grid"></div>
     </section>
+
+    <div id="category-blocks"></div>
   </main>
+
+  <script>
+    const labels = { indland:'Indland', udland:'Udland', penge:'Penge', kultur:'Kultur', viden:'Viden', liv:'Liv', kommentar:'Kommentar' };
+    const esc = value => String(value ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const card = a => `<article class="story-card"><p class="kicker">${esc(labels[a.category] || a.category || '')}</p><h3>${esc(a.headline)}</h3>${a.dek ? `<p>${esc(a.dek)}</p>` : ''}</article>`;
+
+    async function load() {
+      const res = await fetch('/api/published');
+      const data = await res.json();
+      const articles = data.articles || [];
+      if (!articles.length) return;
+
+      const hero = articles.find(a => a.homepage_slot === 'hero') || articles[0];
+      document.getElementById('lead').innerHTML = `<article class="lead-card"><p class="kicker">${esc(labels[hero.category] || hero.category || '')}</p><h1>${esc(hero.headline)}</h1>${hero.dek ? `<p class="lead-dek">${esc(hero.dek)}</p>` : ''}</article>`;
+
+      const latest = articles.filter(a => a.id !== hero.id).slice(0, 8);
+      document.getElementById('latest').innerHTML = latest.map(card).join('');
+
+      const blocks = Object.keys(labels).map(category => {
+        const items = articles.filter(a => a.category === category).slice(0, 4);
+        if (!items.length) return '';
+        return `<section id="${category}" class="category-block"><div class="section-head"><h2>${labels[category]}</h2></div><div class="story-grid">${items.map(card).join('')}</div></section>`;
+      }).join('');
+      document.getElementById('category-blocks').innerHTML = blocks;
+      document.getElementById('updated').textContent = 'Opdateret ' + new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'});
+    }
+    load().catch(console.error);
+  </script>
 </body>
 </html>
