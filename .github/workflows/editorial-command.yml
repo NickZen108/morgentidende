@@ -59,6 +59,18 @@ jobs:
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
+      - name: Probe Worker
+        env:
+          BASE_URL: 'https://morgentidende-v2.nicolaipetersen108.workers.dev'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'Worker health:'
+          curl --fail-with-body --silent --show-error \
+            --connect-timeout 20 --max-time 60 \
+            "$BASE_URL/api/health"
+          echo
+
       - name: Run editorial production
         env:
           BASE_URL: 'https://morgentidende-v2.nicolaipetersen108.workers.dev'
