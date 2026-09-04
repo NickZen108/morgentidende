@@ -10,7 +10,7 @@ import type {
 interface EditorialOrderRow {
   id: string;
   instruction: string;
-  requested_section: string | null;
+  requested_category: string | null;
   requested_article_type: string | null;
   requested_search_type: string | null;
   requested_publish_at: string | null;
@@ -28,7 +28,7 @@ export class EditorialStore {
       headers: { Prefer: "return=representation" },
       body: JSON.stringify({
         instruction: input.instruction,
-        requested_section: input.section ?? null,
+        requested_category: input.category ?? null,
         requested_article_type: input.articleType ?? null,
         requested_search_type: input.searchType ?? null,
         requested_publish_at: input.requestedPublishAt ?? null,
@@ -131,10 +131,10 @@ export class EditorialStore {
           headline: decision.article.headline,
           dek: decision.article.deck ?? null,
           body_markdown: decision.article.body,
-          section: decision.article.section,
+          category: decision.article.category,
           article_type: decision.article.articleType ?? null,
           status: "published",
-          editor_model: "Terra",
+          editor_model: "gpt-5.6-terra",
           homepage_slot: decision.homepageSlot ?? null,
           publish_instruction: {
             notes: decision.notes,
@@ -154,7 +154,7 @@ export class EditorialStore {
     return {
       id: row.id,
       instruction: row.instruction,
-      section: (row.requested_section as EditorialOrder["section"]) ?? undefined,
+      category: (row.requested_category as EditorialOrder["category"]) ?? undefined,
       articleType: row.requested_article_type ?? undefined,
       searchType: (row.requested_search_type as EditorialOrder["searchType"]) ?? undefined,
       requestedPublishAt: row.requested_publish_at ?? undefined,
