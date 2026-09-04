@@ -12,9 +12,23 @@ Verified/expanded on 2026-09-04 for Morgentidende's curated feed pool.
 
 ## Active curated registry
 
-`src/editorial/feeds.ts` currently contains 111 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
+`src/editorial/feeds.ts` currently contains 114 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
 
-Scan now treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
+Scan treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
+
+## Danish news verification pass
+
+The following high-value Danish feeds have now been added to the active registry:
+
+| Source | Feed | Mode | Verification evidence |
+|---|---|---|---|
+| DR Nyheder | https://www.dr.dk/nyheder/service/feeds/allenyheder | direct | current feed readers are receiving fresh DR items; the endpoint is also documented in Danish RSS-harvest configurations |
+| TV 2 Nyheder | https://services.tv2.dk/api/feeds/nyheder/rss | direct | current feed-reader discovery shows fresh TV 2 items from this endpoint |
+| Jyllands-Posten – Topnyheder | https://feeds.jp.dk/jp/topnyheder | direct | current feed catalogues identify this RSS endpoint |
+
+Berlingske and Politiken are known to have currently working feeds according to 2026 feed registries, but their concrete feed URLs were not independently resolved in this pass, so they remain out of `feeds.ts` rather than guessing endpoints.
+
+Danmarks Nationalbank has an official RSS catalogue at `https://www.nationalbanken.dk/da/rss-feeds`. The currently configured individual endpoint remains subject to exact endpoint confirmation.
 
 ## Libertarian feeds
 
@@ -40,16 +54,16 @@ Count with verified RSS: 5/5.
 
 Count with verified RSS: 5/5.
 
-## Newly confirmed official feeds
+## Confirmed research / institutional feeds
 
-- European Medicines Agency exposes an official `News and press releases` RSS endpoint at `https://www.ema.europa.eu/en/news.xml`. The registry entry must use this XML endpoint rather than the HTML RSS overview page.
-- JAMA Network Open exposes its official `New Online` feed at `https://jamanetwork.com/rss/site_214/187.xml`. The registry entry must use this endpoint rather than an unverified guessed site id.
-- Danmarks Nationalbank has an official RSS catalogue at `https://www.nationalbanken.dk/da/rss-feeds`; its individual XML endpoint still needs exact endpoint confirmation before being treated as fully verified in the registry.
+- European Medicines Agency exposes an official `News and press releases` RSS endpoint at `https://www.ema.europa.eu/en/news.xml`. The active registry now uses this XML endpoint rather than the HTML RSS overview page.
+- JAMA Network Open's `New Online` XML endpoint `https://jamanetwork.com/rss/site_214/187.xml` responds as XML and is the endpoint to use in the registry. A legacy provisional JAMA URL remains to be replaced in `feeds.ts` in the next cleanup pass.
+- Google Research, Google DeepMind, Frontiers journal RSS endpoints, Medical Xpress and Phys.org main feeds have been response-checked as XML/RSS endpoints during this pass.
 
 ## Removed / not active RSS feeds
 
 - TheReligionOfPeace.com: the site's own FAQ explicitly states that it has no RSS feed. Keep out of the RSS pool.
-- Gatestone Institute: useful as a possible web/discovery source, but a current working RSS endpoint was not verified in this pass. Do not include it in the active RSS pool until a current feed is verified.
+- Gatestone Institute: useful as a possible web/discovery source, but a current working RSS endpoint was not verified. Do not include it in the active RSS pool until a current feed is verified.
 
 ## Editorial safety
 
@@ -57,4 +71,4 @@ Islam-critical discovery feeds are radar only. Their own prose is not evidence. 
 
 ## Runtime status
 
-The curated-feed registry compiles. Scan integration is implemented with bounded feed selection, RSS/Atom parsing, per-feed failure tolerance, BGE-M3 feed ranking and semantic deduplication, discovery-only outbound-link promotion, and Google/Bing fallback. CI passed after enabling iterable Web API typings.
+The curated-feed registry compiles. Scan integration is implemented with bounded feed selection, RSS/Atom parsing, per-feed failure tolerance, BGE-M3 feed ranking and semantic deduplication, discovery-only outbound-link promotion, and Google/Bing fallback. CI passed after the Danish-feed expansion.
