@@ -1,5 +1,5 @@
 {
-  "request_id": "2026-09-04T23:03:30+02:00-first-live-test-retry-4",
+  "request_id": "2026-09-04T23:07:30+02:00-first-live-test-retry-5",
   "count": 1,
   "order_id": "ee3ecf00-9831-4841-829e-729da2ff05fc",
   "instruction": "TEST: Produce exactly one current ordinary news article. Choose the most important suitable current story for Morgentidende, write it factually, fairly and soberly, and include the relevant opposing perspective where a real opposing party exists."
