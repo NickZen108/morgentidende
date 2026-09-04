@@ -1,30 +1,32 @@
-import type { Section } from "./types";
+import type { Category } from "./types";
 
 export const MODELS = {
-  scanEmbeddings: "BGE-M3",
-  desk: "Qwen3-30B",
-  journalist: "Terra",
-  media: "Gemma 4 26B",
-  editorInChief: "Terra",
-  imageGeneration: "FLUX.1-schnell"
+  scanEmbeddings: "@cf/baai/bge-m3",
+  desk: "@cf/qwen/qwen3-30b-a3b-fp8",
+  journalist: "openai/gpt-5.6-terra",
+  media: "@cf/google/gemma-4-26b-a4b-it",
+  editorInChief: "openai/gpt-5.6-terra",
+  imageGeneration: "@cf/black-forest-labs/flux-1-schnell"
 } as const;
 
-export const SECTIONS: readonly Section[] = [
+export const CATEGORIES: readonly Category[] = [
   "indland",
   "udland",
   "penge",
   "kultur",
   "viden",
-  "liv"
+  "liv",
+  "kommentar"
 ] as const;
 
-export const SECTION_GUIDANCE: Record<Section, string> = {
+export const CATEGORY_GUIDANCE: Record<Category, string> = {
   indland: "Dansk politik og øvrige danske nyheder.",
   udland: "International politik og øvrige udenlandske nyheder.",
   penge: "Finans, erhverv, virksomheder, markeder og privatøkonomi.",
   kultur: "Kulturelle strømninger, ungdoms- og datingkultur, religiøs ekstremisme og kulturelle debatter.",
   viden: "Teknologi, AI, naturvidenskab og anden viden med særlig relevans for avisens læsere.",
-  liv: "Parforhold, dating, forældreskab, sundhed, søvn, kost, motion, biohacking og meditation."
+  liv: "Parforhold, dating, forældreskab, sundhed, søvn, kost, motion, biohacking og meditation.",
+  kommentar: "Avisens analyserende og holdningsbårne stof. Politisk ståsted må gerne være tydeligt, men tonen skal altid være sober, rationel, dokumenteret og aldrig vred eller skinger."
 };
 
 export const MAX_EDITOR_IN_CHIEF_EXTRA_SCAN_CALLS = 5;
