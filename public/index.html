@@ -6,9 +6,24 @@
   <title>Morgentidende</title>
   <meta name="description" content="Morgentidende – få begge sider af sagen" />
   <link rel="stylesheet" href="/styles.css" />
+  <script>
+    (() => {
+      const saved = localStorage.getItem('morgentidende-theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
+    })();
+  </script>
 </head>
 <body>
   <header class="masthead">
+    <div class="header-actions" aria-label="Brugerindstillinger">
+      <label class="theme-control" for="theme-toggle">
+        <span class="theme-label">Dark</span>
+        <input id="theme-toggle" class="theme-toggle" type="checkbox" role="switch" aria-label="Slå dark mode til" />
+        <span class="theme-slider" aria-hidden="true"></span>
+      </label>
+      <button class="login-button" type="button">Login</button>
+    </div>
     <div class="brand">Morgentidende</div>
     <div class="tagline">Danmarks nye avis</div>
   </header>
@@ -62,6 +77,17 @@
       return `<section id="${category}" class="category-block"><div class="section-head"><h2>${labels[category]}</h2></div><div class="story-grid">${items.map(card).join('')}</div></section>`;
     }
 
+    function initThemeToggle() {
+      const toggle = document.getElementById('theme-toggle');
+      const current = document.documentElement.dataset.theme || 'light';
+      toggle.checked = current === 'dark';
+      toggle.addEventListener('change', () => {
+        const theme = toggle.checked ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('morgentidende-theme', theme);
+      });
+    }
+
     async function load() {
       const res = await fetch('/api/published');
       const data = await res.json();
@@ -93,6 +119,8 @@
       document.getElementById('lower-blocks').innerHTML = ['kultur','kommentar'].map(c => categoryBlock(c, articles)).join('');
       document.getElementById('updated').textContent = 'Opdateret ' + new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'});
     }
+
+    initThemeToggle();
     load().catch(console.error);
   </script>
 </body>
