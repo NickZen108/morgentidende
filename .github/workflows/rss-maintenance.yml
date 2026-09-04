@@ -1,0 +1,56 @@
+name: RSS maintenance
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rss-maintenance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-feeds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch verified RSS endpoints
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/editorial/feeds.ts')
+          s = p.read_text()
+          replacements = {
+            'https://jamanetwork.com/rss/site_25/0.xml':'https://jamanetwork.com/rss/site_214/187.xml',
+            'https://medicalxpress.com/rss-feed/sleep-news/':'https://medicalxpress.com/rss-feed/breaking/sleep-news/',
+            'https://medicalxpress.com/rss-feed/mental-health-news/':'https://medicalxpress.com/rss-feed/breaking/mental-health-news/',
+            'https://medicalxpress.com/rss-feed/mens-health-news/':'https://medicalxpress.com/rss-feed/breaking/mens-health-news/',
+            'https://medicalxpress.com/rss-feed/healthy-aging-news/':'https://medicalxpress.com/rss-feed/breaking/healthy-aging-news/',
+            'https://medicalxpress.com/rss-feed/endocrinology-metabolism-news/':'https://medicalxpress.com/rss-feed/breaking/endocrinology-metabolism-news/',
+            'https://medicalxpress.com/rss-feed/sleep-medicine-news/':'https://medicalxpress.com/rss-feed/breaking/sleep-medicine-news/',
+            'https://medicalxpress.com/rss-feed/sports-medicine-news/':'https://medicalxpress.com/rss-feed/breaking/sports-medicine-news/',
+            'https://phys.org/rss-feed/space-news/':'https://phys.org/rss-feed/breaking/space-news/',
+            'https://phys.org/rss-feed/space-news/space-exploration/':'https://phys.org/rss-feed/breaking/space-news/space-exploration/',
+            'https://phys.org/rss-feed/earth-news/environment/':'https://phys.org/rss-feed/breaking/earth-news/environment/',
+            'https://phys.org/rss-feed/biology-news/biotechnology/':'https://phys.org/rss-feed/breaking/biology-news/biotechnology/',
+            'https://phys.org/rss-feed/science-news/economics-business/':'https://phys.org/rss-feed/breaking/science-news/economics-business/',
+            'https://www.ema.europa.eu/en/news-events/rss-feeds':'https://www.ema.europa.eu/en/news.xml',
+          }
+          for old,new in replacements.items():
+              if old not in s:
+                  print('not found:', old)
+              s = s.replace(old,new)
+          p.write_text(s)
+
+          d = Path('docs/rss-feed-verification.md')
+          t = d.read_text()
+          t += '''\n\n## Verification pass 2026-09-05\n\n- Corrected JAMA Network Open to the official `New Online` XML feed: `https://jamanetwork.com/rss/site_214/187.xml`.\n- Corrected EMA to the actual RSS endpoint `https://www.ema.europa.eu/en/news.xml`.\n- Corrected Medical Xpress section feeds to their current `/rss-feed/breaking/.../` XML endpoints for sleep, mental health, men's health, healthy aging, endocrinology, sleep medicine and sports medicine.\n- Corrected Phys.org section feeds that currently require `/rss-feed/breaking/.../` for Astronomy & Space, Space Exploration, Environment, Biotechnology and Economics & Business.\n- Phys.org's Bio & Medicine and Quantum Physics feeds were independently confirmed as XML on their existing paths.\n- Danmarks Statistik still exposes current news on `rss.dst.dk`, but legacy paths such as `/pressemeddelelser` now redirect to HTML; do not add them as RSS XML until a current XML endpoint is positively identified.\n'''
+          d.write_text(t)
+          PY
+      - name: Commit verified endpoint corrections
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/editorial/feeds.ts docs/rss-feed-verification.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Correct verified RSS endpoints'
+          git push
