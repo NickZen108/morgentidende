@@ -1,4 +1,7 @@
 import { SupabaseError, supabaseRequest } from "./lib/supabase";
+import { MODELS, SECTIONS } from "./editorial/policy";
+import { EditorialStore } from "./editorial/store";
+import type { EditorialOrder, SearchType, Section } from "./editorial/types";
 
 interface Env {
   ASSETS: Fetcher;
@@ -51,6 +54,14 @@ async function readJson(request: Request): Promise<Record<string, unknown>> {
   }
 }
 
+function isSection(value: unknown): value is Section {
+  return typeof value === "string" && (SECTIONS as readonly string[]).includes(value);
+}
+
+function isSearchType(value: unknown): value is SearchType {
+  return ["text", "image", "video", "map_satellite"].includes(String(value));
+}
+
 async function handleApi(request: Request, env: Env, url: URL): Promise<Response | null> {
   if (url.pathname === "/api/health") {
     return json({
@@ -58,8 +69,47 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
       service: "morgentidende-v2",
       architecture: "v2-clean",
       database: Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY),
-      editorialFlow: ["scan", "desk", "journalist", "media", "editor_in_chief", "publish"]
+      editorialFlow: ["editor_in_chief_order", "scan", "desk", "journalist", "media", "editor_in_chief", "publish"],
+      models: MODELS,
+      sections: SECTIONS
     });
+  }
+
+  if (url.pathname === "/api/pipeline/config" && request.method === "GET") {
+    return json({
+      ok: true,
+      models: MODELS,
+      sections: SECTIONS,
+      timing: "editor_in_chief_controlled_not_configured_yet"
+    });
+  }
+
+  if (url.pathname === "/api/editorial/orders" && request.method === "POST") {
+    const body = await readJson(request);
+    const instruction = typeof body.instruction === "string" ? body.instruction.trim() : "";
+    if (!instruction) return badRequest("instruction is required");
+    if (body.section !== undefined && !isSection(body.section)) return badRequest("invalid section");
+    if (body.searchType !== undefined && !isSearchType(body.searchType)) return badRequest("invalid searchType");
+
+    const store = new EditorialStore(env);
+    const input: Omit<EditorialOrder, "id"> = {
+      instruction,
+      section: isSection(body.section) ? body.section : undefined,
+      articleType: typeof body.articleType === "string" ? body.articleType : undefined,
+      searchType: isSearchType(body.searchType) ? body.searchType : undefined,
+      requestedPublishAt: typeof body.requestedPublishAt === "string" ? body.requestedPublishAt : undefined,
+      homepageSlot: typeof body.homepageSlot === "string" ? body.homepageSlot : undefined
+    };
+    const order = await store.createOrder(input);
+    return json({ ok: true, order }, { status: 201 });
+  }
+
+  if (url.pathname.startsWith("/api/editorial/orders/") && request.method === "GET") {
+    const id = url.pathname.split("/").pop() ?? "";
+    const store = new EditorialStore(env);
+    const order = await store.getOrder(id);
+    if (!order) return json({ ok: false, error: "not_found" }, { status: 404 });
+    return json({ ok: true, order });
   }
 
   if (url.pathname === "/api/stories" && request.method === "GET") {
@@ -78,7 +128,7 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     const payload = {
       title,
       summary: typeof body.summary === "string" ? body.summary : null,
-      section: typeof body.section === "string" ? body.section : null,
+      section: isSection(body.section) ? body.section : null,
       news_value: typeof body.news_value === "number" ? body.news_value : null,
       status: "candidate"
     };
