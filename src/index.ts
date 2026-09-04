@@ -16,6 +16,7 @@ async function readJson(request:Request):Promise<Record<string,unknown>> { try{r
 function isCategory(value:unknown):value is Category { return typeof value === "string" && (CATEGORIES as readonly string[]).includes(value); }
 function isSearchType(value:unknown):value is SearchType { return ["text","image","video","map_satellite"].includes(String(value)); }
 function safeErrorMessage(error: unknown): string { const raw = error instanceof Error ? error.message : String(error); return raw.replace(/https?:\/\/\S+/g,"[url]").slice(0,240); }
+const textField = (value: unknown): string | undefined => typeof value === "string" && value.trim() ? value.trim() : undefined;
 
 async function editorialOverview(env:Env) {
   const since = new Date(Date.now()-24*60*60*1000).toISOString();
@@ -39,11 +40,21 @@ async function handleApi(request:Request, env:Env, url:URL):Promise<Response|nul
   if(url.pathname==="/api/editorial/overview"&&request.method==="GET") return json({ok:true,overview:await editorialOverview(env)});
 
   if(url.pathname==="/api/editorial/orders"&&request.method==="POST") {
-    const body=await readJson(request); const instruction=typeof body.instruction==="string"?body.instruction.trim():"";
+    const body=await readJson(request); const instruction=textField(body.instruction)??"";
     if(!instruction)return badRequest("instruction is required");
     if(body.category!==undefined&&!isCategory(body.category))return badRequest("invalid category");
     if(body.searchType!==undefined&&!isSearchType(body.searchType))return badRequest("invalid searchType");
-    const input:Omit<EditorialOrder,"id">={instruction,category:isCategory(body.category)?body.category:undefined,articleType:typeof body.articleType==="string"?body.articleType:undefined,searchType:isSearchType(body.searchType)?body.searchType:undefined,requestedPublishAt:typeof body.requestedPublishAt==="string"?body.requestedPublishAt:undefined,homepageSlot:typeof body.homepageSlot==="string"?body.homepageSlot:undefined};
+    const input:Omit<EditorialOrder,"id">={
+      instruction,
+      scanBrief:textField(body.scanBrief),
+      deskBrief:textField(body.deskBrief),
+      journalistBrief:textField(body.journalistBrief),
+      category:isCategory(body.category)?body.category:undefined,
+      articleType:textField(body.articleType),
+      searchType:isSearchType(body.searchType)?body.searchType:undefined,
+      requestedPublishAt:textField(body.requestedPublishAt),
+      homepageSlot:textField(body.homepageSlot)
+    };
     const order=await new EditorialStore(env).createOrder(input); return json({ok:true,order},{status:201});
   }
 
