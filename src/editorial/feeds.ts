@@ -43,6 +43,9 @@ const f = (
  */
 export const EDITORIAL_FEEDS: readonly EditorialFeed[] = [
   // Denmark / Danish research
+  f("dr-all", "DR Nyheder", "https://www.dr.dk/nyheder/service/feeds/allenyheder", "direct", ["indland", "udland", "penge", "kultur", "viden", "liv"], ["danmark", "nyheder", "politik", "verden"], { language: "da", country: "DK", authorityWeight: 0.95 }),
+  f("tv2-news", "TV 2 Nyheder", "https://services.tv2.dk/api/feeds/nyheder/rss", "direct", ["indland", "udland", "penge", "kultur", "viden", "liv"], ["danmark", "nyheder", "politik", "verden"], { language: "da", country: "DK", authorityWeight: 0.95 }),
+  f("jp-top", "Jyllands-Posten – Topnyheder", "https://feeds.jp.dk/jp/topnyheder", "direct", ["indland", "udland", "penge", "kultur", "viden"], ["danmark", "nyheder", "politik", "erhverv"], { language: "da", country: "DK", authorityWeight: 0.9 }),
   f("ku-all", "Københavns Universitet", "https://nyheder.ku.dk/alle_nyheder/?get_rss=1", "primary", ["viden", "liv", "indland"], ["danmark", "forskning", "universitet"], { language: "da", country: "DK" }),
   f("ku-society", "KU – Samfund, politik & jura", "https://nyheder.ku.dk/samfund-politik-jura/?get_rss=1", "research", ["indland", "viden"], ["politik", "samfund", "jura"], { language: "da", country: "DK" }),
   f("ku-science", "KU – Natur, tal & teknologi", "https://nyheder.ku.dk/natur-tal-teknologi/?get_rss=1", "research", ["viden"], ["naturvidenskab", "teknologi", "ai", "data"], { language: "da", country: "DK" }),
@@ -169,7 +172,7 @@ export const EDITORIAL_FEEDS: readonly EditorialFeed[] = [
 
   // Medicine / regulators
   f("fda-medwatch", "FDA MedWatch", "https://www.fda.gov/AboutFDA/ContactFDA/StayInformed/RSSFeeds/MedWatch/rss.xml", "primary", ["liv", "viden"], ["drug safety", "medicine", "health"]),
-  f("ema-news", "European Medicines Agency – News", "https://www.ema.europa.eu/en/news-events/rss-feeds", "primary", ["liv", "viden", "udland"], ["medicine", "regulation", "drug safety"]),
+  f("ema-news", "European Medicines Agency – News", "https://www.ema.europa.eu/en/news.xml", "primary", ["liv", "viden", "udland"], ["medicine", "regulation", "drug safety"]),
   f("jama-open", "JAMA Network Open", "https://jamanetwork.com/rss/site_25/0.xml", "research", ["liv", "viden"], ["medicine", "health", "research"]),
 
   // Space / energy / climate
