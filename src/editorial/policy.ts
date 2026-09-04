@@ -9,6 +9,42 @@ export const MODELS = {
   imageGeneration: "@cf/black-forest-labs/flux-1-schnell"
 } as const;
 
+export const PIPELINE_CAPABILITIES = {
+  scan: {
+    model: MODELS.scanEmbeddings,
+    role: "Retrieval, semantic relevance ranking and deduplication. Scan is not a full generative reasoning agent.",
+    strengths: [
+      "semantic matching between a concise scan brief and candidate/feed metadata",
+      "semantic deduplication of similar stories",
+      "targeted text/media lookup"
+    ],
+    guidanceForChief: "Give Scan concise retrieval signals: geography, topic, source type, freshness, named entities and concrete must-have evidence. Do not rely on long nuanced prose alone."
+  },
+  desk: {
+    model: MODELS.desk,
+    role: "Select at most one concrete story from Scan candidates or reject all.",
+    strengths: ["editorial relevance", "news value", "freshness", "matching candidates to the order"],
+    guidanceForChief: "Desk benefits from a structured brief with explicit must-have, prefer and reject criteria plus a short editorial intent."
+  },
+  journalist: {
+    model: MODELS.journalist,
+    role: "Plan targeted research through Scan and write the article.",
+    strengths: ["reasoning", "source-aware research planning", "long-form Danish news writing", "fair representation of real counterpart positions"],
+    guidanceForChief: "Journalist benefits from the full prose editorial brief, including desired angle, context, evidentiary standards and what must be new."
+  },
+  media: {
+    model: MODELS.media,
+    role: "Formulate media searches and evaluate candidate assets for editorial relevance and rights.",
+    strengths: ["image-query formulation", "asset relevance evaluation", "rights-aware selection"],
+    fallbackImageModel: MODELS.imageGeneration,
+    guidanceForChief: "Media can request concrete event/person/location imagery through Scan; if no suitable legal asset is found, FLUX may generate a clearly non-documentary illustration."
+  },
+  publish: {
+    model: "deterministic code",
+    role: "Persist and publish the final approved article. No editorial reasoning."
+  }
+} as const;
+
 export const CATEGORIES: readonly Category[] = [
   "indland",
   "udland",
