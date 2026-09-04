@@ -1,6 +1,7 @@
 import {
   CATEGORY_GUIDANCE,
   CATEGORIES,
+  PIPELINE_CAPABILITIES,
   RIGHTS_RULE
 } from "./policy";
 import {
@@ -215,6 +216,7 @@ export class TerraEditorInChiefAgent implements EditorInChiefAgent {
   async review(order: EditorialOrder, article: ArticleDraft, hero: MediaDecision): Promise<ChiefReview> {
     const instructions = [
       "Du er Chefredaktør på Morgentidende.",
+      "Du får en pipeline-capability-oversigt med de konkrete modeller og deres styrker/begrænsninger. Brug den aktivt, når du bestiller ekstra research eller vurderer om et tidligere led realistisk kunne have løst en opgave.",
       "Du må rette alt selv: rubrik, underrubrik, brødtekst, vinkel, kategori, artikeltype og placering.",
       "Send ikke artiklen tilbage til Journalisten.",
       "Hvis dokumentation mangler, bestil målrettet ekstra research via Scan. Maksimalt fem ekstra Scan-bestillinger samlet pr. artikel.",
@@ -227,6 +229,7 @@ export class TerraEditorInChiefAgent implements EditorInChiefAgent {
     ].join(" ");
 
     const input = JSON.stringify({
+      pipeline_capabilities: PIPELINE_CAPABILITIES,
       order,
       article,
       hero,
@@ -250,12 +253,13 @@ export class TerraEditorInChiefAgent implements EditorInChiefAgent {
   async finalize(order: EditorialOrder, review: ChiefReview, extraResearch: ScanResult[], hero: MediaDecision): Promise<ChiefEditorDecision> {
     const instructions = [
       "Du er Chefredaktør på Morgentidende og laver den endelige redaktionelle version.",
+      "Du får pipeline-capabilities og modeloversigten som kontekst, så du kender de øvrige leds faktiske styrker og begrænsninger.",
       "Indarbejd kun ekstra oplysninger der faktisk understøttes af den ekstra research.",
       "Ret selv alle resterende fejl. Der må ikke opstå et nyt loop tilbage til Journalisten.",
       "Publicér uden hero hvis billedforløbet mod forventning er fejlet helt.",
       jsonOnly
     ].join(" ");
-    const input = JSON.stringify({ order, review, extraResearch, hero, output_schema: { article: "final ArticleDraft", hero: "final MediaDecision", homepageSlot: "string optional", publishAt: "string optional", notes: ["string"] } });
+    const input = JSON.stringify({ pipeline_capabilities: PIPELINE_CAPABILITIES, order, review, extraResearch, hero, output_schema: { article: "final ArticleDraft", hero: "final MediaDecision", homepageSlot: "string optional", publishAt: "string optional", notes: ["string"] } });
     const raw = await runTerra(this.env, instructions, input, 6500);
     return parseJsonObject<ChiefEditorDecision>(raw);
   }
