@@ -15,6 +15,7 @@ const badRequest = (message:string) => json({ok:false,error:message},{status:400
 async function readJson(request:Request):Promise<Record<string,unknown>> { try{return await request.json() as Record<string,unknown>;}catch{return{};} }
 function isCategory(value:unknown):value is Category { return typeof value === "string" && (CATEGORIES as readonly string[]).includes(value); }
 function isSearchType(value:unknown):value is SearchType { return ["text","image","video","map_satellite"].includes(String(value)); }
+function safeErrorMessage(error: unknown): string { const raw = error instanceof Error ? error.message : String(error); return raw.replace(/https?:\/\/\S+/g,"[url]").slice(0,240); }
 
 async function editorialOverview(env:Env) {
   const since = new Date(Date.now()-24*60*60*1000).toISOString();
@@ -49,7 +50,8 @@ async function handleApi(request:Request, env:Env, url:URL):Promise<Response|nul
   if(url.pathname.startsWith("/api/editorial/orders/")&&url.pathname.endsWith("/run")&&request.method==="POST") {
     const id=url.pathname.split("/").filter(Boolean).at(-2)??""; const store=new EditorialStore(env); const order=await store.getOrder(id);
     if(!order)return json({ok:false,error:"not_found"},{status:404});
-    return json({ok:true,outcome:await runLiveEditorialOrder(env,order)});
+    try { return json({ok:true,outcome:await runLiveEditorialOrder(env,order)}); }
+    catch(error) { return json({ok:false,error:"editorial_run_failed",detail:safeErrorMessage(error)},{status:500}); }
   }
   if(url.pathname.startsWith("/api/editorial/orders/")&&request.method==="GET") {
     const id=url.pathname.split("/").pop()??""; const order=await new EditorialStore(env).getOrder(id); if(!order)return json({ok:false,error:"not_found"},{status:404}); return json({ok:true,order});
