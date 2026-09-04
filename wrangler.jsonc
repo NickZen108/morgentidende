@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "morgentidende",
+  "name": "morgentidende-v2",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-04",
   "assets": {
