@@ -3,6 +3,7 @@ import type { EditorialOrder, NewsCandidate, ScanRequest, ScanResult, SourceRef 
 import type { ScanService } from "./pipeline";
 
 const GOOGLE_NEWS = "https://news.google.com/rss/search";
+const BING_NEWS = "https://www.bing.com/news/search";
 const COMMONS_API = "https://commons.wikimedia.org/w/api.php";
 const MAX_DISCOVERY_RESULTS = 24;
 const USER_AGENT = "Morgentidende/2.0 (+editorial retrieval)";
@@ -48,7 +49,7 @@ export class LiveScanService implements ScanService {
       "when:1d"
     ].filter(Boolean).join(" ");
 
-    const items = await searchGoogleNews(query, MAX_DISCOVERY_RESULTS * 2);
+    const items = await searchNews(query, MAX_DISCOVERY_RESULTS * 2);
     const candidates = items.map((item, index) => toCandidate(item, order, index));
     return await semanticDedupe(this.env, candidates, MAX_DISCOVERY_RESULTS);
   }
@@ -61,6 +62,25 @@ export class LiveScanService implements ScanService {
   }
 }
 
+async function searchNews(query: string, limit: number): Promise<RssItem[]> {
+  const errors: string[] = [];
+  try {
+    const google = await searchGoogleNews(query, limit);
+    if (google.length) return google;
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : "google_news_failed");
+  }
+
+  try {
+    const bing = await searchBingNews(query, limit);
+    if (bing.length) return bing;
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : "bing_news_failed");
+  }
+
+  throw new Error(`scan_news_search_failed:${errors.join("|") || "no_results"}`);
+}
+
 async function searchGoogleNews(query: string, limit: number): Promise<RssItem[]> {
   const url = new URL(GOOGLE_NEWS);
   url.searchParams.set("q", query);
@@ -71,7 +91,21 @@ async function searchGoogleNews(query: string, limit: number): Promise<RssItem[]
   const response = await fetch(url.toString(), {
     headers: { "user-agent": USER_AGENT, accept: "application/rss+xml, application/xml, text/xml" }
   });
-  if (!response.ok) throw new Error(`scan_news_search_failed:${response.status}`);
+  if (!response.ok) throw new Error(`google_news:${response.status}`);
+  return parseRss(await response.text()).slice(0, limit);
+}
+
+async function searchBingNews(query: string, limit: number): Promise<RssItem[]> {
+  const url = new URL(BING_NEWS);
+  url.searchParams.set("q", query.replace(/\bwhen:\d+d\b/gi, "").trim());
+  url.searchParams.set("format", "RSS");
+  url.searchParams.set("setlang", "da-DK");
+  url.searchParams.set("qft", 'sortbydate="1"');
+
+  const response = await fetch(url.toString(), {
+    headers: { "user-agent": USER_AGENT, accept: "application/rss+xml, application/xml, text/xml" }
+  });
+  if (!response.ok) throw new Error(`bing_news:${response.status}`);
   return parseRss(await response.text()).slice(0, limit);
 }
 
@@ -184,7 +218,7 @@ function lexicalDedupe(candidates: NewsCandidate[], limit: number): NewsCandidat
 }
 
 async function lookupText(query: string, excludeUrls: string[]): Promise<ScanResult | null> {
-  const items = await searchGoogleNews(`${query} when:30d`, 12);
+  const items = await searchNews(`${query} when:30d`, 12);
   for (const item of items) {
     if (excludeUrls.includes(item.link)) continue;
     const page = await fetchReadablePage(item.link);
@@ -195,7 +229,7 @@ async function lookupText(query: string, excludeUrls: string[]): Promise<ScanRes
       publisher: item.publisher,
       summary: page.text || item.description,
       publishedAt: item.publishedAt,
-      metadata: { searchProvider: "Google News RSS", requestedQuery: query, resolvedFrom: item.link }
+      metadata: { searchProvider: "RSS news retrieval", requestedQuery: query, resolvedFrom: item.link }
     };
   }
   return null;
