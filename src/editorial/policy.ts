@@ -29,6 +29,31 @@ export const CATEGORY_GUIDANCE: Record<Category, string> = {
   kommentar: "Avisens analyserende og holdningsbårne stof. Politisk ståsted må gerne være tydeligt, men tonen skal altid være sober, rationel, dokumenteret og aldrig vred eller skinger."
 };
 
+export const HOMEPAGE_MIX = {
+  wholePageHardNewsTarget: { min: 0.65, max: 0.70 },
+  upperThirdHardNewsTarget: { min: 0.80, max: 0.90 },
+  categoryShareTargets: {
+    indland: { min: 0.25, max: 0.30 },
+    udland: { min: 0.20, max: 0.25 },
+    penge: { min: 0.15, max: 0.20 },
+    viden: { min: 0.10, max: 0.15 },
+    liv: { min: 0.10, max: 0.15 },
+    kultur: { min: 0.08, max: 0.12 },
+    kommentar: { min: 0.05, max: 0.10 }
+  },
+  topTenRules: {
+    requireIndland: true,
+    requireUdland: true,
+    requirePenge: true,
+    avoidSingleCategoryDominance: true
+  },
+  otherVisibleStoriesTarget: { min: 2, max: 4 },
+  magazineBlocks: ["viden", "liv"] as const,
+  magazinePlacement: "middle",
+  leadFollowupExpected: true,
+  leadCommentary: "consider_when_editorially_relevant"
+} as const;
+
 export const MAX_EDITOR_IN_CHIEF_EXTRA_SCAN_CALLS = 5;
 export const SCAN_RESULTS_PER_REQUEST = 1;
 
@@ -57,5 +82,7 @@ export const PIPELINE_RULES = {
   editorInChiefChoosesPlacement: true,
   publishIsCodeOnly: true,
   allowPublishWithoutHero: true,
-  journalistReturnLoop: false
+  journalistReturnLoop: false,
+  leadNeedsFollowupConsideration: true,
+  leadMayNeedCommentary: true
 } as const;
