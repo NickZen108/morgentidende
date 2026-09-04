@@ -1,11 +1,20 @@
 # RSS feed verification
 
-Verified on 2026-09-04 for Morgentidende's planned curated feed pool.
+Verified/expanded on 2026-09-04 for Morgentidende's curated feed pool.
 
 ## Rules
 - `direct`: may be used as a normal source when the concrete article is suitable.
+- `primary`: official authority/institution feed; may be used as a normal primary source.
+- `research`: journal/university/research feed; may be used as a research source when the concrete item supports the claim.
 - `discovery_only`: may be used only to discover outbound links. It must never appear in article sourceRefs, source boxes, evidence counts, or Supabase article-source records.
 - Discovery-only pages must be discarded after authoritative/primary outbound links have been extracted.
+- A dead, blocked or malformed feed must never stop Scan. It is skipped and the run continues.
+
+## Active curated registry
+
+`src/editorial/feeds.ts` currently contains 111 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
+
+Scan now treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
 
 ## Libertarian feeds
 
@@ -31,6 +40,12 @@ Count with verified RSS: 5/5.
 
 Count with verified RSS: 5/5.
 
+## Newly confirmed official feeds
+
+- European Medicines Agency exposes an official `News and press releases` RSS endpoint at `https://www.ema.europa.eu/en/news.xml`. The registry entry must use this XML endpoint rather than the HTML RSS overview page.
+- JAMA Network Open exposes its official `New Online` feed at `https://jamanetwork.com/rss/site_214/187.xml`. The registry entry must use this endpoint rather than an unverified guessed site id.
+- Danmarks Nationalbank has an official RSS catalogue at `https://www.nationalbanken.dk/da/rss-feeds`; its individual XML endpoint still needs exact endpoint confirmation before being treated as fully verified in the registry.
+
 ## Removed / not active RSS feeds
 
 - TheReligionOfPeace.com: the site's own FAQ explicitly states that it has no RSS feed. Keep out of the RSS pool.
@@ -39,3 +54,7 @@ Count with verified RSS: 5/5.
 ## Editorial safety
 
 Islam-critical discovery feeds are radar only. Their own prose is not evidence. Scan should extract outbound links and prefer primary sources, authorities, courts, police, local reporting, Reuters/AP/BBC-class media, or other authoritative reporting. The discovery source itself disappears before Desk/Journalist source handling.
+
+## Runtime status
+
+The curated-feed registry compiles. Scan integration is implemented with bounded feed selection, RSS/Atom parsing, per-feed failure tolerance, BGE-M3 feed ranking and semantic deduplication, discovery-only outbound-link promotion, and Google/Bing fallback. CI passed after enabling iterable Web API typings.
