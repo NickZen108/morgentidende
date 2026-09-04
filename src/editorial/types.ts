@@ -13,7 +13,14 @@ export type RequestedBy = "editor_in_chief" | "journalist" | "media" | "desk";
 
 export interface EditorialOrder {
   id: string;
+  /** Chefredaktørens oprindelige autoritative prosabestilling. */
   instruction: string;
+  /** Kompakt retrieval-brief. Scan må kun bruge denne til initial discovery, når den findes. */
+  scanBrief?: string;
+  /** Struktureret udvælgelsesbrief til Desk. */
+  deskBrief?: string;
+  /** Rig research- og skrivebrief til Journalisten. */
+  journalistBrief?: string;
   category?: Category;
   articleType?: string;
   searchType?: SearchType;
