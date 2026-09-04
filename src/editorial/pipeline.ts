@@ -22,39 +22,18 @@ export interface ScanService {
   lookup(request: ScanRequest, excludeUrls?: string[]): Promise<ScanResult | null>;
 }
 
-export interface DeskAgent {
-  choose(order: EditorialOrder, candidates: NewsCandidate[]): Promise<DeskDecision>;
-}
-
-export interface JournalistResearchPlan {
-  requests: ScanRequest[];
-}
-
+export interface DeskAgent { choose(order: EditorialOrder, candidates: NewsCandidate[]): Promise<DeskDecision>; }
+export interface JournalistResearchPlan { requests: ScanRequest[]; }
 export interface JournalistAgent {
   planResearch(order: EditorialOrder, candidate: NewsCandidate): Promise<JournalistResearchPlan>;
-  write(
-    order: EditorialOrder,
-    candidate: NewsCandidate,
-    research: ScanResult[]
-  ): Promise<ArticleDraft>;
+  write(order: EditorialOrder, candidate: NewsCandidate, research: ScanResult[]): Promise<ArticleDraft>;
 }
-
-export interface MediaEvaluation {
-  accepted: boolean;
-  reason: string;
-  decision?: MediaDecision;
-}
-
+export interface MediaEvaluation { accepted: boolean; reason: string; decision?: MediaDecision; }
 export interface MediaAgent {
   buildQuery(article: ArticleDraft, priority: 1 | 2 | 3 | 4 | 5): Promise<ScanRequest>;
-  evaluate(
-    article: ArticleDraft,
-    priority: 1 | 2 | 3 | 4 | 5,
-    result: ScanResult
-  ): Promise<MediaEvaluation>;
+  evaluate(article: ArticleDraft, priority: 1 | 2 | 3 | 4 | 5, result: ScanResult): Promise<MediaEvaluation>;
   generateFlux(article: ArticleDraft): Promise<MediaDecision>;
 }
-
 export interface ChiefReview {
   revisedArticle: ArticleDraft;
   revisedHero: MediaDecision;
@@ -64,158 +43,89 @@ export interface ChiefReview {
   publishAt?: string;
   notes: string[];
 }
-
 export interface EditorInChiefAgent {
   review(order: EditorialOrder, article: ArticleDraft, hero: MediaDecision): Promise<ChiefReview>;
-  finalize(
-    order: EditorialOrder,
-    review: ChiefReview,
-    extraResearch: ScanResult[],
-    hero: MediaDecision
-  ): Promise<ChiefEditorDecision>;
+  finalize(order: EditorialOrder, review: ChiefReview, extraResearch: ScanResult[], hero: MediaDecision): Promise<ChiefEditorDecision>;
 }
-
-export interface Publisher {
-  publish(order: EditorialOrder, decision: ChiefEditorDecision): Promise<PublishRecord>;
-}
-
-export interface PipelineDependencies {
-  scan: ScanService;
-  desk: DeskAgent;
-  journalist: JournalistAgent;
-  media: MediaAgent;
-  editorInChief: EditorInChiefAgent;
-  publisher: Publisher;
-}
-
+export interface Publisher { publish(order: EditorialOrder, decision: ChiefEditorDecision): Promise<PublishRecord>; }
+export interface PipelineDependencies { scan: ScanService; desk: DeskAgent; journalist: JournalistAgent; media: MediaAgent; editorInChief: EditorInChiefAgent; publisher: Publisher; }
 export type PipelineOutcome =
   | { status: "published"; order: EditorialOrder; record: PublishRecord }
   | { status: "no_candidate"; order: EditorialOrder; reason: string };
 
 const noHero = (): MediaDecision => ({ kind: "none", rightsVerified: true });
 
+/** Each role gets the same order metadata, but only the wording useful for that role. */
+function orderForScan(order: EditorialOrder): EditorialOrder {
+  return { ...order, instruction: order.scanBrief ?? order.instruction, deskBrief: undefined, journalistBrief: undefined };
+}
+function orderForDesk(order: EditorialOrder): EditorialOrder {
+  return { ...order, instruction: order.deskBrief ?? order.instruction, scanBrief: undefined, journalistBrief: undefined };
+}
+function orderForJournalist(order: EditorialOrder): EditorialOrder {
+  return { ...order, instruction: order.journalistBrief ?? order.instruction, scanBrief: undefined, deskBrief: undefined };
+}
+
 function ensureOneDeskCandidate(decision: DeskDecision, candidates: NewsCandidate[]): NewsCandidate | null {
   if (!decision.accepted || !decision.candidateId) return null;
   return candidates.find((candidate) => candidate.id === decision.candidateId) ?? null;
 }
 
-async function journalistResearch(
-  deps: PipelineDependencies,
-  order: EditorialOrder,
-  candidate: NewsCandidate
-): Promise<ScanResult[]> {
-  const plan = await deps.journalist.planResearch(order, candidate);
+async function journalistResearch(deps: PipelineDependencies, order: EditorialOrder, candidate: NewsCandidate): Promise<ScanResult[]> {
+  const journalistOrder = orderForJournalist(order);
+  const plan = await deps.journalist.planResearch(journalistOrder, candidate);
   const results: ScanResult[] = [];
   const seen = new Set<string>();
-
   for (const request of plan.requests) {
-    const normalized: ScanRequest = {
-      ...request,
-      requestedBy: "journalist",
-      searchType: request.searchType,
-      query: request.query,
-      purpose: request.purpose
-    };
+    const normalized: ScanRequest = { ...request, requestedBy: "journalist", searchType: request.searchType, query: request.query, purpose: request.purpose };
     const result = await deps.scan.lookup(normalized, [...seen]);
-    if (result && !seen.has(result.url)) {
-      seen.add(result.url);
-      results.push(result);
-    }
+    if (result && !seen.has(result.url)) { seen.add(result.url); results.push(result); }
   }
   return results;
 }
 
-async function chooseHero(
-  deps: PipelineDependencies,
-  article: ArticleDraft
-): Promise<MediaDecision> {
+async function chooseHero(deps: PipelineDependencies, article: ArticleDraft): Promise<MediaDecision> {
   const seen = new Set<string>();
-
-  // Priorities 1-5 are retrieval. Scan returns one candidate per request.
   for (const step of HERO_PRIORITY.slice(0, 5)) {
     const priority = step.priority as 1 | 2 | 3 | 4 | 5;
     const request = await deps.media.buildQuery(article, priority);
-    const result = await deps.scan.lookup(
-      { ...request, requestedBy: "media", purpose: `${step.description}. ${RIGHTS_RULE}` },
-      [...seen]
-    );
+    const result = await deps.scan.lookup({ ...request, requestedBy: "media", purpose: `${step.description}. ${RIGHTS_RULE}` }, [...seen]);
     if (!result) continue;
     seen.add(result.url);
-
     const evaluation = await deps.media.evaluate(article, priority, result);
-    if (evaluation.accepted && evaluation.decision?.rightsVerified) {
-      return { ...evaluation.decision, heroPriority: priority };
-    }
+    if (evaluation.accepted && evaluation.decision?.rightsVerified) return { ...evaluation.decision, heroPriority: priority };
   }
-
-  // Priority 6 is always FLUX.1 Schnell; failure must not block publication.
-  try {
-    const generated = await deps.media.generateFlux(article);
-    return { ...generated, heroPriority: 6, rightsVerified: true };
-  } catch {
-    return noHero();
-  }
+  try { const generated = await deps.media.generateFlux(article); return { ...generated, heroPriority: 6, rightsVerified: true }; }
+  catch { return noHero(); }
 }
 
-async function chiefExtraResearch(
-  deps: PipelineDependencies,
-  requests: ScanRequest[]
-): Promise<ScanResult[]> {
+async function chiefExtraResearch(deps: PipelineDependencies, requests: ScanRequest[]): Promise<ScanResult[]> {
   const limited = requests.slice(0, MAX_EDITOR_IN_CHIEF_EXTRA_SCAN_CALLS);
   const results: ScanResult[] = [];
   const seen = new Set<string>();
-
   for (const request of limited) {
-    const result = await deps.scan.lookup(
-      { ...request, requestedBy: "editor_in_chief" },
-      [...seen]
-    );
-    if (result && !seen.has(result.url)) {
-      seen.add(result.url);
-      results.push(result);
-    }
+    const result = await deps.scan.lookup({ ...request, requestedBy: "editor_in_chief" }, [...seen]);
+    if (result && !seen.has(result.url)) { seen.add(result.url); results.push(result); }
   }
   return results;
 }
 
-/**
- * One bounded editorial cycle. Timing/cadence is intentionally outside this function;
- * the editor in chief will later decide when to create/run the next order.
- */
-export async function runEditorialOrder(
-  deps: PipelineDependencies,
-  order: EditorialOrder
-): Promise<PipelineOutcome> {
-  const candidates = await deps.scan.discover(order);
-  const deskDecision = await deps.desk.choose(order, candidates);
-  const candidate = ensureOneDeskCandidate(deskDecision, candidates);
+/** One bounded editorial cycle. No candidate is a normal editorial outcome, not a runtime error. */
+export async function runEditorialOrder(deps: PipelineDependencies, order: EditorialOrder): Promise<PipelineOutcome> {
+  const candidates = await deps.scan.discover(orderForScan(order));
+  if (!candidates.length) return { status: "no_candidate", order, reason: "Scan found no suitable candidates" };
 
-  if (!candidate) {
-    return {
-      status: "no_candidate",
-      order,
-      reason: deskDecision.rationale || "Desk rejected all candidates"
-    };
-  }
+  const deskDecision = await deps.desk.choose(orderForDesk(order), candidates);
+  const candidate = ensureOneDeskCandidate(deskDecision, candidates);
+  if (!candidate) return { status: "no_candidate", order, reason: deskDecision.rationale || "Desk rejected all candidates" };
 
   const research = await journalistResearch(deps, order, candidate);
-  const draft = await deps.journalist.write(order, candidate, research);
+  const draft = await deps.journalist.write(orderForJournalist(order), candidate, research);
   let hero = await chooseHero(deps, draft);
-
   const review = await deps.editorInChief.review(order, draft, hero);
   const extraResearch = await chiefExtraResearch(deps, review.extraScanRequests);
-
-  if (review.requestBetterHero) {
-    hero = await chooseHero(deps, review.revisedArticle);
-  }
-
-  const finalDecision = await deps.editorInChief.finalize(
-    order,
-    review,
-    extraResearch,
-    hero
-  );
-
+  if (review.requestBetterHero) hero = await chooseHero(deps, review.revisedArticle);
+  const finalDecision = await deps.editorInChief.finalize(order, review, extraResearch, hero);
   const record = await deps.publisher.publish(order, finalDecision);
   return { status: "published", order, record };
 }
