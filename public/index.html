@@ -28,18 +28,39 @@
       <article class="lead-card placeholder"><p class="kicker">MORGENTIDENDE</p><h1>Nyhederne er på vej</h1><p>Forsiden fyldes automatisk med Chefredaktørens prioriterede artikler.</p></article>
     </section>
 
+    <section id="lead-commentary" class="lead-commentary" hidden></section>
+
     <section class="latest-wrap">
       <div class="section-head"><h2>Seneste</h2><span id="updated"></span></div>
       <div id="latest" class="story-grid"></div>
     </section>
 
-    <div id="category-blocks"></div>
+    <section id="hard-news-blocks"></section>
+
+    <section id="viden" class="magazine magazine-viden" hidden>
+      <div class="magazine-brand"><span>Morgentidende</span><h2>Viden</h2><p>Teknologi · AI · Naturvidenskab</p></div>
+      <div id="viden-grid" class="magazine-grid"></div>
+    </section>
+
+    <section id="liv" class="magazine magazine-liv" hidden>
+      <div class="magazine-brand"><span>Morgentidende</span><h2>Liv</h2><p>Relationer · Sundhed · Søvn · Biohacking</p></div>
+      <div id="liv-grid" class="magazine-grid"></div>
+    </section>
+
+    <section id="lower-blocks"></section>
   </main>
 
   <script>
     const labels = { indland:'Indland', udland:'Udland', penge:'Penge', kultur:'Kultur', viden:'Viden', liv:'Liv', kommentar:'Kommentar' };
     const esc = value => String(value ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const card = a => `<article class="story-card"><p class="kicker">${esc(labels[a.category] || a.category || '')}</p><h3>${esc(a.headline)}</h3>${a.dek ? `<p>${esc(a.dek)}</p>` : ''}</article>`;
+    const magazineCard = (a, index) => `<article class="magazine-card ${index === 0 ? 'magazine-feature' : ''}"><p class="magazine-kicker">${esc(labels[a.category] || '')}</p><h3>${esc(a.headline)}</h3>${a.dek ? `<p>${esc(a.dek)}</p>` : ''}</article>`;
+
+    function categoryBlock(category, articles) {
+      const items = articles.filter(a => a.category === category).slice(0, 4);
+      if (!items.length) return '';
+      return `<section id="${category}" class="category-block"><div class="section-head"><h2>${labels[category]}</h2></div><div class="story-grid">${items.map(card).join('')}</div></section>`;
+    }
 
     async function load() {
       const res = await fetch('/api/published');
@@ -50,15 +71,26 @@
       const hero = articles.find(a => a.homepage_slot === 'hero') || articles[0];
       document.getElementById('lead').innerHTML = `<article class="lead-card"><p class="kicker">${esc(labels[hero.category] || hero.category || '')}</p><h1>${esc(hero.headline)}</h1>${hero.dek ? `<p class="lead-dek">${esc(hero.dek)}</p>` : ''}</article>`;
 
+      const leadComment = articles.find(a => a.category === 'kommentar' && (a.homepage_slot === 'lead-commentary' || a.homepage_slot === 'lead_commentary'));
+      if (leadComment) {
+        const el = document.getElementById('lead-commentary');
+        el.hidden = false;
+        el.innerHTML = `<div class="commentary-label">Kommentar til dagens lead</div><h2>${esc(leadComment.headline)}</h2>${leadComment.dek ? `<p>${esc(leadComment.dek)}</p>` : ''}`;
+      }
+
       const latest = articles.filter(a => a.id !== hero.id).slice(0, 8);
       document.getElementById('latest').innerHTML = latest.map(card).join('');
 
-      const blocks = Object.keys(labels).map(category => {
-        const items = articles.filter(a => a.category === category).slice(0, 4);
-        if (!items.length) return '';
-        return `<section id="${category}" class="category-block"><div class="section-head"><h2>${labels[category]}</h2></div><div class="story-grid">${items.map(card).join('')}</div></section>`;
-      }).join('');
-      document.getElementById('category-blocks').innerHTML = blocks;
+      document.getElementById('hard-news-blocks').innerHTML = ['indland','udland','penge'].map(c => categoryBlock(c, articles)).join('');
+
+      for (const category of ['viden','liv']) {
+        const items = articles.filter(a => a.category === category).slice(0, 5);
+        if (!items.length) continue;
+        document.getElementById(category).hidden = false;
+        document.getElementById(category + '-grid').innerHTML = items.map(magazineCard).join('');
+      }
+
+      document.getElementById('lower-blocks').innerHTML = ['kultur','kommentar'].map(c => categoryBlock(c, articles)).join('');
       document.getElementById('updated').textContent = 'Opdateret ' + new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'});
     }
     load().catch(console.error);
