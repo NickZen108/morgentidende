@@ -7,14 +7,14 @@ export type EditorialStage =
   | "editor_in_chief"
   | "publish";
 
-export type Section = "indland" | "udland" | "penge" | "kultur" | "viden" | "liv";
+export type Category = "indland" | "udland" | "penge" | "kultur" | "viden" | "liv" | "kommentar";
 export type SearchType = "text" | "image" | "video" | "map_satellite";
 export type RequestedBy = "editor_in_chief" | "journalist" | "media" | "desk";
 
 export interface EditorialOrder {
   id: string;
   instruction: string;
-  section?: Section;
+  category?: Category;
   articleType?: string;
   searchType?: SearchType;
   requestedPublishAt?: string;
@@ -58,7 +58,7 @@ export interface NewsCandidate {
   id: string;
   title: string;
   summary?: string;
-  section?: Section;
+  category?: Category;
   sources: SourceRef[];
   discoveredAt: string;
 }
@@ -67,7 +67,7 @@ export interface DeskDecision {
   candidateId?: string;
   accepted: boolean;
   priority?: "lead" | "high" | "normal" | "low";
-  section?: Section;
+  category?: Category;
   rationale: string;
 }
 
@@ -76,7 +76,7 @@ export interface ArticleDraft {
   headline: string;
   deck?: string;
   body: string;
-  section: Section;
+  category: Category;
   articleType?: string;
   sourceRefs: SourceRef[];
   relatedCandidateIds?: string[];
