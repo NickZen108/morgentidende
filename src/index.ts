@@ -1,10 +1,11 @@
 import { SupabaseError, supabaseRequest } from "./lib/supabase";
-import { MODELS, SECTIONS } from "./editorial/policy";
+import { CATEGORIES, MODELS } from "./editorial/policy";
 import { EditorialStore } from "./editorial/store";
-import type { EditorialOrder, SearchType, Section } from "./editorial/types";
+import type { Category, EditorialOrder, SearchType } from "./editorial/types";
 
 interface Env {
   ASSETS: Fetcher;
+  AI: Ai;
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
 }
@@ -14,7 +15,7 @@ interface StoryRow {
   slug: string | null;
   title: string;
   summary: string | null;
-  section: string | null;
+  category: string | null;
   status: string;
   news_value: number | null;
   created_at: string;
@@ -28,10 +29,17 @@ interface ArticleRow {
   headline: string;
   dek: string | null;
   body_markdown: string;
-  section: string | null;
+  category: string | null;
   article_type: string | null;
+  homepage_slot?: string | null;
   status: string;
   published_at: string | null;
+}
+
+interface RelationRow {
+  article_id: string;
+  related_article_id: string;
+  relation_type: string;
 }
 
 const json = (data: unknown, init: ResponseInit = {}) =>
@@ -47,19 +55,49 @@ const json = (data: unknown, init: ResponseInit = {}) =>
 const badRequest = (message: string) => json({ ok: false, error: message }, { status: 400 });
 
 async function readJson(request: Request): Promise<Record<string, unknown>> {
-  try {
-    return (await request.json()) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
+  try { return (await request.json()) as Record<string, unknown>; } catch { return {}; }
 }
 
-function isSection(value: unknown): value is Section {
-  return typeof value === "string" && (SECTIONS as readonly string[]).includes(value);
+function isCategory(value: unknown): value is Category {
+  return typeof value === "string" && (CATEGORIES as readonly string[]).includes(value);
 }
 
 function isSearchType(value: unknown): value is SearchType {
   return ["text", "image", "video", "map_satellite"].includes(String(value));
+}
+
+async function editorialOverview(env: Env) {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const [articles, relations] = await Promise.all([
+    supabaseRequest<ArticleRow[]>(env, `articles?select=id,story_id,headline,category,article_type,homepage_slot,status,published_at&status=eq.published&published_at=gte.${encodeURIComponent(since)}&order=published_at.desc&limit=200`),
+    supabaseRequest<RelationRow[]>(env, "article_relations?select=article_id,related_article_id,relation_type&limit=500")
+  ]);
+
+  const counts = Object.fromEntries(CATEGORIES.map(category => [category, 0])) as Record<Category, number>;
+  for (const article of articles) if (article.category && isCategory(article.category)) counts[article.category] += 1;
+
+  const relatedIds = new Set(relations.map(r => r.article_id));
+  const leads = articles.filter(a => a.homepage_slot === "hero" || a.article_type === "lead");
+  const leadsMissingFollowup = leads.filter(a => !relatedIds.has(a.id)).map(a => ({ id: a.id, headline: a.headline }));
+
+  const newsCount = counts.indland + counts.udland + counts.penge;
+  const otherCount = counts.kultur + counts.viden + counts.liv + counts.kommentar;
+  const missingCategories = CATEGORIES.filter(category => counts[category] === 0);
+
+  return {
+    windowHours: 24,
+    totalPublished: articles.length,
+    categoryCounts: counts,
+    mix: { news: newsCount, other: otherCount },
+    leads: leads.length,
+    leadsMissingFollowup,
+    missingCategories,
+    signals: {
+      needsMoreNews: newsCount < otherCount,
+      needsMoreOther: otherCount === 0 || (newsCount > 0 && otherCount / newsCount < 0.35),
+      needsLeadFollowups: leadsMissingFollowup.length > 0
+    }
+  };
 }
 
 async function handleApi(request: Request, env: Env, url: URL): Promise<Response | null> {
@@ -69,32 +107,32 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
       service: "morgentidende-v2",
       architecture: "v2-clean",
       database: Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY),
+      workersAI: Boolean(env.AI),
       editorialFlow: ["editor_in_chief_order", "scan", "desk", "journalist", "media", "editor_in_chief", "publish"],
       models: MODELS,
-      sections: SECTIONS
+      categories: CATEGORIES
     });
   }
 
   if (url.pathname === "/api/pipeline/config" && request.method === "GET") {
-    return json({
-      ok: true,
-      models: MODELS,
-      sections: SECTIONS,
-      timing: "editor_in_chief_controlled_not_configured_yet"
-    });
+    return json({ ok: true, models: MODELS, categories: CATEGORIES, timing: "editor_in_chief_controlled_not_configured_yet" });
+  }
+
+  if (url.pathname === "/api/editorial/overview" && request.method === "GET") {
+    return json({ ok: true, overview: await editorialOverview(env) });
   }
 
   if (url.pathname === "/api/editorial/orders" && request.method === "POST") {
     const body = await readJson(request);
     const instruction = typeof body.instruction === "string" ? body.instruction.trim() : "";
     if (!instruction) return badRequest("instruction is required");
-    if (body.section !== undefined && !isSection(body.section)) return badRequest("invalid section");
+    if (body.category !== undefined && !isCategory(body.category)) return badRequest("invalid category");
     if (body.searchType !== undefined && !isSearchType(body.searchType)) return badRequest("invalid searchType");
 
     const store = new EditorialStore(env);
     const input: Omit<EditorialOrder, "id"> = {
       instruction,
-      section: isSection(body.section) ? body.section : undefined,
+      category: isCategory(body.category) ? body.category : undefined,
       articleType: typeof body.articleType === "string" ? body.articleType : undefined,
       searchType: isSearchType(body.searchType) ? body.searchType : undefined,
       requestedPublishAt: typeof body.requestedPublishAt === "string" ? body.requestedPublishAt : undefined,
@@ -106,17 +144,13 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
 
   if (url.pathname.startsWith("/api/editorial/orders/") && request.method === "GET") {
     const id = url.pathname.split("/").pop() ?? "";
-    const store = new EditorialStore(env);
-    const order = await store.getOrder(id);
+    const order = await new EditorialStore(env).getOrder(id);
     if (!order) return json({ ok: false, error: "not_found" }, { status: 404 });
     return json({ ok: true, order });
   }
 
   if (url.pathname === "/api/stories" && request.method === "GET") {
-    const stories = await supabaseRequest<StoryRow[]>(
-      env,
-      "stories?select=id,slug,title,summary,section,status,news_value,created_at,updated_at&order=created_at.desc&limit=50"
-    );
+    const stories = await supabaseRequest<StoryRow[]>(env, "stories?select=id,slug,title,summary,category,status,news_value,created_at,updated_at&order=created_at.desc&limit=50");
     return json({ ok: true, stories });
   }
 
@@ -124,36 +158,24 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     const body = await readJson(request);
     const title = typeof body.title === "string" ? body.title.trim() : "";
     if (!title) return badRequest("title is required");
-
     const payload = {
       title,
       summary: typeof body.summary === "string" ? body.summary : null,
-      section: isSection(body.section) ? body.section : null,
+      category: isCategory(body.category) ? body.category : null,
       news_value: typeof body.news_value === "number" ? body.news_value : null,
       status: "candidate"
     };
-
-    const stories = await supabaseRequest<StoryRow[]>(env, "stories", {
-      method: "POST",
-      headers: { Prefer: "return=representation" },
-      body: JSON.stringify(payload)
-    });
+    const stories = await supabaseRequest<StoryRow[]>(env, "stories", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(payload) });
     return json({ ok: true, story: stories[0] }, { status: 201 });
   }
 
   if (url.pathname === "/api/articles" && request.method === "GET") {
-    const articles = await supabaseRequest<ArticleRow[]>(
-      env,
-      "articles?select=id,story_id,slug,headline,dek,body_markdown,section,article_type,status,published_at&order=created_at.desc&limit=50"
-    );
+    const articles = await supabaseRequest<ArticleRow[]>(env, "articles?select=id,story_id,slug,headline,dek,body_markdown,category,article_type,homepage_slot,status,published_at&order=created_at.desc&limit=50");
     return json({ ok: true, articles });
   }
 
   if (url.pathname === "/api/published" && request.method === "GET") {
-    const articles = await supabaseRequest<ArticleRow[]>(
-      env,
-      "articles?select=id,story_id,slug,headline,dek,body_markdown,section,article_type,status,published_at&status=eq.published&order=published_at.desc&limit=50"
-    );
+    const articles = await supabaseRequest<ArticleRow[]>(env, "articles?select=id,story_id,slug,headline,dek,body_markdown,category,article_type,homepage_slot,status,published_at&status=eq.published&order=published_at.desc&limit=50");
     return json({ ok: true, articles });
   }
 
@@ -163,18 +185,12 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-
     try {
       const apiResponse = await handleApi(request, env, url);
       if (apiResponse) return apiResponse;
       return env.ASSETS.fetch(request);
     } catch (error) {
-      if (error instanceof SupabaseError) {
-        return json(
-          { ok: false, error: "database_request_failed", status: error.status, detail: error.body },
-          { status: 502 }
-        );
-      }
+      if (error instanceof SupabaseError) return json({ ok: false, error: "database_request_failed", status: error.status, detail: error.body }, { status: 502 });
       console.error(error);
       return json({ ok: false, error: "internal_error" }, { status: 500 });
     }
