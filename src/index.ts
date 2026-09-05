@@ -1,3 +1,4 @@
+import {verifyChatToken,ChatAuthError} from './v3/chat-auth';
 import {db,rpc,boundedText} from './v3/db';
 import {ChatCommand,DirectSubmission,Order} from './v3/contracts';
 import type {ChiefInput} from './v3/chief';
@@ -38,7 +39,18 @@ async function startChiefOnce(env:Env,id:string,params:ChiefInput){
  }
 }
 async function dispatchChatCommand(request:Request,env:Env){
+ const commit=request.headers.get('X-Morgentidende-Commit')??'';
+ await verifyChatToken((request.headers.get('Authorization')??'').replace(/^Bearer /,''),commit);
  const command=await verifiedChatCommand(request);
+ if(command.type==='status')return Response.json({ok:true,budget:await rpc(env,'v3_budget_state'),version:3});
+ const workflowId=command.type==='commission'?`chatops-commission-${command.id}`:`chatops-direct-${command.id}`;
+ const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(command))))).map(x=>x.toString(16).padStart(2,'0')).join('');
+ if(!await rpc<boolean>(env,'v3_chat_receipt',{p_id:command.id,p_hash:hash,p_workflow:workflowId}))return Response.json({ok:true,already_dispatched:true,workflow_id:workflowId});
+ const response=await dispatchVerifiedCommand(command,env);
+ await db(env,`v3_chat_receipts?id=eq.${command.id}`,'PATCH',{status:'dispatched',dispatched_at:new Date().toISOString()});
+ return response;
+}
+async function dispatchVerifiedCommand(command:Exclude<ChatCommand,{type:'status'}>,env:Env){
  if(command.type==='commission'){
   const workflowId=`chatops-commission-${command.id}`;
   const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,commission:'chatops-batch-v1',count:command.count,topic:command.topic});
@@ -68,7 +80,7 @@ export default {
   const url=new URL(request.url);
   try{
    if(url.pathname==='/api/health')return Response.json({ok:true,version:3});
-   if(url.pathname==='/api/chatops/dispatch'&&request.method==='POST')return dispatchChatCommand(request,env);
+   if(url.pathname==='/api/chatops/dispatch'&&request.method==='POST')return await dispatchChatCommand(request,env);
    if(url.pathname.startsWith('/media/')){
     const object=await env.MEDIA_BUCKET.get(url.pathname.slice(7));
     return object?new Response(object.body,{headers:{'Content-Type':'image/jpeg','Cache-Control':'public,max-age=86400','X-Content-Type-Options':'nosniff'}}):new Response('Not found',{status:404});
@@ -82,6 +94,8 @@ export default {
    }
    if(url.pathname.startsWith('/api/admin/')){
     if(!await authorized(request,env))return new Response('Unauthorized',{status:401});
+    if(url.pathname==='/api/admin/budget')return Response.json(await rpc(env,'v3_budget_state'));
+    if(url.pathname==='/api/admin/costs')return Response.json(await db(env,'v3_article_costs?limit=100'));
     if(url.pathname==='/api/admin/state')return Response.json(await rpc(env,'v3_editorial_state'));
     if(url.pathname==='/api/admin/diagnostic/models'&&request.method==='POST'){
      const id=`model-probe-${crypto.randomUUID()}`;
@@ -102,6 +116,6 @@ export default {
    if(url.pathname.startsWith('/api/'))return new Response('Not found',{status:404});
    if(url.pathname.startsWith('/artikel/'))return env.ASSETS.fetch(new Request(new URL('/index.html',url),request));
    return env.ASSETS.fetch(request);
-  }catch(error){console.error(JSON.stringify({event:'request_failed',message:error instanceof Error?error.message:'unknown'}));return Response.json({error:'request_failed'},{status:500});}
+  }catch(error){if(error instanceof ChatAuthError)return Response.json({error:'unauthorized'},{status:401});console.error(JSON.stringify({event:'request_failed',message:error instanceof Error?error.message:'unknown'}));return Response.json({error:'request_failed'},{status:500});}
  }
 } satisfies ExportedHandler<Env>;
