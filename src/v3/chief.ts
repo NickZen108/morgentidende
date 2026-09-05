@@ -3,8 +3,8 @@ import {ChiefDecision,DirectSubmission,OrderRow,Review} from './contracts';
 import {db,rpc} from './db';
 import {model} from './models';
 import {selectMedia} from './media';
-type ChiefInput={tick:string;commission?:'first-article-v1'|'single-article-test-v1'|'chatops-batch-v1';count?:number;topic?:string;directOrderId?:string};
-type EditorialState={settings:{enabled:boolean;max_orders_per_day:number;editorial_policy:string};breaking:{id:string}[];[key:string]:unknown};
+export type ChiefInput={tick:string;commission?:'first-article-v1'|'single-article-test-v1'|'chatops-batch-v1';count?:number;topic?:string;directOrderId?:string};
+type EditorialState={settings:{enabled:boolean;max_orders_per_day:number;editorial_policy:string};breaking:{id:string}[]};
 export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
  async run(event:WorkflowEvent<ChiefInput>,step:WorkflowStep){
   const state=await step.do('state',()=>rpc<EditorialState>(this.env,'v3_editorial_state'));
@@ -12,7 +12,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
    const id=event.payload.directOrderId;
    try{
     const row=await step.do('direct-load',async()=>{
-     const [found]=await db<{id:string;status:string;original_order:unknown}[]>(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&limit=1`);
+     const [found]=await db<{id:string;status:string;original_order:DirectSubmission}[]>(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&limit=1`);
      if(!found)throw new Error('direct_order_not_found');
      if(found.status!=='published')await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}`,'PATCH',{status:'running'});
      return found;
