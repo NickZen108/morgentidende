@@ -41,6 +41,16 @@ export default {
    if(url.pathname.startsWith('/api/admin/')){
     if(!await authorized(request,env))return new Response('Unauthorized',{status:401});
     if(url.pathname==='/api/admin/state')return Response.json(await rpc(env,'v3_editorial_state'));
+    if(url.pathname==='/api/admin/diagnostic/models'&&request.method==='POST'){
+     const id=`model-probe-${crypto.randomUUID()}`;
+     await env.PRODUCTION.create({id,params:{diagnostic:'models-v1'}});
+     return Response.json({id,status_url:`/api/admin/diagnostic/models/${id}`},{status:202});
+    }
+    const diagnostic=url.pathname.match(/^\/api\/admin\/diagnostic\/models\/(model-probe-[a-f0-9-]{36})$/);
+    if(diagnostic&&request.method==='GET'){
+     const instance=await env.PRODUCTION.get(diagnostic[1]);
+     return Response.json(await instance.status());
+    }
     if(url.pathname==='/api/admin/order'&&request.method==='POST'){
      const order=Order.parse(JSON.parse(await boundedText(request,16000)));
      const [row]=await db<{id:string}[]>(env,'v3_orders','POST',{dedupe_key:crypto.randomUUID(),original_order:order});
