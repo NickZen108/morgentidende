@@ -16,7 +16,7 @@ await build({entryPoints:['src/v3/production.ts'],outfile:'reports/production-te
 }}]});
 const {Production}=await import('../reports/production-test.mjs');
 const original={instruction:'Write the original order',category:'viden'};
-for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-question','provider-failure']){
+for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-question','provider-failure','budget-failure']){
  const calls=[],writes=[],steps=[],configs=[];let desks=0,journalists=0,reviews=0,published=0;
  globalThis.productionTest={
   async db(env,path,method='GET',body){writes.push({path,method,body});if(method==='GET')return [{id:'order-test',status:'pending',original_order:original}];return [];},
@@ -24,6 +24,7 @@ for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-
   async media(env,article,job,context){assert.deepEqual(context.original_order,original);assert.ok(context.dossier);return {id:'media-test',url:'https://example.org/image.jpg',alt:'test',credit:'test'};},
   async model(env,role,instructions,input,schema){
    calls.push({role,input});assert.deepEqual(input.original_order,original);
+   if(scenario==='budget-failure')throw new Error('daily_budget_exhausted');
    if(scenario==='provider-failure')throw new Error('provider unavailable');
    if(role==='desk'){
     desks++;if(scenario==='fresh-retry'||scenario==='drop')assert.equal(input.dossier,undefined,'fresh attempt leaked previous dossier');
@@ -40,12 +41,13 @@ for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-
  };
  const step={async do(name,configOrFn,maybeFn){steps.push(name);const fn=maybeFn??configOrFn;if(maybeFn)configs.push({name,config:configOrFn});return fn();}};
  const run=()=>new Production({},{}).run({payload:{orderId:'order-test'}},step);
- if(['fourth-question','provider-failure'].includes(scenario)){
+ if(['fourth-question','provider-failure','budget-failure'].includes(scenario)){
   await assert.rejects(run);assert.equal(published,0);assert.ok(writes.some(x=>x.body?.status==='failed'));
  }else{
   await run();assert.equal(published,scenario==='drop'?0:1);
   if(scenario==='drop')assert.ok(writes.some(x=>x.body?.status==='dropped'));
  }
+ if(scenario==='budget-failure')assert.ok(writes.some(x=>x.body?.error_code==='daily_budget_exhausted'));
  if(scenario==='fresh-retry'||scenario==='drop'){assert.equal(desks,2);assert.equal(reviews,2);}
  if(scenario==='three-questions'||scenario==='fourth-question'){assert.equal(desks,4);assert.equal(journalists,4);}
  for(const entry of configs.filter(x=>/-(desk|journalist-|followup-|review)$/.test(x.name)||/-journalist-/.test(x.name)||/-followup-/.test(x.name))){assert.equal(entry.config.retries.limit,1);assert.equal(entry.config.timeout,'2 minutes');}

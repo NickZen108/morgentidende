@@ -73,7 +73,7 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
   const order=await step.do('load-order',async()=>{
    const [row]=await db<OrderRow[]>(this.env,`v3_orders?id=eq.${id}`);
    if(!row)throw new Error('order_not_found');
-   if(row.status!=='published')await db(this.env,`v3_orders?id=eq.${id}`,'PATCH',{status:'running'});
+   if(row.status!=='published')await db(this.env,`v3_orders?id=eq.${id}`,'PATCH',{status:'running',error_code:null});
    return row;
   });
   if(order.status==='published')return;

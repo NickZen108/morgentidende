@@ -23,7 +23,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     const row=await step.do('direct-load',async()=>{
      const [found]=await db<{id:string;status:string;original_order:DirectSubmission}[]>(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&limit=1`);
      if(!found)throw new Error('direct_order_not_found');
-     if(found.status!=='published')await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}`,'PATCH',{status:'running'});
+     if(found.status!=='published')await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}`,'PATCH',{status:'running',error_code:null});
      return found;
     });
     if(row.status==='published')return {status:'already-published',order_id:id};
