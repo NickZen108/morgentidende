@@ -35,7 +35,7 @@ export default {
    if(url.pathname.startsWith('/api/article/')&&request.method==='GET'){
     const slug=url.pathname.slice('/api/article/'.length);
     if(!/^[a-f0-9-]{36}$/.test(slug))return new Response('Not found',{status:404});
-    const rows=await db<unknown[]>(env,`v3_articles?slug=eq.${slug}&select=slug,headline,deck,paragraphs,category,sources,published_at,media:v3_media(url,alt,credit,license_documentation,generated)`);
+    const rows=await db<unknown[]>(env,`v3_articles?slug=eq.${slug}&select=slug,headline,deck,paragraphs,category,sources,published_at,media:v3_media(url,original_url,alt,credit,license_documentation,generated)`);
     return rows[0]?Response.json(rows[0]):new Response('Not found',{status:404});
    }
    if(url.pathname.startsWith('/api/admin/')){
