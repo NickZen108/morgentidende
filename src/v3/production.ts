@@ -1,27 +1,36 @@
 import {WorkflowEntrypoint,WorkflowEvent,WorkflowStep} from 'cloudflare:workers';
+import {z} from 'zod';
 import {Dossier,Draft,JournalistResult,Review,OrderRow,nextReviewAction} from './contracts';
 import {db,rpc} from './db';
 import {model,modelResponseText,ModelResponse} from './models';
 import {selectMedia} from './media';
-type ProductionInput={orderId?:string;diagnostic?:'models-v1'};
+const DeskWebProbe=z.object({fact:z.string().min(1).max(500),source_url:z.string().url()});
+type ProductionInput={orderId?:string;diagnostic?:'models-v1'|'desk-web-v1'};
 export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
  async run(event:WorkflowEvent<ProductionInput>,step:WorkflowStep){
-  // Dashboard-only commissioning probe: fixed input, no tools or automatic retries.
-  // At published Luna/Terra rates, 128 output tokens each cost under $0.002 total.
+  // Commissioning probes are bounded and never create orders, media or articles.
   if(event.payload.diagnostic){
-   if(event.payload.diagnostic!=='models-v1')throw new Error('unknown_diagnostic');
-   const results=[];
-   for(const name of ['openai/gpt-5.6-luna','openai/gpt-5.6-terra']){
-    results.push(await step.do(`probe-${name.split('/')[1]}`,{retries:{limit:0,delay:'1 second'}},async()=>{
-     const run=this.env.AI.run.bind(this.env.AI) as (name:string,input:Record<string,unknown>,options:Record<string,unknown>)=>Promise<unknown>;
-     const response=await run(name,{input:'Reply with exactly OK.',reasoning:{effort:'low'},max_output_tokens:128,store:false},{gateway:{id:'default'}}) as ModelResponse;
-     if(response.status&&response.status!=='completed')throw new Error(`probe_${name.split('/')[1]}_${response.status}`);
-     const text=modelResponseText(response).trim();
-     if(text!=='OK')throw new Error(`probe_${name.split('/')[1]}_unexpected_output`);
-     return {model:name,ok:true};
-    }));
+   if(event.payload.diagnostic==='models-v1'){
+    const results=[];
+    for(const name of ['openai/gpt-5.6-luna','openai/gpt-5.6-terra']){
+     results.push(await step.do(`probe-${name.split('/')[1]}`,{retries:{limit:0,delay:'1 second'}},async()=>{
+      const run=this.env.AI.run.bind(this.env.AI) as (name:string,input:Record<string,unknown>,options:Record<string,unknown>)=>Promise<unknown>;
+      const response=await run(name,{input:'Reply with exactly OK.',reasoning:{effort:'low'},max_output_tokens:128,store:false},{gateway:{id:'default'}}) as ModelResponse;
+      if(response.status&&response.status!=='completed')throw new Error(`probe_${name.split('/')[1]}_${response.status}`);
+      const text=modelResponseText(response).trim();
+      if(text!=='OK')throw new Error(`probe_${name.split('/')[1]}_unexpected_output`);
+      return {model:name,ok:true};
+     }));
+    }
+    return results;
    }
-   return results;
+   if(event.payload.diagnostic==='desk-web-v1'){
+    return await step.do('probe-desk-web',{retries:{limit:0,delay:'1 second'}},async()=>{
+     const result=await model(this.env,'desk','Commissioning only. Use web search to verify one current public fact about Cloudflare Workers Workflows from an official Cloudflare source. Keep the answer short and include the exact source URL.',{question:'What is one current capability of Cloudflare Workers Workflows? Use an official Cloudflare source.'},DeskWebProbe,true);
+     return {model:'openai/gpt-5.6-luna',web_search:true,...result};
+    });
+   }
+   throw new Error('unknown_diagnostic');
   }
   const id=event.payload.orderId;
   if(!id)throw new Error('order_id_required');

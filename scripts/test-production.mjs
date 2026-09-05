@@ -58,3 +58,17 @@ await new Production({},{AI:{async run(name,input,options){
 }}}).run({payload:{diagnostic:'models-v1'}},{async do(name,options,fn){assert.equal(options.retries.limit,0);return fn();}});
 assert.deepEqual(probes,['openai/gpt-5.6-luna','openai/gpt-5.6-terra']);
 console.log('PASS production: bounded model diagnostic');
+let deskProbeCalls=0;
+globalThis.productionTest={
+ async model(env,role,instructions,input,schema,search){
+  deskProbeCalls++;assert.equal(role,'desk');assert.equal(search,true);assert.match(instructions,/web search/i);assert.ok(input.question);
+  return {fact:'Cloudflare Workflows can run durable multi-step applications.',source_url:'https://developers.cloudflare.com/workflows/'};
+ }
+};
+const deskProbe=await new Production({},{}).run({payload:{diagnostic:'desk-web-v1'}},{async do(name,options,fn){assert.equal(name,'probe-desk-web');assert.equal(options.retries.limit,0);return fn();}});
+assert.equal(deskProbeCalls,1);
+assert.equal(deskProbe.web_search,true);
+assert.equal(deskProbe.model,'openai/gpt-5.6-luna');
+assert.equal(deskProbe.source_url,'https://developers.cloudflare.com/workflows/');
+console.log('PASS production: bounded Desk web-search diagnostic');
+delete globalThis.productionTest;
