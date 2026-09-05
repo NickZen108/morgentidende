@@ -5,7 +5,7 @@ import {db,rpc} from './db';
 import {model,modelResponseText,ModelResponse} from './models';
 import {selectMedia} from './media';
 const DeskWebProbe=z.object({fact:z.string().min(1).max(500),source_url:z.string().url()});
-type ProductionInput={orderId?:string;diagnostic?:'models-v1'|'desk-web-v1'};
+type ProductionInput={orderId?:string;diagnostic?:'models-v1'|'desk-web-v1'|'desk-terra-v1'};
 export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
  async run(event:WorkflowEvent<ProductionInput>,step:WorkflowStep){
   // Commissioning probes are bounded and never create orders, media or articles.
@@ -29,6 +29,17 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
      const result=await model(this.env,'desk','Commissioning only. Use web search to verify one current public fact about Cloudflare Workers Workflows from an official Cloudflare source. Keep the answer short and include the exact source URL.',{question:'What is one current capability of Cloudflare Workers Workflows? Use an official Cloudflare source.'},DeskWebProbe,true);
      return {model:'openai/gpt-5.6-luna',web_search:true,...result};
     });
+   }
+   if(event.payload.diagnostic==='desk-terra-v1'){
+    const original_order={instruction:'Skriv en kort dansk forklarende artikel om en aktuel, dokumenteret egenskab ved Cloudflare Workers Workflows.',category:'viden' as const,mode:'specific' as const,angle:'Forklar egenskaben nøgternt for en teknisk interesseret læser.',why_now:'Commissioning af Morgentidende v3.',words:180,primary_source_required:true,opposing_view_required:false};
+    const dossier=await step.do('probe-desk-dossier',{retries:{limit:0,delay:'1 second'}},()=>model(this.env,'desk','Commissioning only. Research one current capability of Cloudflare Workers Workflows. Use web search, prefer an official Cloudflare primary source, and return a compact but real editorial dossier with exact URLs. Do not invent quotes.',{original_order},Dossier,true));
+    if(!dossier.sources.some(source=>source.kind==='primary'))throw new Error('probe_primary_source_missing');
+    const result=await step.do('probe-terra-draft',{retries:{limit:0,delay:'1 second'}},()=>model(this.env,'journalist','Commissioning only. Write the requested short Danish article from the dossier. Do not request more research. Use only facts and source URLs present in the dossier. No invented quotations.',{original_order,dossier,research_requests_remaining:0},JournalistResult));
+    if(result.kind!=='draft')throw new Error('probe_terra_requested_research');
+    const allowed=new Set(dossier.sources.map(source=>source.url));
+    if(result.article.source_urls.some(url=>!allowed.has(url)))throw new Error('probe_terra_unknown_source');
+    if(result.article.category!==original_order.category)throw new Error('probe_terra_category_mismatch');
+    return {desk_model:'openai/gpt-5.6-luna',terra_model:'openai/gpt-5.6-terra',web_search:true,dossier_subject:dossier.subject,dossier_sources:dossier.sources.map(source=>({publisher:source.publisher,kind:source.kind,url:source.url})),headline:result.article.headline,deck:result.article.deck,paragraphs:result.article.paragraphs,source_urls:result.article.source_urls};
    }
    throw new Error('unknown_diagnostic');
   }
