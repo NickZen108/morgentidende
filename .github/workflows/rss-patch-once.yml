@@ -1,0 +1,43 @@
+name: RSS patch once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rss-patch-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add verified Politiken feed and record probe results
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/editorial/feeds.ts')
+          s=p.read_text()
+          anchor='  f("jp-top", "Jyllands-Posten – Topnyheder", "https://feeds.jp.dk/jp/topnyheder", "direct", ["indland", "udland", "penge", "kultur", "viden"], ["danmark", "nyheder", "politik", "erhverv"], { language: "da", country: "DK", authorityWeight: 0.9 }),\n'
+          new='  f("politiken-top", "Politiken – Tophistorier", "https://politiken.dk/rss/tophistorier.rss", "direct", ["indland", "udland", "penge", "kultur", "viden", "liv"], ["danmark", "nyheder", "politik", "verden", "kultur"], { language: "da", country: "DK", authorityWeight: 0.9 }),\n'
+          if 'f("politiken-top"' not in s:
+            if anchor not in s: raise SystemExit('JP anchor not found')
+            s=s.replace(anchor,anchor+new)
+            p.write_text(s)
+
+          d=Path('docs/rss-feed-verification.md')
+          t=d.read_text()
+          t=t.replace('`src/editorial/feeds.ts` currently contains 113 feed endpoints','`src/editorial/feeds.ts` currently contains 114 feed endpoints')
+          t=t.replace('After cleanup the active registry contains 113 endpoints.','After the Nationalbanken cleanup and addition of one verified Politiken feed, the active registry contains 114 endpoints.')
+          note='''\n\n## Danish endpoint discovery pass 2026-09-05\n\n- Politiken's historical-looking RSS paths were live-probed from a GitHub runner. `senestenyt.rss`, `tophistorier.rss`, `indland.rss`, `udland.rss` and `kultur.rss` all returned HTTP 200 `application/rss+xml` on 2026-09-05. `erhverv.rss` returned 404. To avoid unnecessary duplicate ingestion, only `https://politiken.dk/rss/tophistorier.rss` is added to the active Scan registry for now.\n- Berlingske's obvious candidates `/rss`, `/feed`, `/rss.xml` and the legacy `section/nyhedsoversigt/&template=rss&mime=xml` all returned 404. Berlingske is therefore still excluded until its actual current feed URL is resolved; current feed directories indicate that a working feed exists, but we do not guess the endpoint.\n- TV 2's `services.tv2.dk` endpoint still fails DNS resolution from GitHub runners; obvious alternatives under `nyheder.tv2.dk` returned 404. The existing TV 2 entry remains provisional because current feed readers still show fresh items from it.\n- Nationalbanken's RSS page embeds 17 topic metadata objects, but the raw page does not expose their feed URLs directly; the component appears to construct them client-side. The invalid guessed endpoint remains removed until the actual request pattern is identified.\n'''
+          if '## Danish endpoint discovery pass 2026-09-05' not in t: t += note
+          d.write_text(t)
+          PY
+      - name: Commit verified RSS update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/editorial/feeds.ts docs/rss-feed-verification.md
+          git commit -m 'Add verified Politiken RSS feed'
+          git push
