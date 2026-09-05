@@ -125,3 +125,13 @@ After later additions of Politiken, three Nationalbanken feeds and Finansministe
 - Finansministeriets front page explicitly exposes `https://fm.dk/nyheder/nyhedsarkiv/?rss=true`, which returns XML and is active as a primary source.
 - A deeper Erhvervsministeriet pass tested `/aktuelt`, `/aktuelt/nyheder`, year archives, `/presse` and other plausible routes with `?rss=true`; all returned ordinary HTML, not feeds. No EM feed was added.
 - A deeper Danmarks Statistik pass tested the current `rss.dst.dk` site, legacy paths and `rss=true`/`format=rss`/`output=rss` variants on current news/publication URLs; all tested candidates were HTML or 404. No DST feed was added.
+
+
+## Folketinget / Danish regulator pass 2026-09-05
+
+- Folketinget officially documents `https://oda.ft.dk/api/` as an OData 3.0 service and states that open data can be delivered as Atom/XML or JSON. A live probe of `Sag` and `Dokument` confirmed the API is healthy and current, but the service returned `application/json` even when `$format=atom` was explicitly requested. The returned records are highly useful primary-source material (for example recent bills, parliamentary questions and document titles), but the current generic RSS/Atom parser should not ingest this endpoint as if it were a normal feed. Folketinget is therefore not counted among the 118 RSS/Atom endpoints. A dedicated OData adapter is the correct future integration.
+- Folketinget's subscription service can generate RSS feeds for user-configured subscriptions, but that is profile/subscription-specific rather than a stable public generic feed for the registry.
+- Finanstilsynet's current news page was inspected and common `/rss`, `/rss.xml`, `/feed`, `?rss=true` and archive RSS patterns were live-probed. No parseable RSS/Atom endpoint was found; obvious root feed paths returned 404 and `?rss=true` returned normal HTML.
+- Konkurrence- og Forbrugerstyrelsens current news archive was inspected in the same way. No parseable RSS/Atom endpoint was exposed; obvious feed paths returned 404 or normal HTML.
+- Udlændinge- og Integrationsministeriet returned `text/xml` for several `?rss=true` guesses, but the bodies were zero bytes. These are not valid feeds and remain excluded.
+- Justitsministeriet, politiet and Indenrigs- og Sundhedsministeriet did not yield verified RSS endpoints in the same pass. Sundhedsstyrelsen rate-limited the GitHub probe (HTTP 429) and remains unresolved rather than classified as feedless.
