@@ -12,7 +12,7 @@ Verified/expanded on 2026-09-05 for Morgentidende's curated feed pool.
 
 ## Active curated registry
 
-`src/editorial/feeds.ts` currently contains 114 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
+`src/editorial/feeds.ts` currently contains 117 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
 
 Scan treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
 
@@ -109,7 +109,7 @@ A GitHub-hosted live audit requested every configured endpoint and inspected the
 - 1 (Danmarks Nationalbank) returned HTTP 404 and was removed.
 - There were zero cases where HTTP 200 returned an ordinary HTML page masquerading as a feed.
 
-After the Nationalbanken cleanup and addition of one verified Politiken feed, the active registry contains 114 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
+After the Nationalbanken cleanup and addition of one verified Politiken feed, the active registry contains 117 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
 
 
 ## Danish endpoint discovery pass 2026-09-05
@@ -118,3 +118,8 @@ After the Nationalbanken cleanup and addition of one verified Politiken feed, th
 - Berlingske's obvious candidates `/rss`, `/feed`, `/rss.xml` and the legacy `section/nyhedsoversigt/&template=rss&mime=xml` all returned 404. Berlingske is therefore still excluded until its actual current feed URL is resolved; current feed directories indicate that a working feed exists, but we do not guess the endpoint.
 - TV 2's `services.tv2.dk` endpoint still fails DNS resolution from GitHub runners; obvious alternatives under `nyheder.tv2.dk` returned 404. The existing TV 2 entry remains provisional because current feed readers still show fresh items from it.
 - Nationalbanken's RSS page embeds 17 topic metadata objects, but the raw page does not expose their feed URLs directly; the component appears to construct them client-side. The invalid guessed endpoint remains removed until the actual request pattern is identified.
+
+
+## Nationalbanken exact RSS API verified 2026-09-05
+
+Inspection of Nationalbanken's current JavaScript bundle showed the official feed construction pattern: `https://www.nationalbanken.dk/api/rssfeed?topic=<TOPIC>&lang=da`. Live probes returned HTTP 200 `application/rss+xml` for `Nyt`, `Pressemeddelelse`, `Analyse`, `Statistiknyhed` and `Markedsmeddelelse`. To limit overlap, Scan now includes three high-value Nationalbanken feeds: `Nyt`, `Pressemeddelelse` and `Statistiknyhed`. They are classified as `primary` sources with authority weight 1.
