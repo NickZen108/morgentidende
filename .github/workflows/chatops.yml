@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: morgentidende-v3-chatops
@@ -18,14 +19,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Dispatch Git-verified command to v3
-        env:
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          curl --fail-with-body --silent --show-error \
-            --retry 4 --retry-all-errors --max-time 60 \
-            -X POST \
-            -H 'Content-Type: application/json' \
-            -H "X-Morgentidende-Commit: ${COMMIT_SHA}" \
-            --data-binary @.chatops/command.json \
-            https://morgentidende-v3.nicolaipetersen108.workers.dev/api/chatops/dispatch
+      - name: Dispatch with short-lived GitHub identity
+        run: node scripts/chatops-dispatch.mjs

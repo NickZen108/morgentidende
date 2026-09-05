@@ -14,6 +14,7 @@ export const DirectSubmission = z.object({kind:z.literal('direct_article'),artic
 export type DirectSubmission = z.infer<typeof DirectSubmission>;
 const ChatCommandId=z.string().uuid();
 export const ChatCommand = z.discriminatedUnion('type',[
+ z.object({id:ChatCommandId,type:z.literal('status')}).strict(),
  z.object({id:ChatCommandId,type:z.literal('commission'),count:z.number().int().min(1).max(20),topic:z.string().min(3).max(1000).optional()}).strict(),
  z.object({id:ChatCommandId,type:z.literal('publish_order'),order_id:z.string().uuid()}).strict(),
  z.object({id:ChatCommandId,type:z.literal('publish_article'),article:DirectArticle}).strict()
@@ -29,6 +30,6 @@ export const ChiefDecision = z.object({order:Order.nullable(),reason:z.string().
 export interface OrderRow {id:string;original_order:Order;status:string}
 export interface MediaRow {id:string;family_id:string;url:string;original_url:string;credit:string;alt:string;license_documentation:Record<string,unknown>;rights_verified:boolean;vision_verified:boolean;generated:boolean;tags:string[]}
 export function nextReviewAction(review:Review,attempt:number):'publish'|'retry'|'drop' {
- if(review.matches_order&&review.headline_correct) return 'publish';
+ if(review.matches_order&&review.headline_correct&&!review.serious_error) return 'publish';
  return review.serious_error&&attempt===1?'retry':'drop';
 }

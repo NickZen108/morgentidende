@@ -1,4 +1,5 @@
 import {WorkflowEntrypoint,WorkflowEvent,WorkflowStep} from 'cloudflare:workers';
+import {withCostContext,budgetedAI} from './budget';
 import {z} from 'zod';
 import {Dossier,Draft,JournalistResult,Review,OrderRow,nextReviewAction} from './contracts';
 import {db,rpc} from './db';
@@ -10,6 +11,9 @@ const AI_STEP={retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'2
 const MEDIA_STEP={retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'3 minutes'} as const;
 export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
  async run(event:WorkflowEvent<ProductionInput>,step:WorkflowStep){
+  return withCostContext({orderId:event.payload.orderId??null,workflowId:event.instanceId},()=>this.execute(event,step));
+ }
+ async execute(event:WorkflowEvent<ProductionInput>,step:WorkflowStep){
   // Commissioning probes never create or publish articles. The prepublish probe may register one media asset.
   if(event.payload.diagnostic){
    if(event.payload.diagnostic==='models-v1'){
@@ -17,7 +21,7 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
     for(const name of ['openai/gpt-5.6-luna','openai/gpt-5.6-terra']){
      results.push(await step.do(`probe-${name.split('/')[1]}`,{retries:{limit:0,delay:'1 second'}},async()=>{
       const run=this.env.AI.run.bind(this.env.AI) as (name:string,input:Record<string,unknown>,options:Record<string,unknown>)=>Promise<unknown>;
-      const response=await run(name,{input:'Reply with exactly OK.',reasoning:{effort:'low'},max_output_tokens:128,store:false},{gateway:{id:'default'}}) as ModelResponse;
+      const response=await budgetedAI(this.env,name,{input:'Reply with exactly OK.',reasoning:{effort:'low'},max_output_tokens:128,store:false},{gateway:{id:'default'}}) as ModelResponse;
       if(response.status&&response.status!=='completed')throw new Error(`probe_${name.split('/')[1]}_${response.status}`);
       const text=modelResponseText(response).trim();
       if(text!=='OK')throw new Error(`probe_${name.split('/')[1]}_unexpected_output`);
@@ -54,7 +58,7 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
     if(journalist.article.category!==original_order.category)throw new Error('probe_terra_category_mismatch');
     const article=journalist.article;
     const media=await step.do('probe-prepublish-media',{retries:{limit:0,delay:'1 second'}},async()=>{
-     const asset=await selectMedia(this.env,article,'commissioning-prepublish-v1');
+     const asset=await selectMedia(this.env,article,'commissioning-prepublish-v1',{original_order,dossier});
      return {id:asset.id,url:asset.url,alt:asset.alt,credit:asset.credit,generated:asset.generated};
     });
     const state={commissioning:true,occupied_slots:[],available_slots:['lead','top-1','top-2','top-3','news-1','news-2','news-3','news-4','viden-1','viden-2','liv-1','liv-2']};
@@ -99,7 +103,7 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
    }
    if(!draft)throw new Error('draft_missing');
    const article=draft;
-   const media=await step.do(`${prefix}-media`,MEDIA_STEP,async()=>{const m=await selectMedia(this.env,article,`${id}-${attempt}`);return {id:m.id,url:m.url,alt:m.alt,credit:m.credit};});
+   const media=await step.do(`${prefix}-media`,MEDIA_STEP,async()=>{const m=await selectMedia(this.env,article,`${id}-${attempt}`,{original_order:order.original_order,dossier});return {id:m.id,url:m.url,alt:m.alt,credit:m.credit};});
    const review=await step.do(`${prefix}-review`,AI_STEP,async()=>{
     const state=await rpc(this.env,'v3_editorial_state');
     const review=await model(this.env,'chief','Kontrollér KUN om artiklen matcher originalordren og om rubrikken er korrekt i forhold til dossier og artikel. Omskriv ikke og bestil ikke ekstra research. Markér alvorlige fejl. Vælg forsideplacering ud fra state; Viden/Liv placeres i deres magasinpladser medmindre historien klart kræver lead.',{original_order:order.original_order,dossier,article,media,state},Review);

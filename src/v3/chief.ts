@@ -1,3 +1,4 @@
+import {withCostContext,assignOrderCosts} from './budget';
 import {WorkflowEntrypoint,WorkflowEvent,WorkflowStep} from 'cloudflare:workers';
 import {ChiefDecision,DirectSubmission,OrderRow,Review} from './contracts';
 import {db,rpc} from './db';
@@ -7,6 +8,9 @@ export type ChiefInput={tick:string;commission?:'first-article-v1'|'single-artic
 type EditorialState={settings:{enabled:boolean;max_orders_per_day:number;editorial_policy:string};breaking:{id:string}[]};
 export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
  async run(event:WorkflowEvent<ChiefInput>,step:WorkflowStep){
+  return withCostContext({orderId:event.payload.directOrderId??null,workflowId:event.instanceId},()=>this.execute(event,step));
+ }
+ async execute(event:WorkflowEvent<ChiefInput>,step:WorkflowStep){
   const state=await step.do('state',()=>rpc<EditorialState>(this.env,'v3_editorial_state'));
   if(event.payload.directOrderId){
    const id=event.payload.directOrderId;
@@ -29,7 +33,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     };
     await step.do('direct-save-attempt',async()=>{await db(this.env,'v3_attempts?on_conflict=order_id,attempt','POST',{order_id:id,attempt:1,stage:'media',dossier,draft:article});return true;});
     const media=await step.do('direct-media',{retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'3 minutes'},async()=>{
-     const m=await selectMedia(this.env,article,`direct-${id}`);return {id:m.id,url:m.url,alt:m.alt,credit:m.credit,generated:m.generated};
+     const m=await selectMedia(this.env,article,`direct-${id}`,{original_order:submission,dossier});return {id:m.id,url:m.url,alt:m.alt,credit:m.credit,generated:m.generated};
     });
     const review=await step.do('direct-chief-review',{retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'2 minutes'},async()=>{
      const freshState=await rpc(this.env,'v3_editorial_state');
@@ -63,7 +67,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
      const [created]=await db<OrderRow[]>(this.env,'v3_orders','POST',{dedupe_key:key,original_order:decision.order});
      if(!created)throw new Error(`chatops_order_insert_failed_${i+1}`);return created;
     });
-    await step.do(`chatops-start-${i+1}`,async()=>{await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
+    await step.do(`chatops-start-${i+1}`,async()=>{await assignOrderCosts(this.env,order.id);await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
     started.push({order_id:order.id,order:decision.order});
    }
    return {status:'started',count:started.length,orders:started,topic:topic??null,automation_enabled:state.settings.enabled};
@@ -79,7 +83,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     if(!row)throw new Error('test_order_insert_failed');
     return row;
    });
-   await step.do('test-start-production',async()=>{await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
+   await step.do('test-start-production',async()=>{await assignOrderCosts(this.env,order.id);await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
    return {status:'started',order_id:order.id,order:decision.order,automation_enabled:state.settings.enabled,test:'single-article-test-v1'};
   }
   if(event.payload.commission==='first-article-v1'){
@@ -93,7 +97,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     if(!row)throw new Error('commission_order_insert_failed');
     return row;
    });
-   await step.do('commission-start-production',async()=>{await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
+   await step.do('commission-start-production',async()=>{await assignOrderCosts(this.env,order.id);await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
    return {status:'started',order_id:order.id,order:decision.order,automation_enabled:state.settings.enabled};
   }
   if(!state.settings.enabled)return {status:'disabled'};
@@ -102,7 +106,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
    const order=await step.do('save-order',async()=>{
     const [row]=await rpc<OrderRow[]>(this.env,'v3_admit_order',{p_key:event.payload.tick,p_order:decision.order});return row??null;
    });
-   if(order)await step.do('start-production',async()=>{await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
+   if(order)await step.do('start-production',async()=>{await assignOrderCosts(this.env,order.id);await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
   }
   await step.do('mark-signals',async()=>{
    for(const signal of state.breaking)await db(this.env,`v3_signals?id=eq.${encodeURIComponent(signal.id)}`,'PATCH',{processed_at:new Date().toISOString()});

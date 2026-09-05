@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const replacements={
  'cloudflare:workers':'export class WorkflowEntrypoint {constructor(ctx,env){this.env=env;}}',
+ './budget':`export const withCostContext=(context,fn)=>fn();export const budgetedAI=(env,...args)=>env.AI.run(...args);`,
  './models':`export const model=(...args)=>globalThis.productionTest.model(...args);
 export const modelResponseText=(result)=>result.output_text??result.output?.flatMap(x=>x.content??[]).filter(x=>x.type==='output_text').map(x=>x.text??'').join('\\n')??'';`,
  './media':'export const selectMedia=(...args)=>globalThis.productionTest.media(...args);',
@@ -10,7 +11,7 @@ export const modelResponseText=(result)=>result.output_text??result.output?.flat
 };
 await fs.mkdir('reports',{recursive:true});
 await build({entryPoints:['src/v3/production.ts'],outfile:'reports/production-test.mjs',bundle:true,platform:'node',format:'esm',plugins:[{name:'workflow-boundaries',setup(b){
- b.onResolve({filter:/^(cloudflare:workers|\.\/(models|media|db))$/},args=>args.importer.endsWith('production.ts')?{path:args.path,namespace:'test'}:undefined);
+ b.onResolve({filter:/^(cloudflare:workers|\.\/(models|media|db|budget))$/},args=>args.importer.endsWith('production.ts')?{path:args.path,namespace:'test'}:undefined);
  b.onLoad({filter:/.*/,namespace:'test'},args=>({contents:replacements[args.path],loader:'js'}));
 }}]});
 const {Production}=await import('../reports/production-test.mjs');
@@ -20,7 +21,7 @@ for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-
  globalThis.productionTest={
   async db(env,path,method='GET',body){writes.push({path,method,body});if(method==='GET')return [{id:'order-test',status:'pending',original_order:original}];return [];},
   async rpc(env,name,body){if(name==='v3_publish'){published++;return 'article-test';}return {};},
-  async media(){return {id:'media-test',url:'https://example.org/image.jpg',alt:'test',credit:'test'};},
+  async media(env,article,job,context){assert.deepEqual(context.original_order,original);assert.ok(context.dossier);return {id:'media-test',url:'https://example.org/image.jpg',alt:'test',credit:'test'};},
   async model(env,role,instructions,input,schema){
    calls.push({role,input});assert.deepEqual(input.original_order,original);
    if(scenario==='provider-failure')throw new Error('provider unavailable');
