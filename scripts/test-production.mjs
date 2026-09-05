@@ -72,3 +72,23 @@ assert.equal(deskProbe.model,'openai/gpt-5.6-luna');
 assert.equal(deskProbe.source_url,'https://developers.cloudflare.com/workflows/');
 console.log('PASS production: bounded Desk web-search diagnostic');
 delete globalThis.productionTest;
+const terraProbeRoles=[];
+globalThis.productionTest={
+ async model(env,role,instructions,input,schema,search){
+  terraProbeRoles.push(role);
+  if(role==='desk'){
+   assert.equal(search,true);assert.equal(input.original_order.category,'viden');
+   return {subject:'Cloudflare Workers Workflows',facts:['Workflows support durable multi-step execution.'],uncertainties:[],opposing_views:[],sources:[{url:'https://developers.cloudflare.com/workflows/learn/architecture/',title:'Architecture',publisher:'Cloudflare',kind:'primary',retrieved_at:'2026-09-05T00:00:00Z',facts:['Workflows support durable multi-step execution.'],quotes:[]}]};
+  }
+  assert.equal(role,'journalist');assert.equal(search,undefined);assert.equal(input.research_requests_remaining,0);
+  return {kind:'draft',article:{headline:'Cloudflare Workflows kan køre flertrinsforløb robust',deck:'Tjenesten er bygget til langvarige processer, der kan fortsætte gennem ventetid og fejl.',category:'viden',paragraphs:['Cloudflare Workers Workflows er en tjeneste til flertrinsforløb.','Ifølge Cloudflares egen dokumentation er systemet designet til holdbar udførelse.'],source_urls:['https://developers.cloudflare.com/workflows/learn/architecture/'],image_query:'Cloudflare Workers Workflows'}};
+ }
+};
+const terraProbe=await new Production({},{}).run({payload:{diagnostic:'desk-terra-v1'}},{async do(name,options,fn){assert.equal(options.retries.limit,0);return fn();}});
+assert.deepEqual(terraProbeRoles,['desk','journalist']);
+assert.equal(terraProbe.web_search,true);
+assert.equal(terraProbe.desk_model,'openai/gpt-5.6-luna');
+assert.equal(terraProbe.terra_model,'openai/gpt-5.6-terra');
+assert.equal(terraProbe.source_urls[0],'https://developers.cloudflare.com/workflows/learn/architecture/');
+console.log('PASS production: Luna dossier to Terra draft diagnostic');
+delete globalThis.productionTest;
