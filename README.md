@@ -1,27 +1,41 @@
 # Morgentidende v3
 
-Cloudflare Workers + Workflows, Supabase Postgres og en lille HTML/CSS/JS-forside.
+Cloudflare Workers + Workflows, Supabase Postgres og en HTML/CSS/JS-forside.
 
-Chefredaktør (Luna) → Desk (Luna med websøgning) → Journalist (Terra low) → Media → Chefredaktør → deterministisk Publish. Scan er en separat Worker.
+Chefredaktør (Luna) → Desk (Luna med websøgning) → Journalist (Terra low) → Media → Chefredaktør → deterministisk Publish. Scan er en separat Worker med 15-minutters cron. Automatisk artikelproduktion styres af `v3_settings.enabled` og er slukket ved denne ændring.
 
 ## Udvikling
 
 `npm ci`, `npx wrangler types`, `npx wrangler types scan-configuration.d.ts --config wrangler.scan.jsonc --env-interface ScanEnv`, `npm run check`.
+GitHub Actions tester også Production/Chief, begge Worker-builds og feedregisterets netadgang. Feedregisteret er en kandidatliste, ikke dokumentation for aktiv eller størrelsesrangeret dækning.
 
-GitHub Actions kører typekontrol, tests, begge Worker-builds og netkontrol af feedregisteret. Feedresultater gemmes som artifact. Registeret er en kandidatliste, ikke dokumentation for aktiv eller størrelsesrangeret avisdækning.
+## Drift og budget
 
-## Drift
+Worker: `morgentidende-v3`. Scan: `morgentidende-v3-scan`. Supabase bruger `v3_*`-tabeller.
+`SUPABASE_SERVICE_ROLE_KEY` og `ADMIN_TOKEN` er Worker-secrets. OpenAI bruges via AI Gateway `default`; providerbetaling skal være konfigureret dér.
 
-Den eksisterende Worker hedder fortsat `morgentidende-v2` for at bevare adresse og secrets; runtime er v3. Databasen bruger udelukkende `v3_*`-tabeller. `v3_settings.enabled=false` stopper automatisk bestilling. V3-Scan konfigureres separat via `wrangler.scan.jsonc`.
+Alle produktionskald til tekstmodeller, billedanalyse, FLUX og billedkonvertering reserverer beløb i databasen **før** kaldet. Dagsgrænsen er højst **10 DKK efter dansk kalenderdato**, inklusive chatbestillinger og nye forsøg. Parallelle kald deler samme låste budget. Gratisforbrug trækkes ikke fra, så det ikke kan tælles dobbelt. Faste abonnementer og generel Workers/R2/Supabase-infrastruktur indgår ikke i dette variable produktionsbudget.
 
-`SUPABASE_SERVICE_ROLE_KEY` findes kun som Worker-secret. `ADMIN_TOKEN` er nødvendigt for manuelle produktionskald. Offentlig adgang giver kun publicerede artikler, billeder og forside.
+Afregningen er et estimat baseret på rapporteret tokenforbrug og modelpriser. Budgettet bruger en konservativ kurs på 12,5 DKK/USD inklusive reserve; det er ikke den faktiske fakturakurs. Manglende forbrugstal eller timeout belastes med hele reservationen. Ventende reservationer tæller også efter midnat. Prisændringer kræver opdatering af `src/v3/budget.ts`.
 
-## Status og resterende kontrol
+Websøgning begrænses til ét tool-kald pr. modelkald, med reservation for to fulde kontekstvinduer. Det kan stoppe produktion før de faktiske udgifter når 10 DKK. Ved budgetafvisning starter intet betalt kald; den berørte workflow kan fejle og kræver senere genoptagelse. Installationens resterende dag lukkes konservativt, fordi ældre forbrug ikke kan rekonstrueres.
 
-V3 er flettet til main og deployet. Scan har sin egen Worker, D1-database og 15-minutters cron. Automatisk artikelproduktion er slukket. AI Gateway default har ved seneste kontrol ingen credits eller OpenAI-provider-nøgle; Luna og Terra er derfor endnu ikke afprøvet med rigtige kald.
+`GET /admin/budget` og `GET /admin/costs` kræver admin-token. Private tabeller `v3_costs` og view `v3_article_costs` viser reservationer, model, fase, forbrug og estimerede udgifter pr. ordre. Chefredaktørens indledende bestillingsudgift knyttes til ordren efter oprettelse.
 
-16 tests, seks produktionsscenarier med simulerede eksterne tjenester, begge Worker-builds og Supabase-transaktionstests består. Der er endnu ikke produceret en rigtig artikel. Før automatisk drift: tilslut modelbetaling, verificér modeller og web_search, test Media med faktiske billeder, og gennemfør en samlet artikelproduktion.
+## Chatbestillinger
 
-Samme billedfamilie har en ubetinget database-cooldown på 10 dage. Derudover blokerer en serialiseret publiceringskontrol eksakte og visuelt lignende JPEG-varianter på tværs af kildeadresser. Testene dækker ændret størrelse, JPEG-komprimering, lysstyrke og mindre beskæringer. Vilkårlige redigeringer og forskellige optagelser fra samme fotoserie kan ikke garanteres genkendt; den del kræver stærkere familieoplysninger. Verificerede billedbytes gemmes i R2, så kildeadressens indhold ikke kan ændres efter kontrollen.
+`.github/workflows/chatops.yml` kører fra `chatops`-grenen ved ændring af `.chatops/command.json`. Workflowet skal have `id-token: write` og bruge `scripts/chatops-dispatch.mjs` på samme gren.
 
-Migrationsplan: [docs/v3-build-plan.md](docs/v3-build-plan.md). Databaseintegrationstesten i `tests/database.sql` kører i en transaktion og ruller alt tilbage.
+Serveren verificerer GitHub OIDC-signaturen, audience, repo, ejer, gren, workflow, event, commit og udløb. Kommandoen kontrolleres mod den pågældende Git-commit. En permanent kvittering forhindrer gentagen dispatch. `status` er en signeret, gratis læsekommando til kontrol af forbindelsen. Ingen provider-nøgle sendes gennem chatkommandoer.
+
+## Media og publicering
+
+Media får original ordre og dossier, vælger billedsøgeord og prøver eget fotoarkiv, Wikimedia Commons og Openverse før **FLUX som sidste udvej**. Nye/tvivlsomme billeder kontrolleres med Gemma. PNG, WebP, GIF og AVIF kan normaliseres til JPEG via Images-bindingen. Openverse kræver licensbevis fra den oprindelige kildeside; manglende bevis afviser billedet. Afvisninger logges med årsag.
+
+Samme billedfamilie har ubetinget 10 dages databasekarantæne. Publicering kontrollerer også identiske og visuelt lignende JPEG-varianter på tværs af adresser. Vilkårlige redigeringer og forskellige optagelser fra samme fotoserie kan ikke garanteres genkendt. Verificerede billedbytes gemmes i R2, så kildens indhold ikke kan ændres efter kontrollen.
+
+`serious_error=true` blokerer publicering i både kode og database. Normal produktion må starte ét frisk andet forsøg; derefter droppes artiklen. Direkte indsendte artikler omskrives ikke og afvises ved fejl.
+
+## Databaseændring
+
+Anvend `docs/sql/v3_budget_and_safety.sql` før denne kode deployes. Migreringen er anvendt i Supabase med transaktionelle budget- og replaytests. `tests/database.sql` kontrollerer publicering, alvorlige fejl, idempotens og billedkarantæne og ruller alt tilbage.

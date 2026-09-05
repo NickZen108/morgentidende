@@ -48,6 +48,6 @@ test('budget denial prevents provider calls; successful and uncertain calls are 
  }finally{globalThis.fetch=original;}
 });
 test('cost includes input, output and web searches, missing usage is not free',()=>{
- assert.equal(tokenCost({usage:{input_tokens:1000,output_tokens:100},output:[{type:'web_search_call'}]},0.2,1.2)?.usd,0.01032);
+ assert.ok(Math.abs(tokenCost({usage:{input_tokens:1000,output_tokens:100},output:[{type:'web_search_call'}]},0.2,1.2)!.usd-0.01032)<1e-12);
  assert.equal(tokenCost({},0.2,1.2),null);
 });

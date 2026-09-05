@@ -2,6 +2,7 @@ import {build} from 'esbuild';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const replacements={
+ './budget':'export const withCostContext=(_,fn)=>fn();export const assignOrderCosts=async()=>{}',
  'cloudflare:workers':'export class WorkflowEntrypoint {constructor(ctx,env){this.env=env;}}',
  './models':'export const model=(...args)=>globalThis.chiefTest.model(...args);',
  './db':'export const db=(...args)=>globalThis.chiefTest.db(...args);export const rpc=(...args)=>globalThis.chiefTest.rpc(...args);',
@@ -9,7 +10,7 @@ const replacements={
 };
 await fs.mkdir('reports',{recursive:true});
 await build({entryPoints:['src/v3/chief.ts'],outfile:'reports/chief-test.mjs',bundle:true,platform:'node',format:'esm',plugins:[{name:'chief-boundaries',setup(b){
- b.onResolve({filter:/^(cloudflare:workers|\.\/(models|db|media))$/},args=>args.importer.endsWith('chief.ts')?{path:args.path,namespace:'test'}:undefined);
+ b.onResolve({filter:/^(cloudflare:workers|\.\/(models|db|media|budget))$/},args=>args.importer.endsWith('chief.ts')?{path:args.path,namespace:'test'}:undefined);
  b.onLoad({filter:/.*/,namespace:'test'},args=>({contents:replacements[args.path],loader:'js'}));
 }}]});
 const {Chief}=await import('../reports/chief-test.mjs');
