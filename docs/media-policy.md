@@ -1,38 +1,37 @@
-# Media-policy for Morgentidende v2
+# Media-policy for Morgentidende v3
 
 ## Grundregel
-Alle billeder på Morgentidende skal være gratis og lovlige til kommerciel redaktionel brug i Danmark efter dansk ret eller EU-ret, hvor EU-retten har forrang. Media må aldrig vælge et billede med uklart rettighedsgrundlag til automatisk publicering.
+Alle billeder på Morgentidende skal være gratis og lovlige til kommerciel redaktionel brug. Et rigtigt foto skal foretrækkes meget kraftigt frem for et AI-genereret billede. Media må gerne vælge et foto, der kun er kontekstuelt relateret til sagen, hvis det er tydeligt og ikke vildledende.
 
-## Arbejdsdeling
-Media søger ikke selv. Media beder Scan om en helt konkret type billedfund. Scan returnerer præcis ét fund ad gangen. Media vurderer relevans og rettigheder. Hvis fundet afvises, beder Media Scan om næste. Først når den aktuelle prioritet er udtømt, går Media videre til næste trin.
+## Rigtigt foto først
+Media skal udtømme realistiske muligheder for et lovligt foto, før FLUX overhovedet må kaldes. Søgningen må gradvist bredes ud fra den konkrete hændelse til centrale personer, sted, institution, objekt og til sidst det bredere emne.
 
-## Hero-prioritet
-1. Foto fra den konkrete begivenhed.
-2. Foto af den centrale person i historien.
-3. Foto fra stedet, hvor sagen foregår.
-4. Lovligt videograb fra den konkrete begivenhed.
-5. Lovligt landkort eller satellitfoto fra området.
-6. FLUX 1 Schnell som absolut sidste udvej.
+Prioriteten er:
+1. Foto fra den konkrete aktuelle begivenhed, når et lovligt foto findes.
+2. Foto af den centrale person eller de centrale personer.
+3. Foto af stedet, bygningen, institutionen, virksomheden eller organisationen.
+4. Et ældre, men relevant foto af en central person, et sted eller en institution.
+5. Et generelt foto, der tydeligt illustrerer emnet uden at foregive at vise den konkrete hændelse.
+6. FLUX som absolut sidste udvej.
+
+## Søgestrategi
+Før FLUX skal Media mindst prøve:
+- det verificerede, ikke-genererede mediearkiv,
+- flere forskellige søgeforespørgsler i Wikimedia Commons,
+- søgninger på artikelens centrale navne, steder og emneord,
+- Openverse-resultater med licenser, der tillader kommerciel brug.
+
+Søgningen skal ikke stoppe efter ét mislykket query. Media skal prøve flere query-varianter og flere kandidater. Et foto behøver ikke dokumentere den præcise hændelse; Gemma skal acceptere fotos af en relevant person, et relevant sted, en institution, et objekt eller det bredere emne, så længe brugen ikke er materielt vildledende.
+
+## Rettigheder
+Automatisk publicering må kun bruge et eksternt foto, når rettighedsmetadata er tilstrækkelig. CC BY, CC BY-SA, CC0 og public-domain-materiale kan bruges, når den konkrete licens og attribution er dokumenteret. Licenser med ikke-kommerciel begrænsning må ikke bruges automatisk.
+
+For Openverse gælder, at Openverse er discovery-lag; Media skal gemme den konkrete licens, licens-URL, oprindelige landingsside, ophavsperson når tilgængelig og discovery-kilde sammen med billedet.
 
 ## FLUX-regel
-AI-genereret hero må kun bruges som sidste udvej. Den skal altid være en tydelig skraveret blyantillustration og må aldrig være fotorealistisk eller kunne forveksles med dokumentation af den virkelige hændelse.
+FLUX må kun kaldes, når de reelle fotokilder er udtømt. Systemet skal logge `real_photo_exhausted` før FLUX-fallback. Et AI-genereret hero skal altid være tydeligt mærket som illustration, være ikke-fotorealistisk og må aldrig kunne forveksles med dokumentation af den virkelige hændelse.
 
-## Videograb
-Et screengrab fra YouTube, TikTok, Instagram, X eller andre platforme må kun bruges, når det er lovligt efter gældende dansk/EU-ret, og når videoen dokumenterer den konkrete aktuelle begivenhed eller selv er en væsentlig del af historien. Det må ikke bruges som gratis stockfoto alene fordi frame'et er visuelt stærkt.
+Hvis Gemma afviser en FLUX-illustration, må Media prøve nye, mere neutrale illustrationer; en afvisning må ikke få systemet til at sænke kravene til et vildledende billede.
 
 ## Rettighedsmetadata
-For hvert valgt hero skal Media gemme mindst:
-- source_url
-- source_name/publisher
-- creator/photographer hvis kendt
-- license_type
-- attribution_text/credit
-- rights_basis
-- commercial_use_allowed
-- jurisdiction_note
-- retrieved_at
-- hero_priority (1-6)
-- asset_type (photo, video_grab, map, satellite, generated)
-
-## Fejl
-Hvis alle seks trin fejler, må artiklen publiceres uden hero. Hero-mangel må ikke blokere en ellers publicerbar artikel.
+For hvert valgt hero skal Media gemme mindst kilde/landingsside, creator/fotograf hvis kendt, licens, licens-URL, credit, rettighedsgrundlag, tidspunkt for verificering, om billedet er genereret, og om vision-kontrollen er bestået.
