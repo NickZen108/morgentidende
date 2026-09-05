@@ -1,7 +1,8 @@
 import {XMLParser} from 'fast-xml-parser';
 import {boundedText} from './db';
-import feeds from '../../config/scan-feeds.json';
+import registry from '../../config/scan-feeds.json';
 import {diverseSignals} from './signal-selection';
+const feeds=registry.filter(feed=>feed.enabled);
 export interface FeedItem {url:string;title:string;published:number;publisher:string}
 export function canonical(raw:string){const u=new URL(raw);for(const k of [...u.searchParams.keys()])if(k.startsWith('utm_')||['fbclid','gclid'].includes(k))u.searchParams.delete(k);u.hash='';return u.toString();}
 export function parseFeed(xml:string,publisher:string,now=Date.now()):FeedItem[]{

@@ -7,7 +7,8 @@ export class SignalReceiver extends WorkerEntrypoint<Env>{
  async fetch(request:Request){
   const signal=z.object({id:z.string().regex(/^[a-f0-9]{64}$/),headlines:z.array(z.string().max(400)).max(5),sources:z.array(z.object({publisher:z.string(),url:z.string().url()})).max(12),publisher_count:z.number(),first_seen:z.number(),last_seen:z.number()}).parse(JSON.parse(await boundedText(request,16000)));
   await db(this.env,'v3_signals?on_conflict=id','POST',{id:signal.id,payload:signal});
-  await this.env.CHIEF.create({id:`signal-${signal.id}`,params:{tick:`signal-${signal.id}`}});
+  // The scheduled chief reads the collected batch; a busy feed must not
+  // cause one paid editorial model call for every incoming headline.
   return Response.json({ok:true});
  }
 }
