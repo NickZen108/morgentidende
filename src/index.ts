@@ -1,5 +1,5 @@
 import {db,rpc,boundedText} from './v3/db';
-import {ChatCommand,Order} from './v3/contracts';
+import {ChatCommand,DirectSubmission,Order} from './v3/contracts';
 import type {ChiefInput} from './v3/chief';
 import {WorkerEntrypoint} from 'cloudflare:workers';
 import {z} from 'zod';
@@ -8,8 +8,6 @@ export class SignalReceiver extends WorkerEntrypoint<Env>{
  async fetch(request:Request){
   const signal=z.object({id:z.string().regex(/^[a-f0-9]{64}$/),headlines:z.array(z.string().max(400)).max(5),sources:z.array(z.object({publisher:z.string(),url:z.string().url()})).max(12),publisher_count:z.number(),first_seen:z.number(),last_seen:z.number()}).parse(JSON.parse(await boundedText(request,16000)));
   await db(this.env,'v3_signals?on_conflict=id','POST',{id:signal.id,payload:signal});
-  // The scheduled chief reads the collected batch; a busy feed must not
-  // cause one paid editorial model call for every incoming headline.
   return Response.json({ok:true});
  }
 }
@@ -45,6 +43,14 @@ async function dispatchChatCommand(request:Request,env:Env){
   const workflowId=`chatops-commission-${command.id}`;
   const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,commission:'chatops-batch-v1',count:command.count,topic:command.topic});
   return Response.json({ok:true,type:command.type,count:command.count,topic:command.topic??null,workflow},{status:202});
+ }
+ if(command.type==='publish_order'){
+  const [row]=await db<{id:string;status:string;original_order:unknown}[]>(env,`v3_orders?id=eq.${encodeURIComponent(command.order_id)}&limit=1`);
+  if(!row)throw new Error('chatops_direct_order_not_found');
+  DirectSubmission.parse(row.original_order);
+  const workflowId=`chatops-direct-${command.id}`;
+  const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,directOrderId:row.id});
+  return Response.json({ok:true,type:command.type,order_id:row.id,workflow},{status:202});
  }
  const key=`chatops:article:${command.id}`;
  let [row]=await db<{id:string;status:string}[]>(env,`v3_orders?dedupe_key=eq.${encodeURIComponent(key)}&limit=1`);
