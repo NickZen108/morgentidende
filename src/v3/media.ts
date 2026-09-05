@@ -3,11 +3,24 @@ import {Draft,MediaRow} from './contracts';
 import {db,boundedText,ensureFamily} from './db';
 import {registerIdentity,identityEligible} from './image-identity';
 type Run=(model:string,input:Record<string,unknown>)=>Promise<unknown>;
+const MAX_VISION_BYTES=6_000_000;
 export const cooldownEligible=(last:string|null,now=Date.now())=>last===null||Date.parse(last)<=now-10*86400000;
 async function eligible(env:Env,family:string){const [row]=await db<{last_used_at:string|null}[]>(env,`v3_media_families?id=eq.${encodeURIComponent(family)}`);return !row||cooldownEligible(row.last_used_at);}
-async function vision(env:Env,url:string,article:Draft):Promise<boolean>{
- const response=await (env.AI.run.bind(env.AI) as Run)('@cf/google/gemma-4-26b-a4b-it',{messages:[{role:'user',content:[{type:'text',text:`Is this image suitable as a contextual illustration for this article? Reject misleading documentary claims, irrelevant images or unreadable graphics. Return JSON {"suitable":boolean}. Article: ${article.headline}. ${article.deck}`},{type:'image_url',image_url:{url}}]}],max_completion_tokens:400,response_format:{type:'json_object'}}) as {response?:string;choices?:{message:{content:string}}[]};
+function base64(bytes:Uint8Array){let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));return btoa(binary);}
+async function visionBytes(env:Env,bytes:Uint8Array,mime:string,article:Draft):Promise<boolean>{
+ if(!bytes.length||bytes.length>MAX_VISION_BYTES)throw new Error('vision_image_size');
+ const dataUri=`data:${mime};base64,${base64(bytes)}`;
+ const response=await (env.AI.run.bind(env.AI) as Run)('@cf/google/gemma-4-26b-a4b-it',{messages:[{role:'user',content:[{type:'text',text:`Is this image suitable as a contextual illustration for this article? Reject misleading documentary claims, irrelevant images or unreadable graphics. Return JSON {"suitable":boolean}. Article: ${article.headline}. ${article.deck}`},{type:'image_url',image_url:{url:dataUri}}]}],max_completion_tokens:400,response_format:{type:'json_object'}}) as {response?:string;choices?:{message:{content:string}}[]};
  return z.object({suitable:z.boolean()}).parse(JSON.parse(response.response??response.choices?.[0]?.message.content??'{}')).suitable;
+}
+async function vision(env:Env,url:string,article:Draft):Promise<boolean>{
+ const response=await fetch(url,{signal:AbortSignal.timeout(15000),headers:{'User-Agent':'Morgentidende/3.0 (editorial image verification)'}});
+ if(!response.ok)throw new Error(`vision_fetch_${response.status}`);
+ const length=Number(response.headers.get('content-length')??0);if(length>MAX_VISION_BYTES)throw new Error('vision_image_size');
+ const mime=(response.headers.get('content-type')??'image/jpeg').split(';')[0].trim().toLowerCase();
+ if(!/^image\/(?:jpeg|png|webp|gif|bmp|svg\+xml)$/.test(mime))throw new Error('vision_content_type');
+ const bytes=new Uint8Array(await response.arrayBuffer());
+ return visionBytes(env,bytes,mime,article);
 }
 const plain=(s:string)=>s.replace(/<[^>]*>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&').trim();
 export async function selectMedia(env:Env,article:Draft,job:string):Promise<MediaRow>{
@@ -58,10 +71,11 @@ export async function selectMedia(env:Env,article:Draft,job:string):Promise<Medi
   object=await env.MEDIA_BUCKET.get(key);
  }
  if(!object)throw new Error('generated_image_missing');
- const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await object.arrayBuffer()))).map(x=>x.toString(16).padStart(2,'0')).join('');
+ const imageBytes=new Uint8Array(await object.arrayBuffer());
+ const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',imageBytes))).map(x=>x.toString(16).padStart(2,'0')).join('');
  const family=`flux:${hash}`;
  const publicUrl=`${env.PUBLIC_ORIGIN}/media/${key}`;
- if(!await vision(env,publicUrl,article))throw new Error('generated_image_rejected');
+ if(!await visionBytes(env,imageBytes,'image/jpeg',article))throw new Error('generated_image_rejected');
  await ensureFamily(env,family);
  const [asset]=await db<MediaRow[]>(env,'v3_media?on_conflict=original_url','POST',{
   family_id:family,content_hash:hash,original_url:publicUrl,url:publicUrl,credit:'AI-illustration · Morgentidende / FLUX',alt:`Illustration: ${article.image_query}`,
