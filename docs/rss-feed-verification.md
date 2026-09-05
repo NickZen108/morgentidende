@@ -12,7 +12,7 @@ Verified/expanded on 2026-09-05 for Morgentidende's curated feed pool.
 
 ## Active curated registry
 
-`src/editorial/feeds.ts` currently contains 134 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
+`src/editorial/feeds.ts` currently contains 135 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
 
 Scan treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
 
@@ -114,7 +114,7 @@ A GitHub-hosted live audit requested every configured endpoint and inspected the
 - 1 invalid Danmarks Nationalbank URL returned HTTP 404 and was removed; the correct Nationalbanken API pattern was subsequently discovered and three verified feeds were added.
 - There were zero cases where HTTP 200 returned an ordinary HTML page masquerading as a configured feed.
 
-After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 134 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
+After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 135 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
 
 ## Danish endpoint discovery pass 2026-09-05
 
@@ -162,3 +162,10 @@ This increases the curated registry from 118 to 127 endpoints. Scan still ranks 
 - European Commission Joint Research Centre: `https://joint-research-centre.ec.europa.eu/node/2/rss_en` returned HTTP 200 `application/rss+xml` with 30 items. Added as `research`.
 - European Parliament press-news, ITRE and plenary XML URLs returned HTTP 202 with empty bodies to the GitHub runner. They remain excluded pending positive verification.
 - Registry total rises from 129 to 134 endpoints; Scan still fetches at most 42 ranked feeds per discovery run.
+
+
+## ECDC and EU trade/migration/energy pass 2026-09-05
+
+- ECDC official RSS catalogue links News/press releases to `https://www.ecdc.europa.eu/en/taxonomy/term/1307/feed`; the endpoint responds as `application/rss+xml`. Added as high-authority `primary`.
+- European Commission trade, migration/home affairs, energy, climate and taxation candidate feeds were probed. Several Drupal-style feed URLs returned HTTP 403 to the GitHub runner; the tested migration/energy `?_format=rss` variants returned ordinary HTML. The Trade Newsroom endpoint returned a small XML response but no RSS/Atom entries, so none of these were added on guesswork.
+- Registry total rises from 134 to 135 endpoints.
