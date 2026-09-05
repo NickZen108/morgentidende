@@ -12,7 +12,7 @@ Verified/expanded on 2026-09-05 for Morgentidende's curated feed pool.
 
 ## Active curated registry
 
-`src/editorial/feeds.ts` currently contains 129 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
+`src/editorial/feeds.ts` currently contains 134 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
 
 Scan treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
 
@@ -114,7 +114,7 @@ A GitHub-hosted live audit requested every configured endpoint and inspected the
 - 1 invalid Danmarks Nationalbank URL returned HTTP 404 and was removed; the correct Nationalbanken API pattern was subsequently discovered and three verified feeds were added.
 - There were zero cases where HTTP 200 returned an ordinary HTML page masquerading as a configured feed.
 
-After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 129 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
+After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 134 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
 
 ## Danish endpoint discovery pass 2026-09-05
 
@@ -151,3 +151,14 @@ This increases the curated registry from 118 to 127 endpoints. Scan still ranks 
 - Council of the EU / European Council: official press-release RSS endpoint `https://www.consilium.europa.eu/en/rss/pressreleases.ashx` added as `primary`.
 - Court of Justice of the European Union: official Danish+English press-release RSS endpoint added as `primary`.
 - Registry total: 129 endpoints. Scan still fetches at most 42 ranked feeds per discovery run.
+
+
+## EU expansion verified 2026-09-05
+
+- EUR-Lex predefined feed 162 (all Parliament and Council legislation): live probe returned HTTP 200 `application/xml` with 100 items. Added as `primary`.
+- European Commission Digital Strategy: `https://digital-strategy.ec.europa.eu/en/rss.xml` returned HTTP 200 `application/rss+xml` with 10 items. Added as `primary`.
+- European Commission Competition Policy: `https://competition-policy.ec.europa.eu/node/38/rss_en` returned HTTP 200 `application/rss+xml` with 30 items. Added as `primary`.
+- European Commission Internal Market/Industry newsroom: `https://ec.europa.eu/newsroom/growth/feed?item_type=1053&sub=1&pr=all` returned HTTP 200 `application/xml` with 100 items. Added as `primary`.
+- European Commission Joint Research Centre: `https://joint-research-centre.ec.europa.eu/node/2/rss_en` returned HTTP 200 `application/rss+xml` with 30 items. Added as `research`.
+- European Parliament press-news, ITRE and plenary XML URLs returned HTTP 202 with empty bodies to the GitHub runner. They remain excluded pending positive verification.
+- Registry total rises from 129 to 134 endpoints; Scan still fetches at most 42 ranked feeds per discovery run.
