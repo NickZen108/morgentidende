@@ -16,7 +16,7 @@ await build({entryPoints:['src/v3/production.ts'],outfile:'reports/production-te
 const {Production}=await import('../reports/production-test.mjs');
 const original={instruction:'Write the original order',category:'viden'};
 for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-question','provider-failure']){
- const calls=[],writes=[],steps=[];let desks=0,journalists=0,reviews=0,published=0;
+ const calls=[],writes=[],steps=[],configs=[];let desks=0,journalists=0,reviews=0,published=0;
  globalThis.productionTest={
   async db(env,path,method='GET',body){writes.push({path,method,body});if(method==='GET')return [{id:'order-test',status:'pending',original_order:original}];return [];},
   async rpc(env,name,body){if(name==='v3_publish'){published++;return 'article-test';}return {};},
@@ -37,7 +37,7 @@ for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-
    return {matches_order:approved,headline_correct:approved,serious_error:!approved,reason:'test',slot:'viden-1'};
   }
  };
- const step={async do(name,fn){steps.push(name);return fn();}};
+ const step={async do(name,configOrFn,maybeFn){steps.push(name);const fn=maybeFn??configOrFn;if(maybeFn)configs.push({name,config:configOrFn});return fn();}};
  const run=()=>new Production({},{}).run({payload:{orderId:'order-test'}},step);
  if(['fourth-question','provider-failure'].includes(scenario)){
   await assert.rejects(run);assert.equal(published,0);assert.ok(writes.some(x=>x.body?.status==='failed'));
@@ -47,6 +47,8 @@ for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-
  }
  if(scenario==='fresh-retry'||scenario==='drop'){assert.equal(desks,2);assert.equal(reviews,2);}
  if(scenario==='three-questions'||scenario==='fourth-question'){assert.equal(desks,4);assert.equal(journalists,4);}
+ for(const entry of configs.filter(x=>/-(desk|journalist-|followup-|review)$/.test(x.name)||/-journalist-/.test(x.name)||/-followup-/.test(x.name))){assert.equal(entry.config.retries.limit,1);assert.equal(entry.config.timeout,'2 minutes');}
+ for(const entry of configs.filter(x=>/-media$/.test(x.name))){assert.equal(entry.config.retries.limit,1);assert.equal(entry.config.timeout,'3 minutes');}
  assert.equal(new Set(steps).size,steps.length,'workflow step names collide');
  console.log(`PASS production: ${scenario}`);
 }
