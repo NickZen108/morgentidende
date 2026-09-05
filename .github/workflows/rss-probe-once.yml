@@ -13,39 +13,49 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Discover RSS links on target sites
+      - name: Probe likely Danish RSS endpoints
         run: |
           python - <<'PY'
-          import re, urllib.request, urllib.parse
-
-          targets = {
-            'nationalbanken': 'https://www.nationalbanken.dk/da/rss-feeds',
-            'berlingske': 'https://www.berlingske.dk/',
-            'politiken': 'https://politiken.dk/',
-            'tv2': 'https://nyheder.tv2.dk/',
+          import re, urllib.request, urllib.error
+          headers={'User-Agent':'Mozilla/5.0 Morgentidende RSS Probe','Accept':'application/rss+xml,application/atom+xml,application/xml,text/xml,text/html,*/*'}
+          candidates={
+            'politiken':[
+              'https://politiken.dk/rss/senestenyt.rss','https://politiken.dk/rss/tophistorier.rss','https://politiken.dk/rss/indland.rss','https://politiken.dk/rss/udland.rss','https://politiken.dk/rss/erhverv.rss','https://politiken.dk/rss/kultur.rss'],
+            'berlingske':[
+              'https://www.berlingske.dk/rss','https://www.berlingske.dk/feed','https://www.berlingske.dk/rss.xml','https://www.berlingske.dk/section/nyhedsoversigt/&template=rss&mime=xml'],
+            'tv2':[
+              'https://services.tv2.dk/api/feeds/nyheder/rss','https://nyheder.tv2.dk/rss','https://nyheder.tv2.dk/feed','https://nyheder.tv2.dk/rss.xml'],
           }
-          headers={'User-Agent':'Mozilla/5.0 Morgentidende RSS Probe','Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'}
-          for name,url in targets.items():
-            print('\n===', name, url, '===')
-            try:
-              req=urllib.request.Request(url,headers=headers)
-              with urllib.request.urlopen(req,timeout=15) as r:
-                body=r.read(1000000).decode('utf-8','ignore')
-                print('STATUS', getattr(r,'status',200), 'FINAL', r.geturl(), 'CT', r.headers.get('content-type'))
-            except Exception as e:
-              print('FETCH_ERROR', type(e).__name__, e)
-              continue
-            found=[]
-            patterns=[
-              r'<link[^>]+(?:type=["\']application/(?:rss\+xml|atom\+xml)["\']|rel=["\']alternate["\'])[^>]+href=["\']([^"\']+)',
-              r'<link[^>]+href=["\']([^"\']+)["\'][^>]+(?:type=["\']application/(?:rss\+xml|atom\+xml)["\']|rel=["\']alternate["\'])',
-              r'(https?://[^"\'<>\\ ]+(?:rss|feed|\.xml)[^"\'<>\\ ]*)',
-              r'(?:href|data-url|data-copy|value)=["\']([^"\']+(?:rss|feed|\.xml)[^"\']*)["\']',
-            ]
-            for pat in patterns:
-              for m in re.findall(pat, body, flags=re.I):
-                u=urllib.parse.urljoin(url,m.replace('&amp;','&'))
-                if u not in found: found.append(u)
-            for u in found[:100]: print('CANDIDATE',u)
+          for group,urls in candidates.items():
+            print('\n===',group,'===')
+            for url in urls:
+              try:
+                req=urllib.request.Request(url,headers=headers)
+                with urllib.request.urlopen(req,timeout=12) as r:
+                  body=r.read(100000).decode('utf-8','ignore').lstrip().lower()
+                  xmlish=('<rss' in body[:5000] or '<feed' in body[:5000] or '<rdf:rdf' in body[:5000] or '<item' in body[:10000] or '<entry' in body[:10000])
+                  print('RESULT',r.status,'XML' if xmlish else 'NONXML',r.headers.get('content-type'),r.geturl(),url)
+              except urllib.error.HTTPError as e:
+                print('HTTPERR',e.code,url)
+              except Exception as e:
+                print('ERROR',type(e).__name__,str(e),url)
+
+          # Nationalbanken page: print short contexts around copy-link/RSS data in raw HTML.
+          url='https://www.nationalbanken.dk/da/rss-feeds'
+          print('\n=== nationalbanken raw contexts ===')
+          try:
+            req=urllib.request.Request(url,headers=headers)
+            with urllib.request.urlopen(req,timeout=15) as r:
+              body=r.read(2000000).decode('utf-8','ignore')
+            low=body.lower()
+            for needle in ['kopier link','copy link','rssfeed','rss-feed','clipboard','xml']:
+              print('\nNEEDLE',needle)
+              start=0; n=0
+              while n<12:
+                i=low.find(needle,start)
+                if i<0: break
+                print(body[max(0,i-350):i+650].replace('\n',' ')[:1000])
+                start=i+len(needle); n+=1
+          except Exception as e:
+            print('NB_ERROR',type(e).__name__,e)
           PY
