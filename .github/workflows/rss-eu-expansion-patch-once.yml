@@ -1,0 +1,49 @@
+name: RSS EU expansion patch once
+on:
+  push:
+    paths:
+      - .github/workflows/rss-eu-expansion-patch-once.yml
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/editorial/feeds.ts')
+          s=p.read_text()
+          marker='  f("ku-all", "Københavns Universitet"'
+          if 'f("eurlex-parliament-council"' not in s:
+              i=s.index(marker)
+              lines=[
+                '  f("eurlex-parliament-council", "EUR-Lex – Parlamentets og Rådets lovgivning", "https://eur-lex.europa.eu/EN/display-feed.rss?rssId=162", "primary", ["udland", "indland", "penge", "kultur", "viden"], ["eu", "lovgivning", "eu-ret", "forordninger", "direktiver", "parlamentet", "rådet"], { language: "en", country: "EU", authorityWeight: 1 }),',
+                '  f("ec-digital-strategy", "Europa-Kommissionen – Digital strategi", "https://digital-strategy.ec.europa.eu/en/rss.xml", "primary", ["viden", "penge", "udland"], ["eu", "digitalisering", "ai", "teknologi", "platforme", "data", "cybersikkerhed"], { language: "en", country: "EU", authorityWeight: 1 }),',
+                '  f("ec-competition-news", "Europa-Kommissionen – Konkurrencepolitik", "https://competition-policy.ec.europa.eu/node/38/rss_en", "primary", ["penge", "udland"], ["eu", "konkurrence", "statsstøtte", "karteller", "fusioner", "big tech", "regulering"], { language: "en", country: "EU", authorityWeight: 1 }),',
+                '  f("ec-growth-news", "Europa-Kommissionen – Indre marked og industri", "https://ec.europa.eu/newsroom/growth/feed?item_type=1053&sub=1&pr=all", "primary", ["penge", "udland", "viden"], ["eu", "indre marked", "industri", "virksomheder", "sme", "regulering", "standarder"], { language: "en", country: "EU", authorityWeight: 1 }),',
+                '  f("ec-jrc-news", "Europa-Kommissionen – Joint Research Centre", "https://joint-research-centre.ec.europa.eu/node/2/rss_en", "research", ["viden", "penge", "udland", "liv"], ["eu", "forskning", "videnskab", "teknologi", "økonomi", "sundhed", "klima"], { language: "en", country: "EU", authorityWeight: 1 }),',
+              ]
+              block='\n'.join(lines)+'\n'
+              p.write_text(s[:i]+block+s[i:])
+          d=Path('docs/rss-feed-verification.md')
+          t=d.read_text()
+          t=t.replace('currently contains 129 feed endpoints','currently contains 134 feed endpoints')
+          t=t.replace('active registry contains 129 endpoints','active registry contains 134 endpoints')
+          if '## EU expansion verified 2026-09-05' not in t:
+              t += '\n\n## EU expansion verified 2026-09-05\n\n'
+              t += '- EUR-Lex predefined feed 162 (all Parliament and Council legislation): live probe returned HTTP 200 `application/xml` with 100 items. Added as `primary`.\n'
+              t += '- European Commission Digital Strategy: `https://digital-strategy.ec.europa.eu/en/rss.xml` returned HTTP 200 `application/rss+xml` with 10 items. Added as `primary`.\n'
+              t += '- European Commission Competition Policy: `https://competition-policy.ec.europa.eu/node/38/rss_en` returned HTTP 200 `application/rss+xml` with 30 items. Added as `primary`.\n'
+              t += '- European Commission Internal Market/Industry newsroom: `https://ec.europa.eu/newsroom/growth/feed?item_type=1053&sub=1&pr=all` returned HTTP 200 `application/xml` with 100 items. Added as `primary`.\n'
+              t += '- European Commission Joint Research Centre: `https://joint-research-centre.ec.europa.eu/node/2/rss_en` returned HTTP 200 `application/rss+xml` with 30 items. Added as `research`.\n'
+              t += '- European Parliament press-news, ITRE and plenary XML URLs returned HTTP 202 with empty bodies to the GitHub runner. They remain excluded pending positive verification.\n'
+              t += '- Registry total rises from 129 to 134 endpoints; Scan still fetches at most 42 ranked feeds per discovery run.\n'
+          d.write_text(t)
+          PY
+          git config user.name github-actions-bot
+          git config user.email github-actions-bot@users.noreply.github.com
+          git add src/editorial/feeds.ts docs/rss-feed-verification.md
+          git commit -m "Add verified EU Commission and EUR-Lex feeds"
+          git push
