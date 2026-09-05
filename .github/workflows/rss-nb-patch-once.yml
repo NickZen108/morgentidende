@@ -1,0 +1,44 @@
+name: RSS Nationalbanken patch once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rss-nb-patch-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add verified Nationalbanken feeds
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/editorial/feeds.ts')
+          s=p.read_text()
+          anchor='  f("politiken-top", "Politiken – Tophistorier", "https://politiken.dk/rss/tophistorier.rss", "direct", ["indland", "udland", "penge", "kultur", "viden", "liv"], ["danmark", "nyheder", "politik", "verden", "kultur"], { language: "da", country: "DK", authorityWeight: 0.9 }),\n'
+          additions='''  f("nationalbanken-nyt", "Danmarks Nationalbank – Nyt", "https://www.nationalbanken.dk/api/rssfeed?topic=Nyt&lang=da", "primary", ["penge", "indland"], ["danmark", "økonomi", "renter", "finans", "nationalbanken"], { language: "da", country: "DK", authorityWeight: 1 }),\n  f("nationalbanken-press", "Danmarks Nationalbank – Pressemeddelelser", "https://www.nationalbanken.dk/api/rssfeed?topic=Pressemeddelelse&lang=da", "primary", ["penge", "indland"], ["danmark", "økonomi", "renter", "pressemeddelelser", "nationalbanken"], { language: "da", country: "DK", authorityWeight: 1 }),\n  f("nationalbanken-stats", "Danmarks Nationalbank – Statistiknyheder", "https://www.nationalbanken.dk/api/rssfeed?topic=Statistiknyhed&lang=da", "primary", ["penge", "indland", "viden"], ["danmark", "økonomi", "statistik", "finans", "nationalbanken"], { language: "da", country: "DK", authorityWeight: 1 }),\n'''
+          if 'f("nationalbanken-nyt"' not in s:
+            if anchor not in s: raise SystemExit('Politiken anchor not found')
+            s=s.replace(anchor,anchor+additions)
+            p.write_text(s)
+
+          d=Path('docs/rss-feed-verification.md')
+          t=d.read_text()
+          t=t.replace('`src/editorial/feeds.ts` currently contains 114 feed endpoints','`src/editorial/feeds.ts` currently contains 117 feed endpoints')
+          t=t.replace('the active registry contains 114 endpoints.','the active registry contains 117 endpoints.')
+          note='''\n\n## Nationalbanken exact RSS API verified 2026-09-05\n\nInspection of Nationalbanken's current JavaScript bundle showed the official feed construction pattern: `https://www.nationalbanken.dk/api/rssfeed?topic=<TOPIC>&lang=da`. Live probes returned HTTP 200 `application/rss+xml` for `Nyt`, `Pressemeddelelse`, `Analyse`, `Statistiknyhed` and `Markedsmeddelelse`. To limit overlap, Scan now includes three high-value Nationalbanken feeds: `Nyt`, `Pressemeddelelse` and `Statistiknyhed`. They are classified as `primary` sources with authority weight 1.\n'''
+          if '## Nationalbanken exact RSS API verified 2026-09-05' not in t:
+            t += note
+          d.write_text(t)
+          PY
+      - name: Commit verified Nationalbanken feeds
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/editorial/feeds.ts docs/rss-feed-verification.md
+          git commit -m 'Add verified Nationalbanken RSS feeds'
+          git push
