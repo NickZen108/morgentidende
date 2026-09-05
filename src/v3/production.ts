@@ -3,23 +3,27 @@ import {Dossier,Draft,JournalistResult,Review,OrderRow,nextReviewAction} from '.
 import {db,rpc} from './db';
 import {model} from './models';
 import {selectMedia} from './media';
-type ProductionInput={orderId:string}|{diagnostic:'models-v1'};
+type ProductionInput={orderId?:string;diagnostic?:'models-v1'};
 export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
  async run(event:WorkflowEvent<ProductionInput>,step:WorkflowStep){
   // Dashboard-only commissioning probe: fixed input, no tools or automatic retries.
   // At published Luna/Terra rates, 128 output tokens each cost under $0.002 total.
-  if('diagnostic' in event.payload){
+  if(event.payload.diagnostic){
    if(event.payload.diagnostic!=='models-v1')throw new Error('unknown_diagnostic');
    const results=[];
    for(const name of ['openai/gpt-5.6-luna','openai/gpt-5.6-terra']){
     results.push(await step.do(`probe-${name.split('/')[1]}`,{retries:{limit:0,delay:'1 second'}},async()=>{
      const run=this.env.AI.run.bind(this.env.AI) as (name:string,input:Record<string,unknown>,options:Record<string,unknown>)=>Promise<unknown>;
-     return await run(name,{input:'Reply with exactly OK.',reasoning:{effort:'low'},max_output_tokens:128,store:false},{gateway:{id:'default'}});
+     const response=await run(name,{input:'Reply with exactly OK.',reasoning:{effort:'low'},max_output_tokens:128,store:false},{gateway:{id:'default'}}) as {status?:string;output_text?:string};
+     if(response.status&&response.status!=='completed')throw new Error(`probe_${name.split('/')[1]}_${response.status}`);
+     if((response.output_text??'').trim()!=='OK')throw new Error(`probe_${name.split('/')[1]}_unexpected_output`);
+     return {model:name,ok:true};
     }));
    }
    return results;
   }
   const id=event.payload.orderId;
+  if(!id)throw new Error('order_id_required');
   try {
   const order=await step.do('load-order',async()=>{
    const [row]=await db<OrderRow[]>(this.env,`v3_orders?id=eq.${id}`);
@@ -71,4 +75,3 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
   }
  }
 }
-
