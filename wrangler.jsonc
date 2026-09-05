@@ -1,9 +1,9 @@
 {
  "$schema":"node_modules/wrangler/config-schema.json",
- "name":"morgentidende-v2","main":"src/index.ts","compatibility_date":"2026-09-05","compatibility_flags":["nodejs_compat"],"keep_vars":true,
+ "name":"morgentidende-v3","main":"src/index.ts","compatibility_date":"2026-09-05","compatibility_flags":["nodejs_compat"],"keep_vars":true,
  "ai":{"binding":"AI"},
  "assets":{"directory":"./public","binding":"ASSETS","run_worker_first":true},
- "vars":{"SUPABASE_URL":"https://ginjcxsmmksdkinweyva.supabase.co","PUBLIC_ORIGIN":"https://morgentidende-v2.nicolaipetersen108.workers.dev"},
+ "vars":{"SUPABASE_URL":"https://ginjcxsmmksdkinweyva.supabase.co","PUBLIC_ORIGIN":"https://morgentidende-v3.nicolaipetersen108.workers.dev"},
  "workflows":[{"binding":"PRODUCTION","name":"morgentidende-v3-production","class_name":"Production"},{"binding":"CHIEF","name":"morgentidende-v3-chief","class_name":"Chief"}],
  "r2_buckets":[{"binding":"MEDIA_BUCKET","bucket_name":"morgentidende-v3-media"}],
  "triggers":{"crons":["*/15 * * * *"]},"observability":{"enabled":true,"head_sampling_rate":1}
