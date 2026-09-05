@@ -1,5 +1,6 @@
 import {db,rpc,boundedText} from './v3/db';
 import {ChatCommand,Order} from './v3/contracts';
+import type {ChiefInput} from './v3/chief';
 import {WorkerEntrypoint} from 'cloudflare:workers';
 import {z} from 'zod';
 import {timingSafeEqual} from 'node:crypto';
@@ -31,7 +32,7 @@ async function verifiedChatCommand(request:Request){
  if(JSON.stringify(canonical)!==JSON.stringify(received))throw new Error('chatops_payload_mismatch');
  return received;
 }
-async function startChiefOnce(env:Env,id:string,params:Record<string,unknown>){
+async function startChiefOnce(env:Env,id:string,params:ChiefInput){
  try{await env.CHIEF.create({id,params});return {id,started:true};}
  catch(error){
   try{const instance=await env.CHIEF.get(id);const status=await instance.status();return {id,started:false,status};}
