@@ -12,7 +12,7 @@ Verified/expanded on 2026-09-05 for Morgentidende's curated feed pool.
 
 ## Active curated registry
 
-`src/editorial/feeds.ts` currently contains 118 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
+`src/editorial/feeds.ts` currently contains 127 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
 
 Scan treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
 
@@ -114,7 +114,7 @@ A GitHub-hosted live audit requested every configured endpoint and inspected the
 - 1 invalid Danmarks Nationalbank URL returned HTTP 404 and was removed; the correct Nationalbanken API pattern was subsequently discovered and three verified feeds were added.
 - There were zero cases where HTTP 200 returned an ordinary HTML page masquerading as a configured feed.
 
-After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 118 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
+After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 127 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
 
 ## Danish endpoint discovery pass 2026-09-05
 
@@ -135,3 +135,12 @@ After later additions of Politiken, three Nationalbanken feeds and Finansministe
 - Konkurrence- og Forbrugerstyrelsens current news archive was inspected in the same way. No parseable RSS/Atom endpoint was exposed; obvious feed paths returned 404 or normal HTML.
 - Udlændinge- og Integrationsministeriet returned `text/xml` for several `?rss=true` guesses, but the bodies were zero bytes. These are not valid feeds and remain excluded.
 - Justitsministeriet, politiet and Indenrigs- og Sundhedsministeriet did not yield verified RSS endpoints in the same pass. Sundhedsstyrelsen rate-limited the GitHub probe (HTTP 429) and remains unresolved rather than classified as feedless.
+
+
+## Retsinformation and Høringsportalen verified 2026-09-05
+
+Retsinformation documents an official ELI Atom update feed at `https://www.retsinformation.dk/eli/eli-update-feed.atom`. A live GitHub-runner probe returned HTTP 200 `text/xml`, contained 495 Atom entries in the fetched body, and is now active as a high-authority `primary` feed.
+
+Høringsportalen explicitly documents that its syndication feeds use Atom and return the 25 latest updated hearings. Live probes returned HTTP 200 `application/atom+xml` with 25 entries for the generic feed and each selected high-value area feed. Scan now includes all hearings plus targeted feeds for police, justice/courts, macroeconomy/digitalisation/statistics, taxes, health, immigration/integration, and business.
+
+This increases the curated registry from 118 to 127 endpoints. Scan still ranks metadata first and fetches at most 42 feeds per discovery run.
