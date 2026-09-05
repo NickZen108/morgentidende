@@ -12,7 +12,7 @@ Verified/expanded on 2026-09-05 for Morgentidende's curated feed pool.
 
 ## Active curated registry
 
-`src/editorial/feeds.ts` currently contains 127 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
+`src/editorial/feeds.ts` currently contains 129 feed endpoints across Danish news/research, major international reporting, EU/economics, libertarian sources, islam-critical discovery radar, technology/AI, natural science, medicine, longevity/biohacking, neuroscience/meditation, psychology, space and climate/energy.
 
 Scan treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
 
@@ -114,7 +114,7 @@ A GitHub-hosted live audit requested every configured endpoint and inspected the
 - 1 invalid Danmarks Nationalbank URL returned HTTP 404 and was removed; the correct Nationalbanken API pattern was subsequently discovered and three verified feeds were added.
 - There were zero cases where HTTP 200 returned an ordinary HTML page masquerading as a configured feed.
 
-After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 127 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
+After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 129 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
 
 ## Danish endpoint discovery pass 2026-09-05
 
@@ -144,3 +144,10 @@ Retsinformation documents an official ELI Atom update feed at `https://www.retsi
 Høringsportalen explicitly documents that its syndication feeds use Atom and return the 25 latest updated hearings. Live probes returned HTTP 200 `application/atom+xml` with 25 entries for the generic feed and each selected high-value area feed. Scan now includes all hearings plus targeted feeds for police, justice/courts, macroeconomy/digitalisation/statistics, taxes, health, immigration/integration, and business.
 
 This increases the curated registry from 118 to 127 endpoints. Scan still ranks metadata first and fetches at most 42 feeds per discovery run.
+
+
+## EU primary feeds verified 2026-09-05
+
+- Council of the EU / European Council: official press-release RSS endpoint `https://www.consilium.europa.eu/en/rss/pressreleases.ashx` added as `primary`.
+- Court of Justice of the European Union: official Danish+English press-release RSS endpoint added as `primary`.
+- Registry total: 129 endpoints. Scan still fetches at most 42 ranked feeds per discovery run.
