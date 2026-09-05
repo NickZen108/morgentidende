@@ -1,0 +1,43 @@
+name: Deploy v3
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: morgentidende-v3-production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify before deploy
+        run: npm run check
+      - name: Deploy main Worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Deploy Scan Worker
+        run: npx wrangler deploy --config wrangler.scan.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Smoke test public frontpage
+        run: |
+          curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 3 \
+            https://morgentidende-v3.nicolaipetersen108.workers.dev/api/health
+          curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 3 \
+            https://morgentidende-v3.nicolaipetersen108.workers.dev/api/frontpage > /dev/null
