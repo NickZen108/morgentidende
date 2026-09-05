@@ -23,6 +23,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Generate main Worker types
+        run: npx wrangler types
+      - name: Generate Scan Worker types
+        run: npx wrangler types scan-configuration.d.ts --config wrangler.scan.jsonc --env-interface ScanEnv
       - name: Verify before deploy
         run: npm run check
       - name: Deploy main Worker
