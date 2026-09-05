@@ -16,18 +16,21 @@ Verified/expanded on 2026-09-05 for Morgentidende's curated feed pool.
 
 Scan treats the curated registry as primary discovery. BGE-M3 semantically ranks feed metadata against the Scan brief; only a bounded subset is fetched. Google News/Bing News are fallback discovery. RSS and Atom are both supported.
 
-## Danish news verification pass
+## Danish news and primary-source verification
 
 | Source | Feed | Mode | Verification evidence |
 |---|---|---|---|
 | DR Nyheder | https://www.dr.dk/nyheder/service/feeds/allenyheder | direct | full live audit returned HTTP 200 `application/rss+xml` |
-| TV 2 Nyheder | https://services.tv2.dk/api/feeds/nyheder/rss | direct | GitHub runner had a DNS-resolution failure; current feed-reader evidence still shows fresh items, so keep provisionally |
+| TV 2 Nyheder | https://services.tv2.dk/api/feeds/nyheder/rss | direct | GitHub runner has a DNS-resolution failure; current feed-reader evidence still shows fresh items, so keep provisionally |
 | Jyllands-Posten – Topnyheder | https://feeds.jp.dk/jp/topnyheder | direct | full live audit returned HTTP 200 `application/rss+xml` |
+| Politiken – Tophistorier | https://politiken.dk/rss/tophistorier.rss | direct | live probe returned HTTP 200 `application/rss+xml` |
+| Danmarks Nationalbank – Nyt | https://www.nationalbanken.dk/api/rssfeed?topic=Nyt&lang=da | primary | live probe returned HTTP 200 `application/rss+xml` |
+| Danmarks Nationalbank – Pressemeddelelser | https://www.nationalbanken.dk/api/rssfeed?topic=Pressemeddelelse&lang=da | primary | live probe returned HTTP 200 `application/rss+xml` |
+| Danmarks Nationalbank – Statistiknyheder | https://www.nationalbanken.dk/api/rssfeed?topic=Statistiknyhed&lang=da | primary | live probe returned HTTP 200 `application/rss+xml` |
+| Finansministeriet – Nyheder | https://fm.dk/nyheder/nyhedsarkiv/?rss=true | primary | official front page exposes this RSS link; direct fetch reports XML |
 | Københavns Universitet feeds | multiple `nyheder.ku.dk/.../?get_rss=1` | primary/research | all five configured KU feeds returned HTTP 200 XML in the full audit |
 
-Berlingske and Politiken remain out of `feeds.ts` because a concrete current endpoint has not yet been independently resolved. We do not guess RSS URLs.
-
-Danmarks Nationalbank confirms on its official site that it offers multiple RSS feeds, but the previously configured `https://www.nationalbanken.dk/api/rss/nyheder` returned HTTP 404 in the live audit. It has been removed until a current XML endpoint is positively identified.
+Berlingske remains out of `feeds.ts`: multiple obvious and historical endpoint patterns returned 404, and no current concrete RSS URL has been positively resolved. We do not guess RSS URLs.
 
 ## Major international feed verification pass
 
@@ -89,7 +92,9 @@ Count retained with verified/independently supported RSS: 5/5.
 
 - TheReligionOfPeace.com: the site's own FAQ explicitly states that it has no RSS feed. Keep out of the RSS pool.
 - Gatestone Institute: useful as a possible web/discovery source, but a current working RSS endpoint was not verified. Do not include it in the active RSS pool until a current feed is verified.
-- Danmarks Nationalbank: official RSS exists, but the exact current XML endpoint is unresolved; the invalid 404 endpoint was removed.
+- Berlingske: no current concrete feed URL positively verified.
+- Danmarks Statistik: `rss.dst.dk` is live, but current obvious/historical routes and tested query variants resolve to HTML or 404 rather than RSS/XML.
+- Erhvervsministeriet: current site code contains RSS-handling logic, but no stable RSS endpoint has yet been positively verified.
 
 ## Editorial safety
 
@@ -97,36 +102,26 @@ Islam-critical discovery feeds are radar only. Their own prose is not evidence. 
 
 ## Runtime status
 
-The curated-feed registry compiles. Scan integration is implemented with bounded feed selection, RSS/Atom parsing, per-feed failure tolerance, BGE-M3 feed ranking and semantic deduplication, discovery-only outbound-link promotion, and Google/Bing fallback. The final CI after removing the temporary audit/cleanup workflows passed.
+The curated-feed registry compiles. Scan integration is implemented with bounded feed selection, RSS/Atom parsing, per-feed failure tolerance, BGE-M3 feed ranking and semantic deduplication, discovery-only outbound-link promotion, and Google/Bing fallback.
 
 ## Full endpoint audit 2026-09-05
 
-A GitHub-hosted live audit requested every configured endpoint and inspected the returned body for RSS/Atom/XML structure. Before cleanup there were 114 configured endpoints:
+A GitHub-hosted live audit requested every configured endpoint and inspected the returned body for RSS/Atom/XML structure. Before later Danish additions there were 114 configured endpoints:
 
 - 105 returned parseable RSS/Atom/XML directly with HTTP 200.
 - 7 were blocked or rate-limited to the audit runner (403/429): Euractiv, Human Progress, IEA, Jihad Watch, FrontPage Magazine, NASA legacy feed and Carbon Brief.
 - 1 (TV 2) failed DNS resolution from the GitHub runner but is retained provisionally because independent current feed-reader evidence shows fresh items.
-- 1 (Danmarks Nationalbank) returned HTTP 404 and was removed.
-- There were zero cases where HTTP 200 returned an ordinary HTML page masquerading as a feed.
+- 1 invalid Danmarks Nationalbank URL returned HTTP 404 and was removed; the correct Nationalbanken API pattern was subsequently discovered and three verified feeds were added.
+- There were zero cases where HTTP 200 returned an ordinary HTML page masquerading as a configured feed.
 
-After the Nationalbanken cleanup and addition of one verified Politiken feed, the active registry contains 118 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
-
+After later additions of Politiken, three Nationalbanken feeds and Finansministeriet, the active registry contains 118 endpoints. Blocked feeds do not abort Scan; each is skipped independently if unavailable.
 
 ## Danish endpoint discovery pass 2026-09-05
 
-- Politiken's historical-looking RSS paths were live-probed from a GitHub runner. `senestenyt.rss`, `tophistorier.rss`, `indland.rss`, `udland.rss` and `kultur.rss` all returned HTTP 200 `application/rss+xml` on 2026-09-05. `erhverv.rss` returned 404. To avoid unnecessary duplicate ingestion, only `https://politiken.dk/rss/tophistorier.rss` is added to the active Scan registry for now.
-- Berlingske's obvious candidates `/rss`, `/feed`, `/rss.xml` and the legacy `section/nyhedsoversigt/&template=rss&mime=xml` all returned 404. Berlingske is therefore still excluded until its actual current feed URL is resolved; current feed directories indicate that a working feed exists, but we do not guess the endpoint.
+- Politiken's RSS paths `senestenyt.rss`, `tophistorier.rss`, `indland.rss`, `udland.rss` and `kultur.rss` all returned HTTP 200 `application/rss+xml`. `erhverv.rss` returned 404. To avoid unnecessary duplicate ingestion, only `https://politiken.dk/rss/tophistorier.rss` is active.
+- Berlingske's obvious candidates `/rss`, `/feed`, `/rss.xml`, several `/rss/*.xml`/`.rss` variants and the legacy `section/nyhedsoversigt/&template=rss&mime=xml` all returned 404. It remains excluded.
 - TV 2's `services.tv2.dk` endpoint still fails DNS resolution from GitHub runners; obvious alternatives under `nyheder.tv2.dk` returned 404. The existing TV 2 entry remains provisional because current feed readers still show fresh items from it.
-- Nationalbanken's RSS page embeds 17 topic metadata objects, but the raw page does not expose their feed URLs directly; the component appears to construct them client-side. The invalid guessed endpoint remains removed until the actual request pattern is identified.
-
-
-## Nationalbanken exact RSS API verified 2026-09-05
-
-Inspection of Nationalbanken's current JavaScript bundle showed the official feed construction pattern: `https://www.nationalbanken.dk/api/rssfeed?topic=<TOPIC>&lang=da`. Live probes returned HTTP 200 `application/rss+xml` for `Nyt`, `Pressemeddelelse`, `Analyse`, `Statistiknyhed` and `Markedsmeddelelse`. To limit overlap, Scan now includes three high-value Nationalbanken feeds: `Nyt`, `Pressemeddelelse` and `Statistiknyhed`. They are classified as `primary` sources with authority weight 1.
-
-
-## Finansministeriet RSS verified 2026-09-05
-
-Finansministeriets front page explicitly exposes an RSS link for its news archive at `https://fm.dk/nyheder/nyhedsarkiv/?rss=true`. A direct fetch reports XML (`text/xml`), and the feed is now active as a `primary` Danish source with authority weight 1 for Penge/Indland.
-
-Danmarks Statistik was also probed again. `rss.dst.dk` is live, but obvious historical paths currently resolve to HTML pages or 404s rather than RSS/XML. No guessed DST feed has been added. Erhvervsministeriets current front page JavaScript contains RSS-handling code, but this pass did not expose a concrete stable feed URL, so it remains out until positively verified.
+- Inspection of Nationalbanken's current JavaScript bundle revealed the official construction pattern `https://www.nationalbanken.dk/api/rssfeed?topic=<TOPIC>&lang=da`. `Nyt`, `Pressemeddelelse`, `Analyse`, `Statistiknyhed` and `Markedsmeddelelse` all returned HTTP 200 `application/rss+xml`; Scan uses the first, second and fourth to limit overlap.
+- Finansministeriets front page explicitly exposes `https://fm.dk/nyheder/nyhedsarkiv/?rss=true`, which returns XML and is active as a primary source.
+- A deeper Erhvervsministeriet pass tested `/aktuelt`, `/aktuelt/nyheder`, year archives, `/presse` and other plausible routes with `?rss=true`; all returned ordinary HTML, not feeds. No EM feed was added.
+- A deeper Danmarks Statistik pass tested the current `rss.dst.dk` site, legacy paths and `rss=true`/`format=rss`/`output=rss` variants on current news/publication URLs; all tested candidates were HTML or 404. No DST feed was added.
