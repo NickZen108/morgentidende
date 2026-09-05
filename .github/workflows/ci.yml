@@ -16,7 +16,21 @@ jobs:
       - run: npm ci
       - run: npx wrangler types
       - run: npx wrangler types scan-configuration.d.ts --config wrangler.scan.jsonc --env-interface ScanEnv
-      - run: npm run check
+      - name: Capture TypeScript diagnostics
+        id: typecheck_capture
+        continue-on-error: true
+        run: npm run typecheck > typecheck.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: typecheck-diagnostics
+          path: typecheck.log
+      - name: Fail if typecheck failed
+        if: steps.typecheck_capture.outcome != 'success'
+        run: |
+          cat typecheck.log
+          exit 1
+      - run: npm test
       - run: node scripts/test-production.mjs
       - run: npx wrangler deploy --dry-run
       - run: npx wrangler deploy --config wrangler.scan.jsonc --dry-run
