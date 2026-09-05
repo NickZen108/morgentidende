@@ -13,6 +13,7 @@ permissions:
 concurrency:
   group: morgentidende-v3-chatops
   cancel-in-progress: false
+  queue: max
 
 jobs:
   dispatch:
