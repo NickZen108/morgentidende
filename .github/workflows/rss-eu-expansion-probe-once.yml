@@ -1,0 +1,40 @@
+name: RSS EU expansion probe once
+on:
+  push:
+    paths:
+      - .github/workflows/rss-eu-expansion-probe-once.yml
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          python3 - <<'PY'
+          import urllib.request, urllib.error
+          urls={
+            'eurlex-legislation':'https://eur-lex.europa.eu/EN/display-feed.rss?rssId=162',
+            'digital-strategy':'https://digital-strategy.ec.europa.eu/en/rss.xml',
+            'competition':'https://competition-policy.ec.europa.eu/node/38/rss_en',
+            'growth':'https://ec.europa.eu/newsroom/growth/feed?item_type=1053&sub=1&pr=all',
+            'europarl-news':'https://www.europarl.europa.eu/rss/doc/press-news/en.xml',
+            'europarl-itre':'https://www.europarl.europa.eu/rss/committee/itre/en.xml',
+            'europarl-plenary':'https://www.europarl.europa.eu/rss/doc/plenary/en.xml',
+            'jrc':'https://joint-research-centre.ec.europa.eu/node/2/rss_en',
+          }
+          H={'User-Agent':'Morgentidende/2.0 RSS Probe','Accept':'application/rss+xml,application/atom+xml,application/xml,text/xml,*/*'}
+          for name,url in urls.items():
+            try:
+              req=urllib.request.Request(url,headers=H)
+              with urllib.request.urlopen(req,timeout=20) as r:
+                b=r.read(300000).decode('utf-8','ignore')
+                lo=b.lstrip().lower()
+                feed=(('<rss' in lo[:12000] and '<item' in lo) or ('<feed' in lo[:12000] and '<entry' in lo) or ('<rdf:rdf' in lo[:12000] and '<item' in lo))
+                entries=lo.count('<item')+lo.count('<entry')
+                print('RESULT',name,r.status,'FEED' if feed else 'NONFEED','ENTRIES',entries,'CT',r.headers.get('content-type'),'LEN',len(b),'FINAL',r.geturl())
+            except urllib.error.HTTPError as e:
+              print('HTTP',name,e.code,url)
+            except Exception as e:
+              print('ERR',name,type(e).__name__,e,url)
+          PY
