@@ -1,29 +1,23 @@
-# Morgentidende
+# Morgentidende v3
 
-Morgentidende bygges fra bunden som en enkel, robust nyhedsplatform med Cloudflare som runtime og GitHub som source of truth.
+Cloudflare Workers + Workflows, Supabase Postgres og en lille HTML/CSS/JS-forside.
 
-## Redaktionel kæde
+Chefredaktør (Luna) → Desk (Luna med websøgning) → Journalist (Terra low) → Media → Chefredaktør → deterministisk Publish. Scan er en separat Worker.
 
-`Scan → Desk → Journalist → Media → Chefredaktør → Publish`
+## Udvikling
 
-Foreløbig modelrollefordeling:
+`npm ci`, `npx wrangler types`, `npx wrangler types scan-configuration.d.ts --config wrangler.scan.jsonc --env-interface ScanEnv`, `npm run check`.
 
-- **Scan:** deterministisk indsamling og normalisering af kandidater.
-- **Desk:** Qwen3-30B vurderer relevans, nyhedsværdi og prioritet.
-- **Journalist:** Terra skriver artiklen ud fra godkendt kildegrundlag.
-- **Media:** Gemma 4 26B vælger/forbereder billedstrategi; FLUX bruges kun ved behov for genereret grafik.
-- **Chefredaktør:** Terra laver sidste redaktionelle gennemgang.
-- **Publish:** deterministisk kode publicerer godkendt output.
+GitHub Actions kører typekontrol, tests, begge Worker-builds og netkontrol af feedregisteret. Feedresultater gemmes som artifact. Registeret er en kandidatliste, ikke dokumentation for aktiv eller størrelsesrangeret avisdækning.
 
-## Principper
+## Drift
 
-- Ny kodebase; gammel `avisen`-kode kopieres ikke ind.
-- Få, tydelige trin og ingen skjulte gates.
-- Redaktionelle beslutninger gemmes som struktureret data.
-- Publicering skal være idempotent og kunne genkøres sikkert.
-- Secrets må aldrig ligge i GitHub.
-- Frontend og backend skal kunne deployes samlet på Cloudflare.
+Den eksisterende Worker hedder fortsat `morgentidende-v2` for at bevare adresse og secrets; runtime er v3. Databasen bruger udelukkende `v3_*`-tabeller. `v3_settings.enabled=false` stopper automatisk bestilling. V3-Scan konfigureres separat via `wrangler.scan.jsonc`.
 
-## Status
+`SUPABASE_SERVICE_ROLE_KEY` findes kun som Worker-secret. `ADMIN_TOKEN` er nødvendigt for manuelle produktionskald. Offentlig adgang giver kun publicerede artikler, billeder og forside.
 
-Repoet er initialiseret. Første mål er en deploybar v0 med health endpoint, statisk frontend og en typed redaktionel pipeline.
+## Status og resterende kontrol
+
+Før automatisk drift: verificér modeller og web_search hos Cloudflare, test Media med faktiske billeder, gennemfør end-to-end-produktion og gennemgå feedrapporten. Samme billedfamilie har en ubetinget database-cooldown på 10 dage; registrering af varianter fra forskellige kilde-URL'er skal færdiggøres før billedarkivet kan betragtes som produktionsklart.
+
+Migrationsplan: [docs/v3-build-plan.md](docs/v3-build-plan.md). Databaseintegrationstesten i `tests/database.sql` kører i en transaktion og ruller alt tilbage.

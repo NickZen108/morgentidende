@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, morgentidende-v3]
   pull_request:
 
 jobs:
@@ -13,5 +13,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+      - run: npm ci
+      - run: npx wrangler types
+      - run: npx wrangler types scan-configuration.d.ts --config wrangler.scan.jsonc --env-interface ScanEnv
       - run: npm run check
+      - run: node scripts/test-production.mjs
+      - run: npx wrangler deploy --dry-run
+      - run: npx wrangler deploy --config wrangler.scan.jsonc --dry-run
+      - name: Verify publisher feeds without AI spending
+        run: node scripts/verify-feeds.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scan-feed-verification
+          path: reports/scan-feeds.json

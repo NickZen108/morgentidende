@@ -1,0 +1,1206 @@
+[
+  {
+    "publisher": "Jyllands-Posten",
+    "country": "DK",
+    "url": "https://feeds.jp.dk/jp/topnyheder",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "Politiken",
+    "country": "DK",
+    "url": "https://politiken.dk/rss/tophistorier.rss",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "Berlingske",
+    "country": "DK",
+    "url": "https://www.berlingske.dk/content/rss",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Guardian",
+    "country": "GB",
+    "url": "https://www.theguardian.com/world/rss",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The New York Times",
+    "country": "US",
+    "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Washington Post",
+    "country": "US",
+    "url": "https://feeds.washingtonpost.com/rss/world",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "Le Monde",
+    "country": "FR",
+    "url": "https://www.lemonde.fr/international/rss_full.xml",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "Le Figaro",
+    "country": "FR",
+    "url": "https://www.lefigaro.fr/rss/figaro_international.xml",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "El País",
+    "country": "ES",
+    "url": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "La Repubblica",
+    "country": "IT",
+    "url": "https://www.repubblica.it/rss/esteri/rss2.0.xml",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "Corriere della Sera",
+    "country": "IT",
+    "url": "https://xml2.corriereobjects.it/rss/esteri.xml",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Hindu",
+    "country": "IN",
+    "url": "https://www.thehindu.com/news/international/feeder/default.rss",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Times of India",
+    "country": "IN",
+    "url": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "Dawn",
+    "country": "PK",
+    "url": "https://www.dawn.com/feeds/world",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Japan Times",
+    "country": "JP",
+    "url": "https://www.japantimes.co.jp/feed/",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "South China Morning Post",
+    "country": "HK",
+    "url": "https://www.scmp.com/rss/91/feed",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Sydney Morning Herald",
+    "country": "AU",
+    "url": "https://www.smh.com.au/rss/world.xml",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Age",
+    "country": "AU",
+    "url": "https://www.theage.com.au/rss/world.xml",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Independent",
+    "country": "GB",
+    "url": "https://www.independent.co.uk/news/world/rss",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "The Telegraph",
+    "country": "GB",
+    "url": "https://www.telegraph.co.uk/news/rss.xml",
+    "enabled": true,
+    "verification": "passed",
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "dailytelegraph.com.au",
+    "country": "AU",
+    "url": "https://www.dailytelegraph.com.au/news/breaking-news/rss",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "heraldsun.com.au",
+    "country": "AU",
+    "url": "https://www.heraldsun.com.au/news/breaking-news/rss",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "couriermail.com.au",
+    "country": "AU",
+    "url": "https://www.couriermail.com.au/rss",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "canberratimes.com.au",
+    "country": "AU",
+    "url": "https://www.canberratimes.com.au/rss.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "brisbanetimes.com.au",
+    "country": "AU",
+    "url": "https://www.brisbanetimes.com.au/rss/feed.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "themercury.com.au",
+    "country": "AU",
+    "url": "https://www.themercury.com.au/rss",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "thedailystar.net",
+    "country": "BD",
+    "url": "https://www.thedailystar.net/frontpage/rss.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "jugantor.com",
+    "country": "BD",
+    "url": "https://www.jugantor.com/feed/rss.xml",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "kalerkantho.com",
+    "country": "BD",
+    "url": "https://www.kalerkantho.com/rss.xml",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "prothomalo.com",
+    "country": "BD",
+    "url": "https://www.prothomalo.com/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "folha.uol.com.br",
+    "country": "BR",
+    "url": "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "riotimesonline.com",
+    "country": "BR",
+    "url": "https://riotimesonline.com/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "jornaldebrasilia.com.br",
+    "country": "BR",
+    "url": "https://jornaldebrasilia.com.br/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "financialpost.com",
+    "country": "CA",
+    "url": "https://business.financialpost.com/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "nationalpost.com",
+    "country": "CA",
+    "url": "https://nationalpost.com/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "ottawacitizen.com",
+    "country": "CA",
+    "url": "https://ottawacitizen.com/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "theprovince.com",
+    "country": "CA",
+    "url": "https://theprovince.com/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "lapresse.ca",
+    "country": "CA",
+    "url": "https://www.lapresse.ca/actualites/rss",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "thestar.com",
+    "country": "CA",
+    "url": "https://www.thestar.com/content/thestar/feed.RSSManagerServlet.articles.topstories.rss",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "torontosun.com",
+    "country": "CA",
+    "url": "https://torontosun.com/category/news/feed",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "ladepeche.fr",
+    "country": "FR",
+    "url": "https://www.ladepeche.fr/rss.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "sudouest.fr",
+    "country": "FR",
+    "url": "https://www.sudouest.fr/essentiel/rss.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "ouest-france.fr",
+    "country": "FR",
+    "url": "https://www.ouest-france.fr/rss-en-continu.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "zeit.de",
+    "country": "DE",
+    "url": "http://newsfeed.zeit.de/index",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "faz.net",
+    "country": "DE",
+    "url": "https://www.faz.net/rss/aktuell/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "thestandard.com.hk",
+    "country": "HK",
+    "url": "https://www.thestandard.com.hk/newsfeed/latest/news.xml",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "stheadline.com",
+    "country": "HK",
+    "url": "https://hd.stheadline.com/rss/news/daily/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "hket.com",
+    "country": "HK",
+    "url": "https://www.hket.com/rss/hongkong",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "indianexpress.com",
+    "country": "IN",
+    "url": "http://indianexpress.com/print/front-page/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "dnaindia.com",
+    "country": "IN",
+    "url": "https://www.dnaindia.com/feeds/india.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "business-standard.com",
+    "country": "IN",
+    "url": "https://www.business-standard.com/rss/home_page_top_stories.rss",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "freepressjournal.in",
+    "country": "IN",
+    "url": "https://www.freepressjournal.in/stories.rss",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "deccanchronicle.com",
+    "country": "IN",
+    "url": "https://www.deccanchronicle.com/rss_feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "economictimes.indiatimes.com",
+    "country": "IN",
+    "url": "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "financialexpress.com",
+    "country": "IN",
+    "url": "https://www.financialexpress.com/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "thehindubusinessline.com",
+    "country": "IN",
+    "url": "https://www.thehindubusinessline.com/feeder/default.rss",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "gujaratsamachar.com",
+    "country": "IN",
+    "url": "https://www.gujaratsamachar.com/rss/top-stories",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "maharashtratimes.com",
+    "country": "IN",
+    "url": "https://maharashtratimes.com/rssfeedsdefault.cms",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "loksatta.com",
+    "country": "IN",
+    "url": "https://www.loksatta.com/desh-videsh/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "amarujala.com",
+    "country": "IN",
+    "url": "https://www.amarujala.com/rss/breaking-news.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "navbharattimes.indiatimes.com",
+    "country": "IN",
+    "url": "https://navbharattimes.indiatimes.com/rssfeedsdefault.cms",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "patrika.com",
+    "country": "IN",
+    "url": "http://api.patrika.com/rss/india-news",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "jansatta.com",
+    "country": "IN",
+    "url": "https://www.jansatta.com/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "livehindustan.com",
+    "country": "IN",
+    "url": "https://feed.livehindustan.com/rss/3127",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "bhaskar.com",
+    "country": "IN",
+    "url": "https://www.bhaskar.com/rss-feed/1061/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "divyabhaskar.co.in",
+    "country": "IN",
+    "url": "https://www.divyabhaskar.co.in/rss-feed/1037/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "republika.co.id",
+    "country": "ID",
+    "url": "https://www.republika.co.id/rss/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "tribunnews.com",
+    "country": "ID",
+    "url": "https://www.tribunnews.com/rss",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "irishmirror.ie",
+    "country": "IE",
+    "url": "https://www.irishmirror.ie/?service=rss",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "liberoquotidiano.it",
+    "country": "IT",
+    "url": "https://www.liberoquotidiano.it/rss.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "ilmattino.it",
+    "country": "IT",
+    "url": "https://www.ilmattino.it/?sez=XML&args&p=search&args[box]=Home&limit=20&layout=rss",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "asahi.com",
+    "country": "JP",
+    "url": "http://rss.asahi.com/rss/asahi/newsheadlines.rdf",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "excelsior.com.mx",
+    "country": "MX",
+    "url": "https://www.excelsior.com.mx/rss.xml",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "reforma.com",
+    "country": "MX",
+    "url": "https://www.reforma.com/rss/portada.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "vanguardia.com.mx",
+    "country": "MX",
+    "url": "https://vanguardia.com.mx/rss.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "elsiglodetorreon.com.mx",
+    "country": "MX",
+    "url": "https://www.elsiglodetorreon.com.mx/index.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "elfinanciero.com.mx",
+    "country": "MX",
+    "url": "https://www.elfinanciero.com.mx/arc/outboundfeeds/rss/?outputType=xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "elnorte.com",
+    "country": "MX",
+    "url": "https://www.elnorte.com/rss/portada.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "informador.mx",
+    "country": "MX",
+    "url": "https://www.informador.mx/rss/ultimas-noticias.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "24-horas.mx",
+    "country": "MX",
+    "url": "https://www.24-horas.mx/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "debate.com.mx",
+    "country": "MX",
+    "url": "https://www.debate.com.mx/rss/feed.xml",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "diario.mx",
+    "country": "MX",
+    "url": "https://diario.mx/jrz/media/sitemaps/rss.xml",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "eluniversal.com.mx",
+    "country": "MX",
+    "url": "https://www.eluniversal.com.mx/seccion/1671/rss.xml",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "thenationonlineng.net",
+    "country": "NG",
+    "url": "https://thenationonlineng.net/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "guardian.ng",
+    "country": "NG",
+    "url": "https://guardian.ng/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "tribuneonlineng.com",
+    "country": "NG",
+    "url": "http://tribuneonlineng.com/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "tribune.com.pk",
+    "country": "PK",
+    "url": "https://tribune.com.pk/feed/home",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "nation.com.pk",
+    "country": "PK",
+    "url": "https://nation.com.pk/rss/top-stories",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "jang.com.pk",
+    "country": "PK",
+    "url": "https://jang.com.pk/rss/1/1",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "thenews.com.pk",
+    "country": "PK",
+    "url": "https://www.thenews.com.pk/rss/1/1",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "express.pk",
+    "country": "PK",
+    "url": "https://www.express.pk/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "inquirer.net",
+    "country": "PH",
+    "url": "https://www.inquirer.net/fullfeed",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "manilatimes.net",
+    "country": "PH",
+    "url": "https://www.manilatimes.net/rssfeed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "philstar.com",
+    "country": "PH",
+    "url": "https://www.philstar.com/rss/headlines",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "bworldonline.com",
+    "country": "PH",
+    "url": "https://www.bworldonline.com/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "sunstar.com.ph",
+    "country": "PH",
+    "url": "https://www.sunstar.com.ph/rssFeed/selected",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "manilastandard.net",
+    "country": "PH",
+    "url": "https://manilastandard.net/feed/all",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "tempo.com.ph",
+    "country": "PH",
+    "url": "http://tempo.com.ph/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "businessmirror.com.ph",
+    "country": "PH",
+    "url": "https://businessmirror.com.ph/feed/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "dziennik.pl",
+    "country": "PL",
+    "url": "http://rss.dziennik.pl/Dziennik-PL/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "gazetaprawna.pl",
+    "country": "PL",
+    "url": "http://rss.gazetaprawna.pl/GazetaPrawna",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "rp.pl",
+    "country": "PL",
+    "url": "https://www.rp.pl/rss/1019",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "mk.ru",
+    "country": "RU",
+    "url": "https://www.mk.ru/rss/index.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "rg.ru",
+    "country": "RU",
+    "url": "https://rg.ru/xml/index.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "themoscowtimes.com",
+    "country": "RU",
+    "url": "https://www.themoscowtimes.com/rss/news",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "kommersant.ru",
+    "country": "RU",
+    "url": "https://www.kommersant.ru/RSS/main.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "sowetanlive.co.za",
+    "country": "ZA",
+    "url": "https://www.sowetanlive.co.za/rss/?publication=sowetan-live",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "citizen.co.za",
+    "country": "ZA",
+    "url": "https://citizen.co.za/feed/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "timeslive.co.za",
+    "country": "ZA",
+    "url": "https://www.timeslive.co.za/rss/",
+    "verification": "failed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "elconfidencial.com",
+    "country": "ES",
+    "url": "https://rss.elconfidencial.com/espana/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "eldiario.es",
+    "country": "ES",
+    "url": "https://www.eldiario.es/rss/",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "elperiodico.com",
+    "country": "ES",
+    "url": "https://www.elperiodico.com/es/rss/rss_portada.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "gazeta.ua",
+    "country": "UA",
+    "url": "https://gazeta.ua/rss",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "dailymail.co.uk",
+    "country": "GB",
+    "url": "https://www.dailymail.co.uk/home/index.rss",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "dj.com",
+    "country": "US",
+    "url": "https://feeds.a.dj.com/rss/RSSWorldNews.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "publisher": "latimes.com",
+    "country": "US",
+    "url": "https://www.latimes.com/world-nation/rss2.0.xml",
+    "verification": "passed",
+    "provenance": "https://github.com/plenaryapp/awesome-rss-feeds",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Aftenposten",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.aftenposten.no/rss/",
+    "country": "NO",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Dagens Nyheter",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.dn.se/rss/",
+    "country": "SE",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Helsingin Sanomat",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.hs.fi/rss/tuoreimmat.xml",
+    "country": "FI",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Morgunbladid",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.mbl.is/feeds/fp/",
+    "country": "IS",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "failed",
+    "publisher": "Daily Nation",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://nation.africa/kenya/rss",
+    "country": "KE",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "failed",
+    "publisher": "Daily Monitor",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.monitor.co.ug/uganda/rss",
+    "country": "UG",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Daily Graphic",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.graphic.com.gh/?format=feed&type=rss",
+    "country": "GH",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "failed",
+    "publisher": "The Citizen Tanzania",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.thecitizen.co.tz/tanzania/rss",
+    "country": "TZ",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Daily Sabah",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.dailysabah.com/rssFeed/12",
+    "country": "TR",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "failed",
+    "publisher": "Jordan Times",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://jordantimes.com/feed",
+    "country": "JO",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "The Kathmandu Post",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://kathmandupost.com/rss",
+    "country": "NP",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "The Straits Times",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.straitstimes.com/news/singapore/rss.xml",
+    "country": "SG",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Bangkok Post",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.bangkokpost.com/rss/data/topstories.xml",
+    "country": "TH",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "failed",
+    "publisher": "The Korea Herald",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.koreaherald.com/common/rss_xml.php?ct=102",
+    "country": "KR",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Taipei Times",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.taipeitimes.com/xml/index.rss",
+    "country": "TW",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Clarin",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.clarin.com/rss/lo-ultimo/",
+    "country": "AR",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "failed",
+    "publisher": "El Tiempo",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.eltiempo.com/rss.xml",
+    "country": "CO",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "El Comercio",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://elcomercio.pe/arc/outboundfeeds/rss/?outputType=xml",
+    "country": "PE",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "passed",
+    "publisher": "Publico",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://feeds.feedburner.com/PublicoRSS",
+    "country": "PT",
+    "enabled": true,
+    "checked_at": "2026-09-05T09:01:45Z"
+  },
+  {
+    "verification": "failed",
+    "publisher": "Kathimerini",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.ekathimerini.com/feed/",
+    "country": "GR",
+    "enabled": false,
+    "checked_at": "2026-09-05T09:01:45Z"
+  }
+]
