@@ -1,5 +1,6 @@
 import {db,rpc,boundedText} from './v3/db';
-import {Order} from './v3/contracts';
+import {ChatCommand,Order} from './v3/contracts';
+import type {ChiefInput} from './v3/chief';
 import {WorkerEntrypoint} from 'cloudflare:workers';
 import {z} from 'zod';
 import {timingSafeEqual} from 'node:crypto';
@@ -21,12 +22,47 @@ async function authorized(request:Request,env:Env){
  const b=await crypto.subtle.digest('SHA-256',encoder.encode(`Bearer ${env.ADMIN_TOKEN}`));
  return timingSafeEqual(new Uint8Array(a),new Uint8Array(b));
 }
+async function verifiedChatCommand(request:Request){
+ const commit=(request.headers.get('X-Morgentidende-Commit')??'').trim();
+ if(!/^[a-f0-9]{40}$/.test(commit))throw new Error('chatops_bad_commit');
+ const received=ChatCommand.parse(JSON.parse(await boundedText(request,200_000)));
+ const canonicalResponse=await fetch(`https://raw.githubusercontent.com/NickZen108/morgentidende/${commit}/.chatops/command.json`,{headers:{'User-Agent':'Morgentidende-v3-ChatOps/1.0','Accept':'application/json'},signal:AbortSignal.timeout(15000)});
+ if(!canonicalResponse.ok)throw new Error('chatops_commit_unverified');
+ const canonical=ChatCommand.parse(JSON.parse(await boundedText(canonicalResponse,200_000)));
+ if(JSON.stringify(canonical)!==JSON.stringify(received))throw new Error('chatops_payload_mismatch');
+ return received;
+}
+async function startChiefOnce(env:Env,id:string,params:ChiefInput){
+ try{await env.CHIEF.create({id,params});return {id,started:true};}
+ catch(error){
+  try{const instance=await env.CHIEF.get(id);const status=await instance.status();return {id,started:false,status};}
+  catch{throw error;}
+ }
+}
+async function dispatchChatCommand(request:Request,env:Env){
+ const command=await verifiedChatCommand(request);
+ if(command.type==='commission'){
+  const workflowId=`chatops-commission-${command.id}`;
+  const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,commission:'chatops-batch-v1',count:command.count,topic:command.topic});
+  return Response.json({ok:true,type:command.type,count:command.count,topic:command.topic??null,workflow},{status:202});
+ }
+ const key=`chatops:article:${command.id}`;
+ let [row]=await db<{id:string;status:string}[]>(env,`v3_orders?dedupe_key=eq.${encodeURIComponent(key)}&limit=1`);
+ if(!row){
+  [row]=await db<{id:string;status:string}[]>(env,'v3_orders','POST',{dedupe_key:key,original_order:{kind:'direct_article',article:command.article,submitted_at:new Date().toISOString()}});
+  if(!row)throw new Error('chatops_direct_order_insert_failed');
+ }
+ const workflowId=`chatops-direct-${command.id}`;
+ const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,directOrderId:row.id});
+ return Response.json({ok:true,type:command.type,order_id:row.id,headline:command.article.headline,workflow},{status:202});
+}
 export default {
  async scheduled(event,env){await env.CHIEF.create({id:`tick-${Math.floor(event.scheduledTime/900000)}`,params:{tick:`tick-${Math.floor(event.scheduledTime/900000)}`}});},
  async fetch(request,env):Promise<Response>{
   const url=new URL(request.url);
   try{
    if(url.pathname==='/api/health')return Response.json({ok:true,version:3});
+   if(url.pathname==='/api/chatops/dispatch'&&request.method==='POST')return dispatchChatCommand(request,env);
    if(url.pathname.startsWith('/media/')){
     const object=await env.MEDIA_BUCKET.get(url.pathname.slice(7));
     return object?new Response(object.body,{headers:{'Content-Type':'image/jpeg','Cache-Control':'public,max-age=86400','X-Content-Type-Options':'nosniff'}}):new Response('Not found',{status:404});

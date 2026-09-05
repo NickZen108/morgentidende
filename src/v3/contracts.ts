@@ -8,6 +8,16 @@ export const Dossier = z.object({subject:z.string(),facts:z.array(z.string()).mi
 export type Dossier = z.infer<typeof Dossier>;
 export const Draft = z.object({headline:z.string().min(10).max(200),deck:z.string().min(10).max(600),paragraphs:z.array(z.string().min(1)).min(2).max(40),category:Category,source_urls:z.array(z.string().url()).min(1),image_query:z.string().min(3).max(200)});
 export type Draft = z.infer<typeof Draft>;
+export const DirectArticle = z.object({headline:z.string().min(10).max(200),deck:z.string().min(10).max(600),paragraphs:z.array(z.string().min(1)).min(2).max(40),category:Category,source_urls:z.array(z.string().url()).max(30).default([]),image_query:z.string().min(3).max(200)}).strict();
+export type DirectArticle = z.infer<typeof DirectArticle>;
+export const DirectSubmission = z.object({kind:z.literal('direct_article'),article:DirectArticle,submitted_at:z.string()}).strict();
+export type DirectSubmission = z.infer<typeof DirectSubmission>;
+const ChatCommandId=z.string().uuid();
+export const ChatCommand = z.discriminatedUnion('type',[
+ z.object({id:ChatCommandId,type:z.literal('commission'),count:z.number().int().min(1).max(20),topic:z.string().min(3).max(1000).optional()}).strict(),
+ z.object({id:ChatCommandId,type:z.literal('publish_article'),article:DirectArticle}).strict()
+]);
+export type ChatCommand = z.infer<typeof ChatCommand>;
 export const JournalistResult = z.discriminatedUnion('kind',[
  z.object({kind:z.literal('research'),question:z.string().min(10).max(600)}),
  z.object({kind:z.literal('draft'),article:Draft})
