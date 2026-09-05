@@ -1,0 +1,65 @@
+name: RSS audit once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rss-audit-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit all configured feed endpoints
+        run: |
+          python - <<'PY'
+          import re, ssl, time, urllib.request, urllib.error
+          from pathlib import Path
+
+          text = Path('src/editorial/feeds.ts').read_text()
+          feeds = re.findall(r'f\("([^"]+)",\s*"([^"]+)",\s*"(https?://[^"]+)"', text)
+          print(f'TOTAL_CONFIGURED={len(feeds)}')
+          ok=[]; bad=[]; blocked=[]; html=[]
+          ctx=ssl.create_default_context()
+          headers={'User-Agent':'Morgentidende-RSS-Audit/1.0 (+https://github.com/NickZen108/morgentidende)','Accept':'application/rss+xml, application/atom+xml, application/xml, text/xml, */*'}
+          for i,(fid,name,url) in enumerate(feeds,1):
+              req=urllib.request.Request(url, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=12, context=ctx) as r:
+                      status=getattr(r,'status',200)
+                      ct=(r.headers.get('content-type') or '').lower()
+                      body=r.read(120000).decode('utf-8','ignore').lstrip().lower()
+                      xmlish = ('<rss' in body[:5000] or '<feed' in body[:5000] or '<rdf:rdf' in body[:5000] or '<item' in body[:10000] or '<entry' in body[:10000])
+                      if xmlish:
+                          ok.append((fid,status,ct,url))
+                          state='OK'
+                      elif 'text/html' in ct or '<html' in body[:2000] or '<!doctype html' in body[:2000]:
+                          html.append((fid,status,ct,url))
+                          state='HTML'
+                      else:
+                          bad.append((fid,status,ct,url))
+                          state='NONXML'
+                      print(f'{i:03}/{len(feeds)} {state:6} {status} {fid} {ct} {url}')
+              except urllib.error.HTTPError as e:
+                  row=(fid,e.code,str(e.headers.get('content-type') or ''),url)
+                  if e.code in (401,403,429): blocked.append(row); state='BLOCKED'
+                  else: bad.append(row); state='HTTPERR'
+                  print(f'{i:03}/{len(feeds)} {state:6} {e.code} {fid} {url}')
+              except Exception as e:
+                  bad.append((fid,'ERR',type(e).__name__,url))
+                  print(f'{i:03}/{len(feeds)} ERROR  {fid} {type(e).__name__}: {e} {url}')
+              time.sleep(0.05)
+
+          print('\n=== SUMMARY ===')
+          print('XML_OK=',len(ok))
+          print('HTML_NOT_FEED=',len(html))
+          print('BLOCKED_OR_RATE_LIMITED=',len(blocked))
+          print('ERROR_OR_NONXML=',len(bad))
+          for label,rows in [('HTML_NOT_FEED',html),('BLOCKED',blocked),('BAD',bad)]:
+              print(f'\n--- {label} ---')
+              for row in rows: print('\t'.join(map(str,row)))
+          PY
