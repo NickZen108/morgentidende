@@ -92,3 +92,30 @@ assert.equal(terraProbe.terra_model,'openai/gpt-5.6-terra');
 assert.equal(terraProbe.source_urls[0],'https://developers.cloudflare.com/workflows/learn/architecture/');
 console.log('PASS production: Luna dossier to Terra draft diagnostic');
 delete globalThis.productionTest;
+const prepublishRoles=[];let prepublishMediaCalls=0;
+globalThis.productionTest={
+ async model(env,role,instructions,input,schema,search){
+  prepublishRoles.push(role);
+  if(role==='desk'){
+   assert.equal(search,true);assert.equal(input.original_order.category,'viden');
+   return {subject:'Cloudflare Workers Workflows',facts:['Workflows support durable multi-step execution.'],uncertainties:[],opposing_views:[],sources:[{url:'https://developers.cloudflare.com/workflows/learn/architecture/',title:'Architecture',publisher:'Cloudflare',kind:'primary',retrieved_at:'2026-09-05T00:00:00Z',facts:['Workflows support durable multi-step execution.'],quotes:[]}]};
+  }
+  if(role==='journalist'){
+   assert.equal(input.research_requests_remaining,0);
+   return {kind:'draft',article:{headline:'Cloudflare Workflows kan køre flertrinsforløb robust',deck:'Tjenesten er bygget til langvarige processer, der kan fortsætte gennem ventetid og fejl.',category:'viden',paragraphs:['Cloudflare Workers Workflows er en tjeneste til flertrinsforløb.','Ifølge Cloudflares egen dokumentation er systemet designet til holdbar udførelse.'],source_urls:['https://developers.cloudflare.com/workflows/learn/architecture/'],image_query:'Cloudflare Workers Workflows'}};
+  }
+  assert.equal(role,'chief');assert.equal(input.media.id,'media-commissioning');assert.equal(input.state.commissioning,true);
+  return {matches_order:true,headline_correct:true,serious_error:false,reason:'Commissioning article is consistent with the dossier.',slot:'viden-1'};
+ },
+ async media(env,article,job){prepublishMediaCalls++;assert.equal(job,'commissioning-prepublish-v1');assert.equal(article.category,'viden');return {id:'media-commissioning',url:'https://example.org/commissioning.jpg',alt:'Commissioning image',credit:'Commissioning',generated:false};}
+};
+const prepublish=await new Production({},{}).run({payload:{diagnostic:'prepublish-v1'}},{async do(name,options,fn){assert.equal(options.retries.limit,0);return fn();}});
+assert.deepEqual(prepublishRoles,['desk','journalist','chief']);
+assert.equal(prepublishMediaCalls,1);
+assert.equal(prepublish.web_search,true);
+assert.equal(prepublish.chief_model,'openai/gpt-5.6-luna');
+assert.equal(prepublish.media.id,'media-commissioning');
+assert.equal(prepublish.review.slot,'viden-1');
+assert.equal(prepublish.would_publish,true);
+console.log('PASS production: bounded prepublish diagnostic');
+delete globalThis.productionTest;

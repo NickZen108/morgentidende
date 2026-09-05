@@ -5,10 +5,10 @@ import {db,rpc} from './db';
 import {model,modelResponseText,ModelResponse} from './models';
 import {selectMedia} from './media';
 const DeskWebProbe=z.object({fact:z.string().min(1).max(500),source_url:z.string().url()});
-type ProductionInput={orderId?:string;diagnostic?:'models-v1'|'desk-web-v1'|'desk-terra-v1'};
+type ProductionInput={orderId?:string;diagnostic?:'models-v1'|'desk-web-v1'|'desk-terra-v1'|'prepublish-v1'};
 export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
  async run(event:WorkflowEvent<ProductionInput>,step:WorkflowStep){
-  // Commissioning probes are bounded and never create orders, media or articles.
+  // Commissioning probes never create or publish articles. The prepublish probe may register one media asset.
   if(event.payload.diagnostic){
    if(event.payload.diagnostic==='models-v1'){
     const results=[];
@@ -40,6 +40,24 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
     if(result.article.source_urls.some(url=>!allowed.has(url)))throw new Error('probe_terra_unknown_source');
     if(result.article.category!==original_order.category)throw new Error('probe_terra_category_mismatch');
     return {desk_model:'openai/gpt-5.6-luna',terra_model:'openai/gpt-5.6-terra',web_search:true,dossier_subject:dossier.subject,dossier_sources:dossier.sources.map(source=>({publisher:source.publisher,kind:source.kind,url:source.url})),headline:result.article.headline,deck:result.article.deck,paragraphs:result.article.paragraphs,source_urls:result.article.source_urls};
+   }
+   if(event.payload.diagnostic==='prepublish-v1'){
+    const original_order={instruction:'Skriv en kort dansk forklarende artikel om en aktuel, dokumenteret egenskab ved Cloudflare Workers Workflows.',category:'viden' as const,mode:'specific' as const,angle:'Forklar egenskaben nøgternt for en teknisk interesseret læser.',why_now:'Commissioning af Morgentidende v3 før første publicering.',words:180,primary_source_required:true,opposing_view_required:false};
+    const dossier=await step.do('probe-prepublish-desk',{retries:{limit:0,delay:'1 second'}},()=>model(this.env,'desk','Commissioning only. Research one current capability of Cloudflare Workers Workflows. Use web search, prefer an official Cloudflare primary source, and return a compact production-shaped dossier with exact URLs. Do not invent quotes.',{original_order},Dossier,true));
+    if(!dossier.sources.some(source=>source.kind==='primary'))throw new Error('probe_primary_source_missing');
+    const journalist=await step.do('probe-prepublish-terra',{retries:{limit:0,delay:'1 second'}},()=>model(this.env,'journalist','Commissioning only. Write the requested short Danish article from the dossier. Do not request more research. Use only facts and source URLs present in the dossier. No invented quotations.',{original_order,dossier,research_requests_remaining:0},JournalistResult));
+    if(journalist.kind!=='draft')throw new Error('probe_terra_requested_research');
+    const allowed=new Set(dossier.sources.map(source=>source.url));
+    if(journalist.article.source_urls.some(url=>!allowed.has(url)))throw new Error('probe_terra_unknown_source');
+    if(journalist.article.category!==original_order.category)throw new Error('probe_terra_category_mismatch');
+    const article=journalist.article;
+    const media=await step.do('probe-prepublish-media',{retries:{limit:0,delay:'1 second'}},async()=>{
+     const asset=await selectMedia(this.env,article,'commissioning-prepublish-v1');
+     return {id:asset.id,url:asset.url,alt:asset.alt,credit:asset.credit,generated:asset.generated};
+    });
+    const state={commissioning:true,occupied_slots:[],available_slots:['lead','top-1','top-2','top-3','news-1','news-2','news-3','news-4','viden-1','viden-2','liv-1','liv-2']};
+    const review=await step.do('probe-prepublish-chief',{retries:{limit:0,delay:'1 second'}},()=>model(this.env,'chief','Commissioning only. Kontrollér KUN om artiklen matcher originalordren, om rubrikken er korrekt i forhold til dossier og artikel, og vælg en gyldig forsideplads ud fra den oplyste commissioning-state. Omskriv ikke og bestil ikke ekstra research. Der bliver ikke publiceret noget i denne test.',{original_order,dossier,article,media,state},Review));
+    return {desk_model:'openai/gpt-5.6-luna',terra_model:'openai/gpt-5.6-terra',chief_model:'openai/gpt-5.6-luna',web_search:true,headline:article.headline,source_urls:article.source_urls,media,review,would_publish:nextReviewAction(review,1)==='publish'};
    }
    throw new Error('unknown_diagnostic');
   }
