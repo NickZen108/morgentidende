@@ -6,7 +6,7 @@ export class ChatAuthError extends Error {constructor(){super('chatops_unauthori
 function decode(value:string){return Uint8Array.from(atob(value.replace(/-/g,'+').replace(/_/g,'/')),x=>x.charCodeAt(0));}
 export function validateClaims(c:Record<string,unknown>,commit:string,now=Date.now()/1000){
  if(c.iss!==ISSUER||c.aud!==CHAT_AUDIENCE||c.repository!==REPO||c.repository_owner_id!=='304098189'||
- c.ref!=='refs/heads/chatops'||c.sub!==`repo:${REPO}:ref:refs/heads/chatops`||
+ c.ref!=='refs/heads/chatops'||c.sub!=='repo:NickZen108@304098189/morgentidende@1357364514:ref:refs/heads/chatops'||
  c.workflow_ref!==`${REPO}/.github/workflows/chatops.yml@refs/heads/chatops`||
  c.event_name!=='push'||c.sha!==commit||typeof c.exp!=='number'||typeof c.iat!=='number'||
  c.exp<=now||c.iat>now+30||c.iat<now-600||c.exp-c.iat>600||

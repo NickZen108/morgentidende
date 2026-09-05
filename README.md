@@ -20,7 +20,7 @@ Afregningen er et estimat baseret på rapporteret tokenforbrug og modelpriser. B
 
 Websøgning begrænses til ét tool-kald pr. modelkald, med reservation for to fulde kontekstvinduer. Det kan stoppe produktion før de faktiske udgifter når 10 DKK. Ved budgetafvisning starter intet betalt kald; den berørte workflow kan fejle og kræver senere genoptagelse. Installationens resterende dag lukkes konservativt, fordi ældre forbrug ikke kan rekonstrueres.
 
-`GET /admin/budget` og `GET /admin/costs` kræver admin-token. Private tabeller `v3_costs` og view `v3_article_costs` viser reservationer, model, fase, forbrug og estimerede udgifter pr. ordre. Chefredaktørens indledende bestillingsudgift knyttes til ordren efter oprettelse.
+`GET /api/admin/budget` og `GET /api/admin/costs` kræver admin-token. Private tabeller `v3_costs` og view `v3_article_costs` viser reservationer, model, fase, forbrug og estimerede udgifter pr. ordre. Chefredaktørens indledende bestillingsudgift knyttes til ordren efter oprettelse.
 
 ## Chatbestillinger
 
