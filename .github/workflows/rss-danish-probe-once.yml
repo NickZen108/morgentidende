@@ -1,0 +1,84 @@
+name: RSS Danish probe once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rss-danish-probe-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe Danish official and media RSS endpoints
+        run: |
+          python - <<'PY'
+          import re, urllib.request, urllib.parse, urllib.error
+          H={'User-Agent':'Mozilla/5.0 Morgentidende RSS Probe','Accept':'text/html,application/rss+xml,application/atom+xml,application/xml,text/xml,*/*'}
+          def get(url,limit=1500000):
+            req=urllib.request.Request(url,headers=H)
+            with urllib.request.urlopen(req,timeout=15) as r:
+              return r.status,r.geturl(),r.headers.get('content-type') or '',r.read(limit).decode('utf-8','ignore')
+          targets={
+            'dst':'https://rss.dst.dk/da/',
+            'finansministeriet':'https://fm.dk/',
+            'erhvervsministeriet':'https://em.dk/',
+          }
+          for name,url in targets.items():
+            print('\n===',name,url,'===')
+            try:
+              st,final,ct,body=get(url)
+              print('PAGE',st,final,ct,'LEN',len(body))
+            except Exception as e:
+              print('PAGE_ERROR',type(e).__name__,e); continue
+            seen=[]
+            pats=[
+              r'<link[^>]+type=["\']application/(?:rss\+xml|atom\+xml)["\'][^>]+href=["\']([^"\']+)',
+              r'<link[^>]+href=["\']([^"\']+)["\'][^>]+type=["\']application/(?:rss\+xml|atom\+xml)["\']',
+              r'https?://[^"\'<> ]+(?:rss|feed|\.xml)[^"\'<> ]*',
+              r'(?:href|src|data-[\w-]+)=["\']([^"\']+(?:rss|feed|\.xml)[^"\']*)["\']'
+            ]
+            for pat in pats:
+              for x in re.findall(pat,body,re.I):
+                u=urllib.parse.urljoin(final,x.replace('&amp;','&'))
+                if u not in seen: seen.append(u)
+            for u in seen[:80]: print('HINT',u)
+            scripts=[]
+            for s in re.findall(r'<script[^>]+src=["\']([^"\']+)',body,re.I):
+              su=urllib.parse.urljoin(final,s)
+              if su not in scripts: scripts.append(su)
+            for su in scripts[:30]:
+              try:
+                _,_,_,js=get(su,2500000)
+              except Exception: continue
+              low=js.lower()
+              if 'rss' not in low and 'feed' not in low: continue
+              for m in re.findall(r'https?://[^"\'<> ]+(?:rss|feed|\.xml)[^"\'<> ]*',js,re.I):
+                if m not in seen: print('SCRIPT_HINT',m); seen.append(m)
+              for needle in ['rss','feed']:
+                i=low.find(needle)
+                if i>=0: print('SCRIPT_CTX',su,js[max(0,i-300):i+700].replace('\n',' ')[:1000])
+          # Probe likely DST endpoints based on current rss.dst.dk host and historical patterns.
+          print('\n=== DST candidate probes ===')
+          dst_candidates=[
+            'https://rss.dst.dk/da/nyt',
+            'https://rss.dst.dk/da/nyheder',
+            'https://rss.dst.dk/da/pressemeddelelser',
+            'https://rss.dst.dk/da/udgivelser',
+            'https://rss.dst.dk/da/senestenyt',
+            'https://rss.dst.dk/da/rss',
+            'https://rss.dst.dk/da/feed',
+            'https://rss.dst.dk/da/rss.xml',
+            'https://rss.dst.dk/da/feed.xml',
+          ]
+          for u in dst_candidates:
+            try:
+              st,final,ct,b=get(u,120000)
+              low=b.lstrip().lower(); xml=('<rss' in low[:5000] or '<feed' in low[:5000] or '<rdf:rdf' in low[:5000] or '<item' in low[:10000])
+              print('DST_RESULT',st,'XML' if xml else 'NONXML',ct,final,u)
+            except urllib.error.HTTPError as e: print('DST_HTTP',e.code,u)
+            except Exception as e: print('DST_ERR',type(e).__name__,e,u)
+          PY
