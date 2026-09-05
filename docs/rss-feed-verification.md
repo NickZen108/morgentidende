@@ -125,3 +125,20 @@ The curated-feed registry compiles. Scan integration is implemented with bounded
 - Corrected Phys.org section feeds that currently require `/rss-feed/breaking/.../` for Astronomy & Space, Space Exploration, Environment, Biotechnology and Economics & Business.
 - Phys.org's Bio & Medicine and Quantum Physics feeds were independently confirmed as XML on their existing paths.
 - Danmarks Statistik still exposes current news on `rss.dst.dk`, but legacy paths such as `/pressemeddelelser` now redirect to HTML; do not add them as RSS XML until a current XML endpoint is positively identified.
+
+
+## Full endpoint audit 2026-09-05
+
+A GitHub-hosted live audit requested every configured endpoint and inspected the returned body for RSS/Atom/XML structure. Before cleanup there were 114 configured endpoints:
+
+- 105 returned parseable RSS/Atom/XML directly (HTTP 200).
+- 7 were blocked or rate-limited to the audit runner (403/429), so this audit alone does not classify them as dead: Euractiv, Human Progress, IEA, Jihad Watch, FrontPage Magazine, NASA legacy feed, Carbon Brief.
+- TV 2's configured feed had a DNS-resolution failure from the GitHub runner, but independent current feed-reader evidence still shows fresh TV 2 items from that endpoint; keep it provisionally and continue monitoring.
+- Danmarks Nationalbank's configured `https://www.nationalbanken.dk/api/rss/nyheder` returned HTTP 404 and has therefore been removed from the active registry until the exact current XML endpoint is identified. Nationalbanken's official RSS catalogue confirms that feeds exist, but the individual URLs are not exposed reliably in our current retrieval.
+- NASA's legacy `rss/dyn/breaking_news.rss` was rate-limited in the audit. The registry now uses NASA's current official News Releases feed `https://www.nasa.gov/news-release/feed/`, which NASA's current RSS directory advertises.
+- Politico Europe returned HTTP 200 `application/rss+xml` in the live audit.
+- All 10 configured Nature feeds returned HTTP 200 RSS.
+- All 12 configured Frontiers feeds returned HTTP 200 XML.
+- All configured Medical Xpress and Phys.org feeds returned HTTP 200 XML.
+
+After removal of the invalid Nationalbanken entry, the active registry contains 113 endpoints.

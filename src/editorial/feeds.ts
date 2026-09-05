@@ -51,7 +51,6 @@ export const EDITORIAL_FEEDS: readonly EditorialFeed[] = [
   f("ku-science", "KU – Natur, tal & teknologi", "https://nyheder.ku.dk/natur-tal-teknologi/?get_rss=1", "research", ["viden"], ["naturvidenskab", "teknologi", "ai", "data"], { language: "da", country: "DK" }),
   f("ku-health", "KU – Sundhed, krop & psyke", "https://nyheder.ku.dk/sundhed-krop-psyke/?get_rss=1", "research", ["liv", "viden"], ["sundhed", "psykologi", "krop", "meditation"], { language: "da", country: "DK" }),
   f("ku-culture", "KU – Kultur, sprog & historie", "https://nyheder.ku.dk/kultur-sprog-historie/?get_rss=1", "research", ["kultur", "viden"], ["kultur", "historie", "sprog"], { language: "da", country: "DK" }),
-  f("nationalbanken-news", "Danmarks Nationalbank", "https://www.nationalbanken.dk/api/rss/nyheder", "primary", ["penge", "indland"], ["økonomi", "renter", "inflation", "bank"], { language: "da", country: "DK" }),
 
   // Major international reporting
   f("bbc-top", "BBC News", "https://feeds.bbci.co.uk/news/rss.xml", "direct", ["udland", "indland", "penge", "viden"], ["breaking", "world", "politics"]),
@@ -176,7 +175,7 @@ export const EDITORIAL_FEEDS: readonly EditorialFeed[] = [
   f("jama-open", "JAMA Network Open", "https://jamanetwork.com/rss/site_214/187.xml", "research", ["liv", "viden"], ["medicine", "health", "research"]),
 
   // Space / energy / climate
-  f("nasa", "NASA Breaking News", "https://www.nasa.gov/rss/dyn/breaking_news.rss", "primary", ["viden"], ["space", "nasa", "science"]),
+  f("nasa", "NASA Breaking News", "https://www.nasa.gov/news-release/feed/", "primary", ["viden"], ["space", "nasa", "science"]),
   f("spacecom", "Space.com", "https://www.space.com/feeds/all", "direct", ["viden"], ["space", "astronomy", "rockets"]),
   f("carbonbrief", "Carbon Brief", "https://www.carbonbrief.org/feed/", "direct", ["viden", "penge", "udland"], ["climate", "energy", "policy"])
 ] as const;
