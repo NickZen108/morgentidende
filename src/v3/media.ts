@@ -110,7 +110,7 @@ async function vision(env:Env,url:string,article:Draft):Promise<boolean|null>{
 
 const plain=(s:string)=>s.replace(/<[^>]*>/g,'').replace(/&quot;/g,'"').replace(/&amp;/g,'&').trim();
 const freeCommonsLicense=(license:string)=>/^(?:CC BY(?:-SA)?(?: [1-4](?:\.0)?)?|CC0(?: 1\.0)?|Public domain)\b/i.test(license.trim());
-async function sha256(bytes:Uint8Array){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function sha256(bytes:Uint8Array){const copy=Uint8Array.from(bytes);return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',copy.buffer))).map(x=>x.toString(16).padStart(2,'0')).join('');}
 
 async function tryCommons(env:Env,article:Draft,terms:string[]):Promise<MediaRow|null>{
  let checked=0;
