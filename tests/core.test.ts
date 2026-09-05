@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {nextReviewAction,Order} from '../src/v3/contracts';
+import {cooldownEligible} from '../src/v3/media';
+import {canonical,parseFeed,similarHeadlines} from '../src/v3/scanner';
+test('one fresh attempt and then drop',()=>{const review={matches_order:false,headline_correct:false,serious_error:true,reason:'Wrong story',slot:'lead' as const};assert.equal(nextReviewAction(review,1),'retry');assert.equal(nextReviewAction(review,2),'drop');assert.equal(nextReviewAction({...review,matches_order:true,headline_correct:true},1),'publish');});
+test('image reuse opens exactly after ten days',()=>{const now=Date.parse('2026-09-05T12:00:00Z');assert.equal(cooldownEligible('2026-08-26T12:00:00.001Z',now),false);assert.equal(cooldownEligible('2026-08-26T12:00:00Z',now),true);assert.equal(cooldownEligible(null,now),true);});
+test('canonical URL removes trackers but keeps article parameters',()=>assert.equal(canonical('https://example.org/a?id=1&utm_source=x#top'),'https://example.org/a?id=1'));
+test('RSS drops stale or missing timestamps',()=>{const now=Date.now();const date=new Date(now).toUTCString();const items=parseFeed(`<rss><channel><item><title>News headline</title><link>https://example.org/a</link><pubDate>${date}</pubDate></item><item><title>Old</title><link>https://example.org/b</link></item></channel></rss>`,'Paper',now);assert.equal(items.length,1);});
+test('Atom alternate URL is parsed',()=>{const now=Date.now();const items=parseFeed(`<feed><entry><title>News</title><link href="https://example.org/a" rel="alternate"/><updated>${new Date(now).toISOString()}</updated></entry></feed>`,'Paper',now);assert.equal(items[0].url,'https://example.org/a');});
+test('incomplete editorial orders rejected',()=>assert.equal(Order.safeParse({instruction:'Go'}).success,false));
+test('HTML error pages never count as healthy feeds',()=>assert.throws(()=>parseFeed('<html><body>Access denied</body></html>','Paper')));
+test('headlines can cluster without exact word equality',()=>{assert.equal(similarHeadlines('Berlin central railway station evacuated after explosion','Explosion at Berlin central railway station: passengers evacuated'),true);assert.equal(similarHeadlines('Berlin central railway station evacuated','Paris schools open today'),false);});

@@ -7,4 +7,8 @@ dist/
 !.env.example
 .DS_Store
 coverage/
+supabase/.temp/
+worker-configuration.d.ts
+scan-configuration.d.ts
+reports/
 *.log
