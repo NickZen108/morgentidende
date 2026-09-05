@@ -7,9 +7,12 @@ if(!auth.ok)throw new Error('GitHub identity unavailable');
 const {value:token}=await auth.json();
 if(!token)throw new Error('GitHub identity missing');
 console.log('::add-mask::'+token);
-const claims=JSON.parse(Buffer.from(token.split('.')[1],'base64url').toString());
-console.log(JSON.stringify({identity: Object.fromEntries(['iss','aud','repository','repository_owner_id','ref','sub','workflow_ref','event_name','sha','iat','exp','nbf'].map(key=>[key,claims[key]])),now:Math.floor(Date.now()/1000)}));
 const body=await fs.readFile('.chatops/command.json','utf8');
+if(JSON.parse(body).type==='status'){
+ const denied=await fetch('https://morgentidende-v3.nicolaipetersen108.workers.dev/api/chatops/dispatch',{method:'POST',headers:{'Content-Type':'application/json','X-Morgentidende-Commit':process.env.GITHUB_SHA},body,signal:AbortSignal.timeout(15000)});
+ if(denied.status!==401)throw new Error('Unsigned request was not rejected');
+ console.log('PASS unsigned request rejected');
+}
 for(let attempt=0;attempt<4;attempt++){
  const response=await fetch('https://morgentidende-v3.nicolaipetersen108.workers.dev/api/chatops/dispatch',{
   method:'POST',headers:{'Content-Type':'application/json','X-Morgentidende-Commit':process.env.GITHUB_SHA,Authorization:'Bearer '+token},
