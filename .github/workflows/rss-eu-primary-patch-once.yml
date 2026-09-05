@@ -1,48 +1,36 @@
-name: RSS EU primary patch once
-
+name: rss-eu-primary-patch-once
 on:
   push:
     paths:
-      - '.github/workflows/rss-eu-primary-patch-once.yml'
-
+      - .github/workflows/rss-eu-primary-patch-once.yml
 permissions:
   contents: write
-
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add verified EU primary feeds
-        run: |
-          python - <<'PY'
+      - run: |
+          python3 - <<'PY'
           from pathlib import Path
-          p=Path('src/editorial/feeds.ts')
-          s=p.read_text()
-          anchor='  f("ku-all", "Københavns Universitet", "https://nyheder.ku.dk/alle_nyheder/?get_rss=1", "primary", ["viden", "liv", "indland"], ["danmark", "forskning", "universitet"], { language: "da", country: "DK" }),\n'
-          block='''  f("consilium-press", "EU-Rådet – Pressemeddelelser", "https://www.consilium.europa.eu/en/rss/pressreleases.ashx", "primary", ["udland", "penge", "indland"], ["eu", "eu-rådet", "europæiske råd", "pressemeddelelser", "udenrigspolitik", "økonomi", "lovgivning"], { language: "en", country: "EU", authorityWeight: 1 }),
-  f("curia-press-da-en", "EU-Domstolen – Pressemeddelelser", "http://curia.europa.eu/site/rss.jsp?lang=da&secondLang=en", "primary", ["udland", "indland", "penge", "kultur"], ["eu", "eu-domstolen", "domme", "jura", "retspraksis", "pressemeddelelser"], { language: "da", country: "EU", authorityWeight: 1 }),
-'''
+          p = Path('src/editorial/feeds.ts')
+          s = p.read_text()
+          marker = '  f("ku-all", "Københavns Universitet"'
           if 'f("consilium-press"' not in s:
-            if anchor not in s: raise SystemExit('anchor not found')
-            s=s.replace(anchor, block+anchor)
-            p.write_text(s)
-          d=Path('docs/rss-feed-verification.md')
-          t=d.read_text()
-          t=t.replace('currently contains 127 feed endpoints','currently contains 129 feed endpoints')
-          t=t.replace('active registry contains 127 endpoints','active registry contains 129 endpoints')
-          heading='## EU primary feeds verified 2026-09-05'
-          if heading not in t:
-            t += '\n\n'+heading+'\n\n'
-            t += '- Council of the EU / European Council: the official RSS catalogue exposes `https://www.consilium.europa.eu/en/rss/pressreleases.ashx` for press releases. The endpoint resolves as XML/RSS and is active as a `primary` source.\n'
-            t += '- Court of Justice of the European Union: Curia officially documents RSS press-release feeds in 23 languages. The Danish+English endpoint `http://curia.europa.eu/site/rss.jsp?lang=da&secondLang=en` is active as a `primary` source.\n'
-            t += '- This increases the curated registry from 127 to 129 endpoints. Scan still ranks feed metadata first and fetches at most 42 feeds per discovery run.\n'
+              i = s.index(marker)
+              block = '  f("consilium-press", "EU-Rådet – Pressemeddelelser", "https://www.consilium.europa.eu/en/rss/pressreleases.ashx", "primary", ["udland", "penge", "indland"], ["eu", "eu-rådet", "pressemeddelelser", "udenrigspolitik", "økonomi", "lovgivning"], { language: "en", country: "EU", authorityWeight: 1 }),\n'
+              block += '  f("curia-press-da-en", "EU-Domstolen – Pressemeddelelser", "http://curia.europa.eu/site/rss.jsp?lang=da&secondLang=en", "primary", ["udland", "indland", "penge", "kultur"], ["eu", "eu-domstolen", "domme", "jura", "retspraksis", "pressemeddelelser"], { language: "da", country: "EU", authorityWeight: 1 }),\n'
+              p.write_text(s[:i] + block + s[i:])
+          d = Path('docs/rss-feed-verification.md')
+          t = d.read_text()
+          t = t.replace('currently contains 127 feed endpoints', 'currently contains 129 feed endpoints')
+          t = t.replace('active registry contains 127 endpoints', 'active registry contains 129 endpoints')
+          if '## EU primary feeds verified 2026-09-05' not in t:
+              t += '\n\n## EU primary feeds verified 2026-09-05\n\n- Council of the EU / European Council: official press-release RSS endpoint `https://www.consilium.europa.eu/en/rss/pressreleases.ashx` added as `primary`.\n- Court of Justice of the European Union: official Danish+English press-release RSS endpoint added as `primary`.\n- Registry total: 129 endpoints. Scan still fetches at most 42 ranked feeds per discovery run.\n'
           d.write_text(t)
           PY
-      - name: Commit additions
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name github-actions-bot
+          git config user.email github-actions-bot@users.noreply.github.com
           git add src/editorial/feeds.ts docs/rss-feed-verification.md
-          git commit -m 'Add verified EU Council and Court feeds'
+          git commit -m "Add EU Council and Court feeds"
           git push
