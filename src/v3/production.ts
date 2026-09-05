@@ -3,8 +3,22 @@ import {Dossier,Draft,JournalistResult,Review,OrderRow,nextReviewAction} from '.
 import {db,rpc} from './db';
 import {model} from './models';
 import {selectMedia} from './media';
-export class Production extends WorkflowEntrypoint<Env,{orderId:string}>{
- async run(event:WorkflowEvent<{orderId:string}>,step:WorkflowStep){
+type ProductionInput={orderId:string}|{diagnostic:'models-v1'};
+export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
+ async run(event:WorkflowEvent<ProductionInput>,step:WorkflowStep){
+  // Dashboard-only commissioning probe: fixed input, no tools or automatic retries.
+  // At published Luna/Terra rates, 128 output tokens each cost under $0.002 total.
+  if('diagnostic' in event.payload){
+   if(event.payload.diagnostic!=='models-v1')throw new Error('unknown_diagnostic');
+   const results=[];
+   for(const name of ['openai/gpt-5.6-luna','openai/gpt-5.6-terra']){
+    results.push(await step.do(`probe-${name.split('/')[1]}`,{retries:{limit:0,delay:'1 second'}},async()=>{
+     const run=this.env.AI.run.bind(this.env.AI) as (name:string,input:Record<string,unknown>,options:Record<string,unknown>)=>Promise<unknown>;
+     return await run(name,{input:'Reply with exactly OK.',reasoning:{effort:'low'},max_output_tokens:128,store:false},{gateway:{id:'default'}});
+    }));
+   }
+   return results;
+  }
   const id=event.payload.orderId;
   try {
   const order=await step.do('load-order',async()=>{
@@ -57,3 +71,4 @@ export class Production extends WorkflowEntrypoint<Env,{orderId:string}>{
   }
  }
 }
+
