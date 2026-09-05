@@ -1,0 +1,43 @@
+name: RSS Finansministeriet patch once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rss-fm-patch-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add verified Finansministeriet feed
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/editorial/feeds.ts')
+          s=p.read_text()
+          anchor='  f("nationalbanken-stats", "Danmarks Nationalbank – Statistiknyheder", "https://www.nationalbanken.dk/api/rssfeed?topic=Statistiknyhed&lang=da", "primary", ["penge", "indland", "viden"], ["danmark", "økonomi", "statistik", "finans", "nationalbanken"], { language: "da", country: "DK", authorityWeight: 1 }),\n'
+          new='  f("finansministeriet-news", "Finansministeriet – Nyheder", "https://fm.dk/nyheder/nyhedsarkiv/?rss=true", "primary", ["penge", "indland"], ["danmark", "økonomi", "finanspolitik", "skat", "offentlige finanser", "regering"], { language: "da", country: "DK", authorityWeight: 1 }),\n'
+          if 'f("finansministeriet-news"' not in s:
+            if anchor not in s: raise SystemExit('Nationalbanken anchor not found')
+            s=s.replace(anchor,anchor+new)
+            p.write_text(s)
+
+          d=Path('docs/rss-feed-verification.md')
+          t=d.read_text()
+          t=t.replace('`src/editorial/feeds.ts` currently contains 117 feed endpoints','`src/editorial/feeds.ts` currently contains 118 feed endpoints')
+          t=t.replace('the active registry contains 117 endpoints.','the active registry contains 118 endpoints.')
+          note='''\n\n## Finansministeriet RSS verified 2026-09-05\n\nFinansministeriets front page explicitly exposes an RSS link for its news archive at `https://fm.dk/nyheder/nyhedsarkiv/?rss=true`. A direct fetch reports XML (`text/xml`), and the feed is now active as a `primary` Danish source with authority weight 1 for Penge/Indland.\n\nDanmarks Statistik was also probed again. `rss.dst.dk` is live, but obvious historical paths currently resolve to HTML pages or 404s rather than RSS/XML. No guessed DST feed has been added. Erhvervsministeriets current front page JavaScript contains RSS-handling code, but this pass did not expose a concrete stable feed URL, so it remains out until positively verified.\n'''
+          if '## Finansministeriet RSS verified 2026-09-05' not in t: t += note
+          d.write_text(t)
+          PY
+      - name: Commit verified Finansministeriet feed
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/editorial/feeds.ts docs/rss-feed-verification.md
+          git commit -m 'Add verified Finansministeriet RSS feed'
+          git push
