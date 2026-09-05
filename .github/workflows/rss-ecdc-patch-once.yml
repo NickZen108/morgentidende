@@ -1,0 +1,38 @@
+name: RSS ECDC patch once
+on:
+  push:
+    paths:
+      - .github/workflows/rss-ecdc-patch-once.yml
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/editorial/feeds.ts')
+          s=p.read_text()
+          marker='  f("ku-all", "Københavns Universitet"'
+          if 'f("ecdc-news"' not in s:
+              i=s.index(marker)
+              line='  f("ecdc-news", "ECDC – Nyheder og pressemeddelelser", "https://www.ecdc.europa.eu/en/taxonomy/term/1307/feed", "primary", ["liv", "viden", "udland"], ["eu", "sundhed", "smitsomme sygdomme", "udbrud", "epidemiologi", "pressemeddelelser"], { language: "en", country: "EU", authorityWeight: 1 }),\n'
+              p.write_text(s[:i]+line+s[i:])
+          d=Path('docs/rss-feed-verification.md')
+          t=d.read_text()
+          t=t.replace('currently contains 134 feed endpoints','currently contains 135 feed endpoints')
+          t=t.replace('active registry contains 134 endpoints','active registry contains 135 endpoints')
+          if '## ECDC and EU trade/migration/energy pass 2026-09-05' not in t:
+              t += '\n\n## ECDC and EU trade/migration/energy pass 2026-09-05\n\n'
+              t += '- ECDC official RSS catalogue links News/press releases to `https://www.ecdc.europa.eu/en/taxonomy/term/1307/feed`; the endpoint responds as `application/rss+xml`. Added as high-authority `primary`.\n'
+              t += '- European Commission trade, migration/home affairs, energy, climate and taxation candidate feeds were probed. Several Drupal-style feed URLs returned HTTP 403 to the GitHub runner; the tested migration/energy `?_format=rss` variants returned ordinary HTML. The Trade Newsroom endpoint returned a small XML response but no RSS/Atom entries, so none of these were added on guesswork.\n'
+              t += '- Registry total rises from 134 to 135 endpoints.\n'
+          d.write_text(t)
+          PY
+          git config user.name github-actions-bot
+          git config user.email github-actions-bot@users.noreply.github.com
+          git add src/editorial/feeds.ts docs/rss-feed-verification.md
+          git commit -m "Add ECDC news feed and record EU probe"
+          git push
