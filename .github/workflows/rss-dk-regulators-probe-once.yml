@@ -1,0 +1,75 @@
+name: RSS DK regulators probe once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rss-dk-regulators-probe-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Probe Finanstilsynet and KFST RSS endpoints
+        run: |
+          python - <<'PY'
+          import re, html, urllib.request, urllib.parse, urllib.error
+          H={'User-Agent':'Morgentidende/2.0 RSS Probe','Accept':'text/html,application/rss+xml,application/atom+xml,application/xml,text/xml,*/*'}
+          def get(url,limit=1800000):
+            req=urllib.request.Request(url,headers=H)
+            with urllib.request.urlopen(req,timeout=15) as r:
+              return r.status,r.geturl(),r.headers.get('content-type') or '',r.read(limit).decode('utf-8','ignore')
+          def probe(label,url):
+            try:
+              st,final,ct,b=get(url,250000)
+              lo=b.lstrip().lower(); xml=('<rss' in lo[:8000] or '<feed' in lo[:8000] or '<rdf:rdf' in lo[:8000] or '<item' in lo[:20000])
+              print('PROBE',label,st,'XML' if xml else 'NONXML',ct,final,url,'LEN',len(b))
+            except urllib.error.HTTPError as e: print('HTTP',label,e.code,url)
+            except Exception as e: print('ERR',label,type(e).__name__,e,url)
+
+          sites={
+            'finanstilsynet':'https://www.finanstilsynet.dk/nyheder-og-presse/nyheder-og-pressemeddelelser',
+            'kfst':'https://kfst.dk/menu/presse/nyhedsarkiv',
+          }
+          for name,url in sites.items():
+            print('\n===',name,url,'===')
+            try: st,final,ct,b=get(url)
+            except Exception as e: print('PAGE_ERR',type(e).__name__,e); continue
+            print('PAGE',st,final,ct,'LEN',len(b))
+            u=html.unescape(b)
+            hints=[]
+            pats=[
+              r'<link[^>]+type=["\']application/(?:rss\+xml|atom\+xml)["\'][^>]+href=["\']([^"\']+)',
+              r'<link[^>]+href=["\']([^"\']+)["\'][^>]+type=["\']application/(?:rss\+xml|atom\+xml)["\']',
+              r'href=["\']([^"\']*(?:rss|feed|\.xml)[^"\']*)["\']',
+              r'https?://[^"\'<> ]+(?:rss|feed|\.xml)[^"\'<> ]*'
+            ]
+            for pat in pats:
+              for x in re.findall(pat,u,re.I):
+                absu=urllib.parse.urljoin(final,x)
+                if absu not in hints: hints.append(absu)
+            for h in hints[:50]:
+              print('HINT',h); probe(name+'_HINT',h)
+
+          candidates={
+            'finanstilsynet':[
+              'https://www.finanstilsynet.dk/rss',
+              'https://www.finanstilsynet.dk/rss.xml',
+              'https://www.finanstilsynet.dk/feed',
+              'https://www.finanstilsynet.dk/nyheder-og-presse/nyheder-og-pressemeddelelser?rss=true',
+              'https://www.finanstilsynet.dk/nyheder-og-presse/nyheder-og-pressemeddelelser/rss',
+            ],
+            'kfst':[
+              'https://kfst.dk/rss',
+              'https://kfst.dk/rss.xml',
+              'https://kfst.dk/feed',
+              'https://kfst.dk/menu/presse/nyhedsarkiv?rss=true',
+              'https://kfst.dk/pressemeddelelser?rss=true',
+            ]
+          }
+          for name,urls in candidates.items():
+            for url in urls: probe(name+'_COMMON',url)
+          PY
