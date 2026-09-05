@@ -1,0 +1,38 @@
+name: RSS pass cleanup once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rss-pass-cleanup-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Document Folketinget and regulator RSS findings
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('docs/rss-feed-verification.md')
+          s=p.read_text()
+          note='''\n\n## Folketinget / Danish regulator pass 2026-09-05\n\n- Folketinget officially documents `https://oda.ft.dk/api/` as an OData 3.0 service and states that open data can be delivered as Atom/XML or JSON. A live probe of `Sag` and `Dokument` confirmed the API is healthy and current, but the service returned `application/json` even when `$format=atom` was explicitly requested. The returned records are highly useful primary-source material (for example recent bills, parliamentary questions and document titles), but the current generic RSS/Atom parser should not ingest this endpoint as if it were a normal feed. Folketinget is therefore not counted among the 118 RSS/Atom endpoints. A dedicated OData adapter is the correct future integration.\n- Folketinget's subscription service can generate RSS feeds for user-configured subscriptions, but that is profile/subscription-specific rather than a stable public generic feed for the registry.\n- Finanstilsynet's current news page was inspected and common `/rss`, `/rss.xml`, `/feed`, `?rss=true` and archive RSS patterns were live-probed. No parseable RSS/Atom endpoint was found; obvious root feed paths returned 404 and `?rss=true` returned normal HTML.\n- Konkurrence- og Forbrugerstyrelsens current news archive was inspected in the same way. No parseable RSS/Atom endpoint was exposed; obvious feed paths returned 404 or normal HTML.\n- Udlændinge- og Integrationsministeriet returned `text/xml` for several `?rss=true` guesses, but the bodies were zero bytes. These are not valid feeds and remain excluded.\n- Justitsministeriet, politiet and Indenrigs- og Sundhedsministeriet did not yield verified RSS endpoints in the same pass. Sundhedsstyrelsen rate-limited the GitHub probe (HTTP 429) and remains unresolved rather than classified as feedless.\n'''
+          if '## Folketinget / Danish regulator pass 2026-09-05' not in s:
+            s += note
+            p.write_text(s)
+          PY
+      - name: Remove one-shot workflows
+        run: |
+          rm -f .github/workflows/rss-folketinget-probe-once.yml
+          rm -f .github/workflows/rss-dk-regulators-probe-once.yml
+          rm -f .github/workflows/rss-pass-cleanup-once.yml
+      - name: Commit documentation and cleanup
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Document Danish RSS and Folketinget OData pass'
+          git push
