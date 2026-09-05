@@ -1,6 +1,6 @@
 # RSS feed verification
 
-Verified/expanded on 2026-09-04 for Morgentidende's curated feed pool.
+Verified/expanded on 2026-09-05 for Morgentidende's curated feed pool.
 
 ## Rules
 - `direct`: may be used as a normal source when the concrete article is suitable.
@@ -30,6 +30,50 @@ Berlingske and Politiken are known to have currently working feeds according to 
 
 Danmarks Nationalbank has an official RSS catalogue at `https://www.nationalbanken.dk/da/rss-feeds`. The currently configured individual endpoint remains subject to exact endpoint confirmation.
 
+## Major international feed verification pass
+
+The following active endpoints were response-checked on 2026-09-05 and returned XML/RSS content types:
+
+| Source/group | Active endpoint checked | Result |
+|---|---|---|
+| BBC News | https://feeds.bbci.co.uk/news/rss.xml | `text/xml` |
+| The Guardian | https://www.theguardian.com/world/rss | `text/xml` |
+| Financial Times | https://www.ft.com/world?format=rss | `text/xml` |
+| Deutsche Welle | https://rss.dw.com/rdf/rss-en-all | `text/xml` |
+| Al Jazeera English | https://www.aljazeera.com/xml/rss/all.xml | `application/rss+xml` |
+| France 24 | https://www.france24.com/en/rss | current third-party feed monitors show fresh 2026 items; direct verifier receives 403, so keep active but classify verification as indirect |
+| Euractiv | https://www.euractiv.com/feed/ | site has RSS-feed infrastructure, but direct verifier receives 403; keep active pending direct XML response check |
+| Politico Europe | https://www.politico.eu/feed/ | direct verification blocked by robots; keep active pending independent XML response check |
+
+Guardian's own documentation confirms that adding `/rss` to an index/section page produces the corresponding feed, matching the active Guardian entries.
+
+## Technology / AI feed verification pass
+
+The following active endpoints were directly response-checked as XML/RSS on 2026-09-05:
+
+- TechCrunch `https://techcrunch.com/feed/` → `application/rss+xml`
+- Ars Technica `https://feeds.arstechnica.com/arstechnica/index` → `text/xml`
+- WIRED `https://www.wired.com/feed/rss` → `application/xml`
+- The Verge `https://www.theverge.com/rss/index.xml` → `application/xml`
+- Google Research `https://research.google/blog/rss/` → `application/rss+xml`
+- Google DeepMind `https://deepmind.google/discover/blog/feed` → `text/xml`
+- Microsoft Research `https://www.microsoft.com/en-us/research/feed/` → `application/rss+xml`
+
+## Science / medicine / space feed verification pass
+
+The following active endpoints were directly response-checked as XML/RSS on 2026-09-05:
+
+- Nature `https://www.nature.com/nature.rss` → `application/rss+xml`
+- Frontiers in Aging `https://www.frontiersin.org/journals/aging/rss` → `application/xml`
+- Medical Xpress main feed `https://medicalxpress.com/rss-feed/` → `text/xml`
+- Phys.org main feed `https://phys.org/rss-feed/` → `text/xml`
+- EMA `https://www.ema.europa.eu/en/news.xml` → `application/rss+xml`
+- JAMA Network Open `https://jamanetwork.com/rss/site_214/187.xml` → `text/xml`
+- Space.com `https://www.space.com/feeds/all` → `application/xml`
+- Carbon Brief `https://www.carbonbrief.org/feed/` → `application/rss+xml`
+
+NASA's current registry entry could not be positively response-checked by the verifier in this pass; it remains active but should get a separate verification pass rather than being called confirmed.
+
 ## Libertarian feeds
 
 | Source | Feed | Mode | Status |
@@ -56,9 +100,9 @@ Count with verified RSS: 5/5.
 
 ## Confirmed research / institutional feeds
 
-- European Medicines Agency exposes an official `News and press releases` RSS endpoint at `https://www.ema.europa.eu/en/news.xml`. The active registry now uses this XML endpoint rather than the HTML RSS overview page.
-- JAMA Network Open's `New Online` XML endpoint `https://jamanetwork.com/rss/site_214/187.xml` responds as XML and is the endpoint to use in the registry. A legacy provisional JAMA URL remains to be replaced in `feeds.ts` in the next cleanup pass.
-- Google Research, Google DeepMind, Frontiers journal RSS endpoints, Medical Xpress and Phys.org main feeds have been response-checked as XML/RSS endpoints during this pass.
+- European Medicines Agency exposes an official `News and press releases` RSS endpoint at `https://www.ema.europa.eu/en/news.xml`. The active registry uses this XML endpoint rather than the HTML RSS overview page.
+- JAMA Network Open's `New Online` XML endpoint `https://jamanetwork.com/rss/site_214/187.xml` responds as XML and is now the active registry endpoint.
+- Google Research, Google DeepMind, Frontiers journal RSS endpoints, Medical Xpress and Phys.org main feeds have been response-checked as XML/RSS endpoints.
 
 ## Removed / not active RSS feeds
 
@@ -71,10 +115,9 @@ Islam-critical discovery feeds are radar only. Their own prose is not evidence. 
 
 ## Runtime status
 
-The curated-feed registry compiles. Scan integration is implemented with bounded feed selection, RSS/Atom parsing, per-feed failure tolerance, BGE-M3 feed ranking and semantic deduplication, discovery-only outbound-link promotion, and Google/Bing fallback. CI passed after the Danish-feed expansion.
+The curated-feed registry compiles. Scan integration is implemented with bounded feed selection, RSS/Atom parsing, per-feed failure tolerance, BGE-M3 feed ranking and semantic deduplication, discovery-only outbound-link promotion, and Google/Bing fallback. CI passed after the last code cleanup.
 
-
-## Verification pass 2026-09-05
+## Verification pass 2026-09-05 — endpoint corrections
 
 - Corrected JAMA Network Open to the official `New Online` XML feed: `https://jamanetwork.com/rss/site_214/187.xml`.
 - Corrected EMA to the actual RSS endpoint `https://www.ema.europa.eu/en/news.xml`.
