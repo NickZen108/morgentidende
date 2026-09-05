@@ -101,674 +101,814 @@
   },
   {
     "publisher": "dailytelegraph.com.au",
-    "country": "Australia",
+    "country": "AU",
     "url": "https://www.dailytelegraph.com.au/news/breaking-news/rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "heraldsun.com.au",
-    "country": "Australia",
+    "country": "AU",
     "url": "https://www.heraldsun.com.au/news/breaking-news/rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "couriermail.com.au",
-    "country": "Australia",
+    "country": "AU",
     "url": "https://www.couriermail.com.au/rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "canberratimes.com.au",
-    "country": "Australia",
+    "country": "AU",
     "url": "https://www.canberratimes.com.au/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "brisbanetimes.com.au",
-    "country": "Australia",
+    "country": "AU",
     "url": "https://www.brisbanetimes.com.au/rss/feed.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "themercury.com.au",
-    "country": "Australia",
+    "country": "AU",
     "url": "https://www.themercury.com.au/rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "thedailystar.net",
-    "country": "Bangladesh",
+    "country": "BD",
     "url": "https://www.thedailystar.net/frontpage/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "jugantor.com",
-    "country": "Bangladesh",
+    "country": "BD",
     "url": "https://www.jugantor.com/feed/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "kalerkantho.com",
-    "country": "Bangladesh",
+    "country": "BD",
     "url": "https://www.kalerkantho.com/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "prothomalo.com",
-    "country": "Bangladesh",
+    "country": "BD",
     "url": "https://www.prothomalo.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "folha.uol.com.br",
-    "country": "Brazil",
+    "country": "BR",
     "url": "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "riotimesonline.com",
-    "country": "Brazil",
+    "country": "BR",
     "url": "https://riotimesonline.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "jornaldebrasilia.com.br",
-    "country": "Brazil",
+    "country": "BR",
     "url": "https://jornaldebrasilia.com.br/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "financialpost.com",
-    "country": "Canada",
+    "country": "CA",
     "url": "https://business.financialpost.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "nationalpost.com",
-    "country": "Canada",
+    "country": "CA",
     "url": "https://nationalpost.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "ottawacitizen.com",
-    "country": "Canada",
+    "country": "CA",
     "url": "https://ottawacitizen.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "theprovince.com",
-    "country": "Canada",
+    "country": "CA",
     "url": "https://theprovince.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "lapresse.ca",
-    "country": "Canada",
+    "country": "CA",
     "url": "https://www.lapresse.ca/actualites/rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "thestar.com",
-    "country": "Canada",
+    "country": "CA",
     "url": "https://www.thestar.com/content/thestar/feed.RSSManagerServlet.articles.topstories.rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "torontosun.com",
-    "country": "Canada",
+    "country": "CA",
     "url": "https://torontosun.com/category/news/feed",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "ladepeche.fr",
-    "country": "France",
+    "country": "FR",
     "url": "https://www.ladepeche.fr/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "sudouest.fr",
-    "country": "France",
+    "country": "FR",
     "url": "https://www.sudouest.fr/essentiel/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "ouest-france.fr",
-    "country": "France",
+    "country": "FR",
     "url": "https://www.ouest-france.fr/rss-en-continu.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "zeit.de",
-    "country": "Germany",
+    "country": "DE",
     "url": "http://newsfeed.zeit.de/index",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "faz.net",
-    "country": "Germany",
+    "country": "DE",
     "url": "https://www.faz.net/rss/aktuell/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "thestandard.com.hk",
-    "country": "Hong Kong SAR China",
+    "country": "HK",
     "url": "https://www.thestandard.com.hk/newsfeed/latest/news.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "stheadline.com",
-    "country": "Hong Kong SAR China",
+    "country": "HK",
     "url": "https://hd.stheadline.com/rss/news/daily/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "hket.com",
-    "country": "Hong Kong SAR China",
+    "country": "HK",
     "url": "https://www.hket.com/rss/hongkong",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "indianexpress.com",
-    "country": "India",
+    "country": "IN",
     "url": "http://indianexpress.com/print/front-page/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "dnaindia.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.dnaindia.com/feeds/india.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "business-standard.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.business-standard.com/rss/home_page_top_stories.rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "freepressjournal.in",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.freepressjournal.in/stories.rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "deccanchronicle.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.deccanchronicle.com/rss_feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "economictimes.indiatimes.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "financialexpress.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.financialexpress.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "thehindubusinessline.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.thehindubusinessline.com/feeder/default.rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "gujaratsamachar.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.gujaratsamachar.com/rss/top-stories",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "maharashtratimes.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://maharashtratimes.com/rssfeedsdefault.cms",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "loksatta.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.loksatta.com/desh-videsh/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "amarujala.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.amarujala.com/rss/breaking-news.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "navbharattimes.indiatimes.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://navbharattimes.indiatimes.com/rssfeedsdefault.cms",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "patrika.com",
-    "country": "India",
+    "country": "IN",
     "url": "http://api.patrika.com/rss/india-news",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "jansatta.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.jansatta.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "livehindustan.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://feed.livehindustan.com/rss/3127",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "bhaskar.com",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.bhaskar.com/rss-feed/1061/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "divyabhaskar.co.in",
-    "country": "India",
+    "country": "IN",
     "url": "https://www.divyabhaskar.co.in/rss-feed/1037/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "republika.co.id",
-    "country": "Indonesia",
+    "country": "ID",
     "url": "https://www.republika.co.id/rss/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "tribunnews.com",
-    "country": "Indonesia",
+    "country": "ID",
     "url": "https://www.tribunnews.com/rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "irishmirror.ie",
-    "country": "Ireland",
+    "country": "IE",
     "url": "https://www.irishmirror.ie/?service=rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "liberoquotidiano.it",
-    "country": "Italy",
+    "country": "IT",
     "url": "https://www.liberoquotidiano.it/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "ilmattino.it",
-    "country": "Italy",
+    "country": "IT",
     "url": "https://www.ilmattino.it/?sez=XML&args&p=search&args[box]=Home&limit=20&layout=rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "asahi.com",
-    "country": "Japan",
+    "country": "JP",
     "url": "http://rss.asahi.com/rss/asahi/newsheadlines.rdf",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "excelsior.com.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.excelsior.com.mx/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "reforma.com",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.reforma.com/rss/portada.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "vanguardia.com.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://vanguardia.com.mx/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "elsiglodetorreon.com.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.elsiglodetorreon.com.mx/index.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "elfinanciero.com.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.elfinanciero.com.mx/arc/outboundfeeds/rss/?outputType=xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "elnorte.com",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.elnorte.com/rss/portada.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "informador.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.informador.mx/rss/ultimas-noticias.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "24-horas.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.24-horas.mx/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "debate.com.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.debate.com.mx/rss/feed.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "diario.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://diario.mx/jrz/media/sitemaps/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "eluniversal.com.mx",
-    "country": "Mexico",
+    "country": "MX",
     "url": "https://www.eluniversal.com.mx/seccion/1671/rss.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "thenationonlineng.net",
-    "country": "Nigeria",
+    "country": "NG",
     "url": "https://thenationonlineng.net/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "guardian.ng",
-    "country": "Nigeria",
+    "country": "NG",
     "url": "https://guardian.ng/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "tribuneonlineng.com",
-    "country": "Nigeria",
+    "country": "NG",
     "url": "http://tribuneonlineng.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "tribune.com.pk",
-    "country": "Pakistan",
+    "country": "PK",
     "url": "https://tribune.com.pk/feed/home",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "nation.com.pk",
-    "country": "Pakistan",
+    "country": "PK",
     "url": "https://nation.com.pk/rss/top-stories",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "jang.com.pk",
-    "country": "Pakistan",
+    "country": "PK",
     "url": "https://jang.com.pk/rss/1/1",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "thenews.com.pk",
-    "country": "Pakistan",
+    "country": "PK",
     "url": "https://www.thenews.com.pk/rss/1/1",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "express.pk",
-    "country": "Pakistan",
+    "country": "PK",
     "url": "https://www.express.pk/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "inquirer.net",
-    "country": "Philippines",
+    "country": "PH",
     "url": "https://www.inquirer.net/fullfeed",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "manilatimes.net",
-    "country": "Philippines",
+    "country": "PH",
     "url": "https://www.manilatimes.net/rssfeed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "philstar.com",
-    "country": "Philippines",
+    "country": "PH",
     "url": "https://www.philstar.com/rss/headlines",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "bworldonline.com",
-    "country": "Philippines",
+    "country": "PH",
     "url": "https://www.bworldonline.com/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "sunstar.com.ph",
-    "country": "Philippines",
+    "country": "PH",
     "url": "https://www.sunstar.com.ph/rssFeed/selected",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "manilastandard.net",
-    "country": "Philippines",
+    "country": "PH",
     "url": "https://manilastandard.net/feed/all",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "tempo.com.ph",
-    "country": "Philippines",
+    "country": "PH",
     "url": "http://tempo.com.ph/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "businessmirror.com.ph",
-    "country": "Philippines",
+    "country": "PH",
     "url": "https://businessmirror.com.ph/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "dziennik.pl",
-    "country": "Poland",
+    "country": "PL",
     "url": "http://rss.dziennik.pl/Dziennik-PL/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "gazetaprawna.pl",
-    "country": "Poland",
+    "country": "PL",
     "url": "http://rss.gazetaprawna.pl/GazetaPrawna",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "rp.pl",
-    "country": "Poland",
+    "country": "PL",
     "url": "https://www.rp.pl/rss/1019",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "mk.ru",
-    "country": "Russia",
+    "country": "RU",
     "url": "https://www.mk.ru/rss/index.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "rg.ru",
-    "country": "Russia",
+    "country": "RU",
     "url": "https://rg.ru/xml/index.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "themoscowtimes.com",
-    "country": "Russia",
+    "country": "RU",
     "url": "https://www.themoscowtimes.com/rss/news",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "kommersant.ru",
-    "country": "Russia",
+    "country": "RU",
     "url": "https://www.kommersant.ru/RSS/main.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "sowetanlive.co.za",
-    "country": "South Africa",
+    "country": "ZA",
     "url": "https://www.sowetanlive.co.za/rss/?publication=sowetan-live",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "citizen.co.za",
-    "country": "South Africa",
+    "country": "ZA",
     "url": "https://citizen.co.za/feed/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "timeslive.co.za",
-    "country": "South Africa",
+    "country": "ZA",
     "url": "https://www.timeslive.co.za/rss/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "elconfidencial.com",
-    "country": "Spain",
+    "country": "ES",
     "url": "https://rss.elconfidencial.com/espana/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "eldiario.es",
-    "country": "Spain",
+    "country": "ES",
     "url": "https://www.eldiario.es/rss/",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "elperiodico.com",
-    "country": "Spain",
+    "country": "ES",
     "url": "https://www.elperiodico.com/es/rss/rss_portada.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "gazeta.ua",
-    "country": "Ukraine",
+    "country": "UA",
     "url": "https://gazeta.ua/rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "dailymail.co.uk",
-    "country": "United Kingdom",
+    "country": "GB",
     "url": "https://www.dailymail.co.uk/home/index.rss",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "dj.com",
-    "country": "United States",
+    "country": "US",
     "url": "https://feeds.a.dj.com/rss/RSSWorldNews.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
   },
   {
     "publisher": "latimes.com",
-    "country": "United States",
+    "country": "US",
     "url": "https://www.latimes.com/world-nation/rss2.0.xml",
     "verification": "pending",
     "provenance": "https://github.com/plenaryapp/awesome-rss-feeds"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Aftenposten",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.aftenposten.no/rss/",
+    "country": "NO"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Dagens Nyheter",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.dn.se/rss/",
+    "country": "SE"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Helsingin Sanomat",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.hs.fi/rss/tuoreimmat.xml",
+    "country": "FI"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Morgunbladid",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.mbl.is/feeds/fp/",
+    "country": "IS"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Daily Nation",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://nation.africa/kenya/rss",
+    "country": "KE"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Daily Monitor",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.monitor.co.ug/uganda/rss",
+    "country": "UG"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Daily Graphic",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.graphic.com.gh/?format=feed&type=rss",
+    "country": "GH"
+  },
+  {
+    "verification": "pending",
+    "publisher": "The Citizen Tanzania",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.thecitizen.co.tz/tanzania/rss",
+    "country": "TZ"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Daily Sabah",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.dailysabah.com/rssFeed/12",
+    "country": "TR"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Jordan Times",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://jordantimes.com/feed",
+    "country": "JO"
+  },
+  {
+    "verification": "pending",
+    "publisher": "The Kathmandu Post",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://kathmandupost.com/rss",
+    "country": "NP"
+  },
+  {
+    "verification": "pending",
+    "publisher": "The Straits Times",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.straitstimes.com/news/singapore/rss.xml",
+    "country": "SG"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Bangkok Post",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.bangkokpost.com/rss/data/topstories.xml",
+    "country": "TH"
+  },
+  {
+    "verification": "pending",
+    "publisher": "The Korea Herald",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.koreaherald.com/common/rss_xml.php?ct=102",
+    "country": "KR"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Taipei Times",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.taipeitimes.com/xml/index.rss",
+    "country": "TW"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Clarin",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.clarin.com/rss/lo-ultimo/",
+    "country": "AR"
+  },
+  {
+    "verification": "pending",
+    "publisher": "El Tiempo",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.eltiempo.com/rss.xml",
+    "country": "CO"
+  },
+  {
+    "verification": "pending",
+    "publisher": "El Comercio",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://elcomercio.pe/arc/outboundfeeds/rss/?outputType=xml",
+    "country": "PE"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Publico",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://feeds.feedburner.com/PublicoRSS",
+    "country": "PT"
+  },
+  {
+    "verification": "pending",
+    "publisher": "Kathimerini",
+    "provenance": "candidate endpoint; validate in GitHub Actions",
+    "url": "https://www.ekathimerini.com/feed/",
+    "country": "GR"
   }
 ]

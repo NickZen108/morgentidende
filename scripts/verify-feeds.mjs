@@ -10,8 +10,8 @@ for(let i=0;i<feeds.length;i+=8){
    const reader=response.body.getReader();let text='';let size=0;const decoder=new TextDecoder();
    try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>2_000_000)throw new Error('oversize');text+=decoder.decode(value,{stream:true});}}finally{await reader.cancel();}
    const xml=new XMLParser({ignoreAttributes:false,processEntities:false}).parse(text);
-   const entries=xml.rss?.channel?.item??xml.feed?.entry;
-   return {...feed,ok:Boolean(xml.rss?.channel||xml.feed),status:response.status,entries:entries?(Array.isArray(entries)?entries.length:1):0,final_url:response.url};
+   const entries=xml.rss?.channel?.item??xml.feed?.entry??xml['rdf:RDF']?.item;
+   return {...feed,ok:Boolean(xml.rss?.channel||xml.feed||xml['rdf:RDF']?.channel),status:response.status,entries:entries?(Array.isArray(entries)?entries.length:1):0,final_url:response.url};
   }catch(e){return {...feed,ok:false,error:e.message};}
  }));results.push(...batch);
 }
