@@ -13,7 +13,7 @@ export async function identifyImage(env:Env,url:string):Promise<{hash:string;fin
 export async function identifyBytes(bytes:Uint8Array){
  // Unsupported formats are rejected, never treated as a new photo by default.
  const pixels=jpeg.decode(bytes,{useTArray:true,maxResolutionInMP:4,maxMemoryUsageInMB:48,tolerantDecoding:false});
- const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');
+ const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',Uint8Array.from(bytes).buffer))).map(b=>b.toString(16).padStart(2,'0')).join('');
  return {hash,fingerprints:imageFingerprints(pixels),bytes};
 }
 export async function registerIdentity(env:Env,asset:MediaRow,verifiedBytes?:Uint8Array):Promise<MediaRow>{
