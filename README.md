@@ -18,6 +18,10 @@ Den eksisterende Worker hedder fortsat `morgentidende-v2` for at bevare adresse 
 
 ## Status og resterende kontrol
 
-Før automatisk drift: verificér modeller og web_search hos Cloudflare, test Media med faktiske billeder, gennemfør end-to-end-produktion og gennemgå feedrapporten. Samme billedfamilie har en ubetinget database-cooldown på 10 dage; registrering af varianter fra forskellige kilde-URL'er skal færdiggøres før billedarkivet kan betragtes som produktionsklart.
+V3 er flettet til main og deployet. Scan har sin egen Worker, D1-database og 15-minutters cron. Automatisk artikelproduktion er slukket. AI Gateway default har ved seneste kontrol ingen credits eller OpenAI-provider-nøgle; Luna og Terra er derfor endnu ikke afprøvet med rigtige kald.
+
+16 tests, seks produktionsscenarier med simulerede eksterne tjenester, begge Worker-builds og Supabase-transaktionstests består. Der er endnu ikke produceret en rigtig artikel. Før automatisk drift: tilslut modelbetaling, verificér modeller og web_search, test Media med faktiske billeder, og gennemfør en samlet artikelproduktion.
+
+Samme billedfamilie har en ubetinget database-cooldown på 10 dage. Derudover blokerer en serialiseret publiceringskontrol eksakte og visuelt lignende JPEG-varianter på tværs af kildeadresser. Testene dækker ændret størrelse, JPEG-komprimering, lysstyrke og mindre beskæringer. Vilkårlige redigeringer og forskellige optagelser fra samme fotoserie kan ikke garanteres genkendt; den del kræver stærkere familieoplysninger. Verificerede billedbytes gemmes i R2, så kildeadressens indhold ikke kan ændres efter kontrollen.
 
 Migrationsplan: [docs/v3-build-plan.md](docs/v3-build-plan.md). Databaseintegrationstesten i `tests/database.sql` kører i en transaktion og ruller alt tilbage.

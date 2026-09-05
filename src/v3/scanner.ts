@@ -30,7 +30,11 @@ export default {
  async fetch(){return Response.json({ok:true,service:'scan',configured_publishers:feeds.length});}
 } satisfies ExportedHandler<ScanEnv>;
 async function scan(env:ScanEnv){
- await env.SCAN_DB.exec('CREATE TABLE IF NOT EXISTS seen(url TEXT PRIMARY KEY, title TEXT NOT NULL, publisher TEXT NOT NULL, observed INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS feed_health(publisher TEXT PRIMARY KEY, checked INTEGER, ok INTEGER, items INTEGER); CREATE TABLE IF NOT EXISTS signals(id TEXT PRIMARY KEY, payload TEXT NOT NULL, delivered INTEGER NOT NULL DEFAULT 0);');
+ await env.SCAN_DB.batch([
+  env.SCAN_DB.prepare('CREATE TABLE IF NOT EXISTS seen(url TEXT PRIMARY KEY, title TEXT NOT NULL, publisher TEXT NOT NULL, observed INTEGER NOT NULL)'),
+  env.SCAN_DB.prepare('CREATE TABLE IF NOT EXISTS feed_health(publisher TEXT PRIMARY KEY, checked INTEGER, ok INTEGER, items INTEGER)'),
+  env.SCAN_DB.prepare('CREATE TABLE IF NOT EXISTS signals(id TEXT PRIMARY KEY, payload TEXT NOT NULL, delivered INTEGER NOT NULL DEFAULT 0)'),
+ ]);
  const now=Date.now();let items:FeedItem[]=[];
  for(let i=0;i<feeds.length;i+=6){
   const batch=await Promise.allSettled(feeds.slice(i,i+6).map(async feed=>{
