@@ -4,10 +4,10 @@ import {validateClaims,verifyChatToken,CHAT_AUDIENCE} from '../src/v3/chat-auth'
 import {paidCall,withCostContext,tokenCost,BudgetExceeded} from '../src/v3/budget';
 import {licenseEvidence} from '../src/v3/photo-source';
 const commit='a'.repeat(40);
-const claims={iss:'https://token.actions.githubusercontent.com',aud:CHAT_AUDIENCE,repository:'NickZen108/morgentidende',repository_owner_id:'304098189',ref:'refs/heads/chatops',sub:'repo:NickZen108/morgentidende:ref:refs/heads/chatops',workflow_ref:'NickZen108/morgentidende/.github/workflows/chatops.yml@refs/heads/chatops',event_name:'push',sha:commit,iat:1000,exp:1300};
+const claims={iss:'https://token.actions.githubusercontent.com',aud:CHAT_AUDIENCE,repository:'NickZen108/morgentidende',repository_owner_id:'304098189',ref:'refs/heads/chatops',sub:'repo:NickZen108@304098189/morgentidende@1357364514:ref:refs/heads/chatops',workflow_ref:'NickZen108/morgentidende/.github/workflows/chatops.yml@refs/heads/chatops',event_name:'push',sha:commit,iat:1000,exp:1300};
 test('OIDC rejects wrong audience, repo, branch, SHA and expired identity',()=>{
  validateClaims(claims,commit,1100);
- for(const change of [{aud:'wrong'},{repository:'attacker/repo'},{ref:'refs/heads/main'},{sha:'b'.repeat(40)},{exp:1099},{workflow_ref:'wrong'},{event_name:'pull_request'}])assert.throws(()=>validateClaims({...claims,...change},commit,1100));
+ for(const change of [{sub:'repo:NickZen108/morgentidende:ref:refs/heads/chatops'},{sub:'repo:NickZen108@304098189/morgentidende@999:ref:refs/heads/chatops'},{aud:'wrong'},{repository:'attacker/repo'},{ref:'refs/heads/main'},{sha:'b'.repeat(40)},{exp:1099},{workflow_ref:'wrong'},{event_name:'pull_request'}])assert.throws(()=>validateClaims({...claims,...change},commit,1100));
 });
 test('OIDC checks signature, not only claims',async()=>{
  const pair=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
