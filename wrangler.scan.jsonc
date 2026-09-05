@@ -1,6 +1,6 @@
 {
  "$schema":"node_modules/wrangler/config-schema.json","name":"morgentidende-v3-scan","main":"src/v3/scanner.ts","compatibility_date":"2026-09-05","compatibility_flags":["nodejs_compat"],
- "services":[{"binding":"NEWSROOM","service":"morgentidende-v2","entrypoint":"SignalReceiver"}],
+ "services":[{"binding":"NEWSROOM","service":"morgentidende-v3","entrypoint":"SignalReceiver"}],
  "d1_databases":[{"binding":"SCAN_DB","database_name":"morgentidende-v3-scan"}],
  "triggers":{"crons":["*/15 * * * *"]},"observability":{"enabled":true}
 }
