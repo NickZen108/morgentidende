@@ -3,7 +3,8 @@ import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const replacements={
  'cloudflare:workers':'export class WorkflowEntrypoint {constructor(ctx,env){this.env=env;}}',
- './models':'export const model=(...args)=>globalThis.productionTest.model(...args);',
+ './models':`export const model=(...args)=>globalThis.productionTest.model(...args);
+export const modelResponseText=(result)=>result.output_text??result.output?.flatMap(x=>x.content??[]).filter(x=>x.type==='output_text').map(x=>x.text??'').join('\\n')??'';`,
  './media':'export const selectMedia=(...args)=>globalThis.productionTest.media(...args);',
  './db':'export const db=(...args)=>globalThis.productionTest.db(...args);export const rpc=(...args)=>globalThis.productionTest.rpc(...args);'
 };
@@ -53,8 +54,7 @@ delete globalThis.productionTest;
 const probes=[];
 await new Production({},{AI:{async run(name,input,options){
  assert.equal(input.max_output_tokens,128);assert.equal(input.tools,undefined);
- assert.deepEqual(options,{gateway:{id:'default'}});probes.push(name);return {status:'completed',output_text:'OK'};
+ assert.deepEqual(options,{gateway:{id:'default'}});probes.push(name);return {status:'completed',output:[{type:'message',content:[{type:'output_text',text:'OK'}]}]};
 }}}).run({payload:{diagnostic:'models-v1'}},{async do(name,options,fn){assert.equal(options.retries.limit,0);return fn();}});
 assert.deepEqual(probes,['openai/gpt-5.6-luna','openai/gpt-5.6-terra']);
 console.log('PASS production: bounded model diagnostic');
-
