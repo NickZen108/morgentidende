@@ -17,6 +17,7 @@ jobs:
       - run: npx wrangler types
       - run: npx wrangler types scan-configuration.d.ts --config wrangler.scan.jsonc --env-interface ScanEnv
       - run: npm run check
+      - run: node scripts/test-production.mjs
       - run: npx wrangler deploy --dry-run
       - run: npx wrangler deploy --config wrangler.scan.jsonc --dry-run
       - name: Verify publisher feeds without AI spending

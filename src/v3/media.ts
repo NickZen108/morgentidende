@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {Draft,MediaRow} from './contracts';
 import {db,boundedText,ensureFamily} from './db';
+import {registerIdentity,identityEligible} from './image-identity';
 type Run=(model:string,input:Record<string,unknown>)=>Promise<unknown>;
 export const cooldownEligible=(last:string|null,now=Date.now())=>last===null||Date.parse(last)<=now-10*86400000;
 async function eligible(env:Env,family:string){const [row]=await db<{last_used_at:string|null}[]>(env,`v3_media_families?id=eq.${encodeURIComponent(family)}`);return !row||cooldownEligible(row.last_used_at);}
@@ -14,8 +15,13 @@ export async function selectMedia(env:Env,article:Draft,job:string):Promise<Medi
  const archive=await db<MediaRow[]>(env,'v3_media?rights_verified=eq.true&order=usage_count_30d.asc&limit=100');
  for(const asset of archive){
   if(!asset.tags.some(tag=>terms.includes(tag))||!await eligible(env,asset.family_id))continue;
-  if(!asset.vision_verified){if(!await vision(env,asset.url,article))continue;await db(env,`v3_media?id=eq.${asset.id}`,'PATCH',{vision_verified:true});}
-  return asset;
+  try{
+   const identified=await registerIdentity(env,asset);
+   if(!await identityEligible(env,identified))continue;
+   if(!await vision(env,identified.url,article))continue;
+   await db(env,`v3_media?id=eq.${asset.id}`,'PATCH',{vision_verified:true});
+   return identified;
+  }catch{continue;}
  }
  const url=new URL('https://commons.wikimedia.org/w/api.php');
  url.search=new URLSearchParams({action:'query',format:'json',generator:'search',gsrsearch:article.image_query,gsrnamespace:'6',gsrlimit:'5',prop:'imageinfo',iiprop:'url|sha1|extmetadata',iiurlwidth:'1600'}).toString();
@@ -38,7 +44,8 @@ export async function selectMedia(env:Env,article:Draft,job:string):Promise<Medi
     credit:plain(info.extmetadata.Artist?.value??'Wikimedia Commons'),alt:plain(info.extmetadata.ImageDescription?.value??article.image_query).slice(0,600),
     license_documentation:{license,license_url:licenseUrl,evidence:info.extmetadata,verified_at:new Date().toISOString()},
     rights_verified:true,vision_verified:true,tags:terms,generated:false
-   });return asset;
+   });
+   try{const identified=await registerIdentity(env,asset);if(await identityEligible(env,identified))return identified;}catch{continue;}
   }
  }catch(error){console.log(JSON.stringify({event:'commons_failed',reason:error instanceof Error?error.message:'unknown'}));}
  const key=`generated/${job}.jpg`;
@@ -60,5 +67,8 @@ export async function selectMedia(env:Env,article:Draft,job:string):Promise<Medi
   family_id:family,content_hash:hash,original_url:publicUrl,url:publicUrl,credit:'AI-illustration · Morgentidende / FLUX',alt:`Illustration: ${article.image_query}`,
   license_documentation:{license:'FLUX.1-schnell Apache-2.0',license_url:'https://huggingface.co/black-forest-labs/FLUX.1-schnell/blob/main/LICENSE',evidence:{provider:'Cloudflare Workers AI',model:'@cf/black-forest-labs/flux-1-schnell',prompt:article.image_query,object:key},verified_at:new Date().toISOString()},
   rights_verified:true,vision_verified:true,generated:true,tags:terms
- });return asset;
+ });
+ const identified=await registerIdentity(env,asset);
+ if(!await identityEligible(env,identified))throw new Error('generated_image_identity_cooldown');
+ return identified;
 }
