@@ -1,3 +1,4 @@
+import {chatStatus,directWorkflowId,linkChatOrder} from './v3/chat-control';
 import {verifyChatToken,ChatAuthError} from './v3/chat-auth';
 import {db,rpc,boundedText} from './v3/db';
 import {ChatCommand,DirectSubmission,Order} from './v3/contracts';
@@ -42,7 +43,7 @@ async function dispatchChatCommand(request:Request,env:Env){
  const commit=request.headers.get('X-Morgentidende-Commit')??'';
  await verifyChatToken((request.headers.get('Authorization')??'').replace(/^Bearer /,''),commit);
  const command=await verifiedChatCommand(request);
- if(command.type==='status')return Response.json({ok:true,budget:await rpc(env,'v3_budget_state'),version:3});
+ if(command.type==='status')return Response.json(await chatStatus(env,command));
  const workflowId=command.type==='commission'?`chatops-commission-${command.id}`:`chatops-direct-${command.id}`;
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(command))))).map(x=>x.toString(16).padStart(2,'0')).join('');
  if(!await rpc<boolean>(env,'v3_chat_receipt',{p_id:command.id,p_hash:hash,p_workflow:workflowId}))return Response.json({ok:true,already_dispatched:true,workflow_id:workflowId});
@@ -51,6 +52,10 @@ async function dispatchChatCommand(request:Request,env:Env){
  return response;
 }
 async function dispatchVerifiedCommand(command:Exclude<ChatCommand,{type:'status'}>,env:Env){
+ if(command.type==='order'){
+  const workflow=await startChiefOnce(env,`chatops-direct-${command.id}`,{tick:`chatops:${command.id}`,commission:'exact-order-v1',exactOrder:command.order});
+  return Response.json({ok:true,type:command.type,workflow},{status:202});
+ }
  if(command.type==='commission'){
   const workflowId=`chatops-commission-${command.id}`;
   const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,commission:'chatops-batch-v1',count:command.count,topic:command.topic});
@@ -60,7 +65,8 @@ async function dispatchVerifiedCommand(command:Exclude<ChatCommand,{type:'status
   const [row]=await db<{id:string;status:string;original_order:unknown}[]>(env,`v3_orders?id=eq.${encodeURIComponent(command.order_id)}&limit=1`);
   if(!row)throw new Error('chatops_direct_order_not_found');
   DirectSubmission.parse(row.original_order);
-  const workflowId=`chatops-direct-${command.id}`;
+  await linkChatOrder(env,`chatops:${command.id}`,row.id);
+  const workflowId=directWorkflowId(row.id);
   const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,directOrderId:row.id});
   return Response.json({ok:true,type:command.type,order_id:row.id,workflow},{status:202});
  }
@@ -70,7 +76,8 @@ async function dispatchVerifiedCommand(command:Exclude<ChatCommand,{type:'status
   [row]=await db<{id:string;status:string}[]>(env,'v3_orders','POST',{dedupe_key:key,original_order:{kind:'direct_article',article:command.article,submitted_at:new Date().toISOString()}});
   if(!row)throw new Error('chatops_direct_order_insert_failed');
  }
- const workflowId=`chatops-direct-${command.id}`;
+ await linkChatOrder(env,`chatops:${command.id}`,row.id);
+ const workflowId=directWorkflowId(row.id);
  const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,directOrderId:row.id});
  return Response.json({ok:true,type:command.type,order_id:row.id,headline:command.article.headline,workflow},{status:202});
 }

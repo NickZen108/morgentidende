@@ -115,7 +115,7 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
   }
   await step.do('drop-order',async()=>{await db(this.env,`v3_orders?id=eq.${id}`,'PATCH',{status:'dropped'});return true;});
   } catch(error) {
-   await step.do('mark-failed',async()=>{await db(this.env,`v3_orders?id=eq.${id}&status=neq.published`,'PATCH',{status:'failed'});return true;});
+   await step.do('mark-failed',async()=>{await db(this.env,`v3_orders?id=eq.${id}&status=neq.published`,'PATCH',{status:'failed',error_code:error instanceof Error&&error.message==='daily_budget_exhausted'?'daily_budget_exhausted':'production_failed'});return true;});
    throw error;
   }
  }

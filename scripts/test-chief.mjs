@@ -2,6 +2,7 @@ import {build} from 'esbuild';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const replacements={
+ './chat-control':'export const linkChatOrder=async()=>{}',
  './budget':'export const withCostContext=(_,fn)=>fn();export const assignOrderCosts=async()=>{}',
  'cloudflare:workers':'export class WorkflowEntrypoint {constructor(ctx,env){this.env=env;}}',
  './models':'export const model=(...args)=>globalThis.chiefTest.model(...args);',
@@ -10,7 +11,7 @@ const replacements={
 };
 await fs.mkdir('reports',{recursive:true});
 await build({entryPoints:['src/v3/chief.ts'],outfile:'reports/chief-test.mjs',bundle:true,platform:'node',format:'esm',plugins:[{name:'chief-boundaries',setup(b){
- b.onResolve({filter:/^(cloudflare:workers|\.\/(models|db|media|budget))$/},args=>args.importer.endsWith('chief.ts')?{path:args.path,namespace:'test'}:undefined);
+ b.onResolve({filter:/^(cloudflare:workers|\.\/(models|db|media|budget|chat-control))$/},args=>args.importer.endsWith('chief.ts')?{path:args.path,namespace:'test'}:undefined);
  b.onLoad({filter:/.*/,namespace:'test'},args=>({contents:replacements[args.path],loader:'js'}));
 }}]});
 const {Chief}=await import('../reports/chief-test.mjs');
@@ -80,4 +81,20 @@ globalThis.chiefTest={
 const direct=await new Chief({},{PRODUCTION:{}}).run({payload:{tick:'chatops-direct-test',directOrderId:'direct-order'}},runStep);
 assert.equal(direct.status,'published');assert.equal(direct.article_id,'article-direct-1');assert.equal(mediaCalls,1);assert.deepEqual(publishedArgs,{p_order:'direct-order',p_attempt:1,p_slot:'news-1'});
 console.log('PASS chief: direct article bypasses Desk/Journalist, gets Media, Chief review, and publication');
+
+let exactSaved=null;productionCalls=[];
+globalThis.chiefTest={
+ async rpc(env,name){assert.equal(name,'v3_editorial_state');return state;},
+ async db(env,path,method='GET',body){if(method==='GET')return [];exactSaved=body.original_order;return [{id:'exact-order',status:'pending',original_order:body.original_order}];},
+ async model(){throw new Error('Exact order must not be rewritten by a model');},
+ async selectMedia(){throw new Error('Unexpected media');}
+};
+const exact=await new Chief({},{PRODUCTION:{async create(input){productionCalls.push(input);}}}).run({payload:{tick:'chatops:exact-test',commission:'exact-order-v1',exactOrder:order}},runStep);
+assert.deepEqual(exactSaved,order);assert.deepEqual(exact.order,order);assert.equal(productionCalls.length,1);
+console.log('PASS chief: exact instruction reaches production unchanged, without extra model calls');
+let creates=0,gets=0;
+await new Chief({},{PRODUCTION:{async create(){creates++;throw new Error('already exists');},async get(){gets++;return {async status(){return {status:'running'};}};}}}).startProduction('existing-order');
+assert.equal(creates,1);assert.equal(gets,1);
+console.log('PASS chief: production creation retry recognizes existing workflow');
+
 delete globalThis.chiefTest;
