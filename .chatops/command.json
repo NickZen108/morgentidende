@@ -1,5 +1,5 @@
 {
-  "id": "bc4d4d31-d282-45ee-9329-d9baf37d813b",
+  "id": "13eb0583-3938-4378-91e6-6729ba845cb5",
   "type": "publish_article",
   "slot": "lead",
   "article": {
@@ -37,7 +37,7 @@
     "image_query": "Folketinget Christiansborg Denmark"
   },
   "hero": {
-    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Folketinget_facade_Copenhagen_Denmark.jpg/1280px-Folketinget_facade_Copenhagen_Denmark.jpg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Folketinget_facade_Copenhagen_Denmark.jpg/1280px-Folketinget_facade_Copenhagen_Denmark.jpg",
     "source_url": "https://commons.wikimedia.org/wiki/File:Folketinget_facade_Copenhagen_Denmark.jpg",
     "credit": "Jebulon / Wikimedia Commons",
     "alt": "Indgangen til Folketinget på Christiansborg i København.",
