@@ -2,6 +2,7 @@ import {build} from 'esbuild';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const replacements={
+ './claim-review':`export async function reviewWithEvidence(env,step,input){const t=globalThis.productionTest;if(t.pauseReview)return {paused:true,reason:'Awaiting evidence'};const review=await t.model(env,'chief','test boundary',input);await t.db(env,'v3_attempts','PATCH',{review,draft:input.article,stage:review.serious_error?'rejected':'approved'});return {paused:false,review};}`,
  'cloudflare:workers':'export class WorkflowEntrypoint {constructor(ctx,env){this.env=env;}}',
  './budget':`export const withCostContext=(context,fn)=>fn();export const budgetedAI=(env,...args)=>env.AI.run(...args);`,
  './models':`export const model=(...args)=>globalThis.productionTest.model(...args);
@@ -11,14 +12,15 @@ export const modelResponseText=(result)=>result.output_text??result.output?.flat
 };
 await fs.mkdir('reports',{recursive:true});
 await build({entryPoints:['src/v3/production.ts'],outfile:'reports/production-test.mjs',bundle:true,platform:'node',format:'esm',plugins:[{name:'workflow-boundaries',setup(b){
- b.onResolve({filter:/^(cloudflare:workers|\.\/(models|media|db|budget))$/},args=>args.importer.endsWith('production.ts')?{path:args.path,namespace:'test'}:undefined);
+ b.onResolve({filter:/^(cloudflare:workers|\.\/(models|media|db|budget|claim-review))$/},args=>args.importer.endsWith('production.ts')?{path:args.path,namespace:'test'}:undefined);
  b.onLoad({filter:/.*/,namespace:'test'},args=>({contents:replacements[args.path],loader:'js'}));
 }}]});
 const {Production}=await import('../reports/production-test.mjs');
 const original={instruction:'Write the original order',category:'viden'};
-for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-question','provider-failure','budget-failure']){
+for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-question','provider-failure','budget-failure','paused-review']){
  const calls=[],writes=[],steps=[],configs=[];let desks=0,journalists=0,reviews=0,published=0;
  globalThis.productionTest={
+  pauseReview:scenario==='paused-review',
   async db(env,path,method='GET',body){writes.push({path,method,body});if(method==='GET')return [{id:'order-test',status:'pending',original_order:original}];return [];},
   async rpc(env,name,body){if(name==='v3_publish'){published++;return 'article-test';}return {};},
   async media(env,article,job,context){assert.deepEqual(context.original_order,original);assert.ok(context.dossier);return {id:'media-test',url:'https://example.org/image.jpg',alt:'test',credit:'test'};},
@@ -41,7 +43,7 @@ for(const scenario of ['publish','fresh-retry','drop','three-questions','fourth-
  };
  const step={async do(name,configOrFn,maybeFn){steps.push(name);const fn=maybeFn??configOrFn;if(maybeFn)configs.push({name,config:configOrFn});return fn();}};
  const run=()=>new Production({},{}).run({payload:{orderId:'order-test'}},step);
- if(['fourth-question','provider-failure','budget-failure'].includes(scenario)){
+ if(scenario==='paused-review'){const outcome=await run();assert.equal(outcome.status,'paused');assert.equal(published,0);assert.ok(!writes.some(x=>x.body?.status==='dropped'));}else if(scenario==='budget-failure'){const outcome=await run();assert.equal(outcome.status,'paused');assert.equal(published,0);assert.ok(writes.some(x=>x.body?.status==='paused'));}else if(['fourth-question','provider-failure'].includes(scenario)){
   await assert.rejects(run);assert.equal(published,0);assert.ok(writes.some(x=>x.body?.status==='failed'));
  }else{
   await run();assert.equal(published,scenario==='drop'?0:1);

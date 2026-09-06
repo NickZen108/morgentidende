@@ -2,6 +2,7 @@ import {build} from 'esbuild';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const replacements={
+ './claim-review':`export async function reviewWithEvidence(env,step,input){const t=globalThis.chiefTest;if(t.pauseReview)return {paused:true,reason:'Awaiting evidence'};const review=await t.model(env,'chief','test boundary',{...input,direct_submission:true},null,true);await t.db(env,'v3_attempts','PATCH',{review,draft:input.article,stage:review.serious_error?'rejected':'approved'});return {paused:false,review};}`,
  './chat-control':'export const linkChatOrder=async()=>{}',
  './budget':'export const withCostContext=(_,fn)=>fn();export const assignOrderCosts=async()=>{}',
  'cloudflare:workers':'export class WorkflowEntrypoint {constructor(ctx,env){this.env=env;}}',
@@ -11,7 +12,7 @@ const replacements={
 };
 await fs.mkdir('reports',{recursive:true});
 await build({entryPoints:['src/v3/chief.ts'],outfile:'reports/chief-test.mjs',bundle:true,platform:'node',format:'esm',plugins:[{name:'chief-boundaries',setup(b){
- b.onResolve({filter:/^(cloudflare:workers|\.\/(models|db|media|budget|chat-control))$/},args=>args.importer.endsWith('chief.ts')?{path:args.path,namespace:'test'}:undefined);
+ b.onResolve({filter:/^(cloudflare:workers|\.\/(models|db|media|budget|chat-control|claim-review))$/},args=>args.importer.endsWith('chief.ts')?{path:args.path,namespace:'test'}:undefined);
  b.onLoad({filter:/.*/,namespace:'test'},args=>({contents:replacements[args.path],loader:'js'}));
 }}]});
 const {Chief}=await import('../reports/chief-test.mjs');
@@ -82,6 +83,10 @@ const direct=await new Chief({},{PRODUCTION:{}}).run({payload:{tick:'chatops-dir
 assert.equal(direct.status,'published');assert.equal(direct.article_id,'article-direct-1');assert.equal(mediaCalls,1);assert.deepEqual(publishedArgs,{p_order:'direct-order',p_attempt:1,p_slot:'news-1'});
 console.log('PASS chief: direct article bypasses Desk/Journalist, gets Media, Chief review, and publication');
 
+globalThis.chiefTest.pauseReview=true;publishedArgs=null;
+const waiting=await new Chief({},{PRODUCTION:{}}).run({payload:{tick:'chatops-paused-test',directOrderId:'direct-order'}},runStep);
+assert.equal(waiting.status,'paused');assert.equal(publishedArgs,null);
+console.log('PASS chief: unresolved direct article returns pause before publication');
 let exactSaved=null;productionCalls=[];
 globalThis.chiefTest={
  async rpc(env,name){assert.equal(name,'v3_editorial_state');return state;},
