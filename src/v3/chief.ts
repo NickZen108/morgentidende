@@ -17,9 +17,11 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
   return withCostContext({orderId:event.payload.directOrderId??null,workflowId:event.instanceId},()=>this.execute(event,step));
  }
  async execute(event:WorkflowEvent<ChiefInput>,step:WorkflowStep){
+  const workflowCost={orderId:event.payload.directOrderId??null,workflowId:event.instanceId};
   const state=await step.do('state',()=>rpc<EditorialState>(this.env,'v3_editorial_state'));
   if(event.payload.directOrderId){
    const id=event.payload.directOrderId;
+   const directCost={orderId:id,workflowId:event.instanceId};
    try{
     const row=await step.do('direct-load',async()=>{
      const [found]=await db<{id:string;status:string;original_order:DirectSubmission}[]>(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&limit=1`);
@@ -38,10 +40,10 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
      sources:article.source_urls.map(url=>({url,title:url,publisher:new URL(url).hostname,kind:'secondary' as const,retrieved_at:now,facts:['Kilde angivet i den direkte indsendte artikel.'],quotes:[]}))
     };
     await step.do('direct-save-attempt',async()=>{await db(this.env,'v3_attempts?on_conflict=order_id,attempt','POST',{order_id:id,attempt:1,stage:'media',dossier,draft:article});return true;});
-    const media=await step.do('direct-media',{retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'3 minutes'},async()=>{
+    const media=await step.do('direct-media',{retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'3 minutes'},()=>withCostContext(directCost,async()=>{
      const m=await selectMedia(this.env,article,`direct-${id}`,{original_order:submission,dossier});return {id:m.id,url:m.url,alt:m.alt,credit:m.credit,generated:m.generated};
-    });
-    const checked=await reviewWithEvidence(this.env,step,{id,attempt:1,prefix:'direct',article,media,original_order:submission,dossier});
+    }));
+    const checked=await reviewWithEvidence(this.env,step,{id,attempt:1,prefix:'direct',article,media,original_order:submission,dossier,workflowId:event.instanceId});
     if(checked.paused)return {status:'paused',order_id:id,reason:checked.reason};
     const review=checked.review;
     const approved=review.matches_order&&review.headline_correct&&!review.serious_error;
@@ -68,6 +70,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
    });
    await step.do('exact-start-production',async()=>{
     await linkChatOrder(this.env,event.payload.tick,order.id);
+    await assignOrderCosts(this.env,order.id,event.instanceId);
     await this.startProduction(order.id);return order.id;
    });
    return {status:'started',order_id:order.id,order:original,automation_enabled:state.settings.enabled};
@@ -79,7 +82,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
    for(let i=0;i<count;i++){
     const batchState=i===0?state:await step.do(`chatops-state-${i+1}`,()=>rpc<EditorialState>(this.env,'v3_editorial_state'));
     const scope=topic?`Brugeren har bestemt emnet eller rammen: "${topic}". Vælg én aktuel, konkret og publicerbar historie inden for denne ramme.`:'Vælg selv emne, kategori og vinkel ud fra den aktuelle nyhedsdag.';
-    const decision=await step.do(`chatops-decide-${i+1}`,()=>model(this.env,'chief',`Chatstyret commissioning af Morgentidende v3, artikel ${i+1} af ${count}. ${scope} Vurder forsiden, de seneste 72 timers mix, breaking-signaler og allerede igangsatte ordrer. Undgå overlap med tidligere artikler i samme batch. Vælg kategori, vinkel, længde og kildekrav selv. Det skal være en rigtig artikel, ikke meta om AI, Cloudflare eller testen. Vælg ikke kommentar medmindre brugeren udtrykkeligt har bedt om det. Returnér præcis én ordre og ikke order:null.`,batchState,ChiefDecision));
+    const decision=await step.do(`chatops-decide-${i+1}`,()=>withCostContext(workflowCost,()=>model(this.env,'chief',`Chatstyret commissioning af Morgentidende v3, artikel ${i+1} af ${count}. ${scope} Vurder forsiden, de seneste 72 timers mix, breaking-signaler og allerede igangsatte ordrer. Undgå overlap med tidligere artikler i samme batch. Vælg kategori, vinkel, længde og kildekrav selv. Det skal være en rigtig artikel, ikke meta om AI, Cloudflare eller testen. Vælg ikke kommentar medmindre brugeren udtrykkeligt har bedt om det. Returnér præcis én ordre og ikke order:null.`,batchState,ChiefDecision)));
     if(!decision.order)throw new Error(`chatops_order_missing_${i+1}`);
     const key=`commission:chatops-batch-v1:${event.payload.tick}:${i+1}`;
     const order=await step.do(`chatops-save-${i+1}`,async()=>{
@@ -88,13 +91,13 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
      const [created]=await db<OrderRow[]>(this.env,'v3_orders','POST',{dedupe_key:key,original_order:decision.order});
      if(!created)throw new Error(`chatops_order_insert_failed_${i+1}`);return created;
     });
-    await step.do(`chatops-start-${i+1}`,async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
+    await step.do(`chatops-start-${i+1}`,async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id,event.instanceId);await this.startProduction(order.id);return order.id;});
     started.push({order_id:order.id,order:decision.order});
    }
    return {status:'started',count:started.length,orders:started,topic:topic??null,automation_enabled:state.settings.enabled};
   }
   if(event.payload.commission==='single-article-test-v1'){
-   const decision=await step.do('test-decide',()=>model(this.env,'chief','Engangstest af Morgentidende v3. Du er Chefredaktør og vælger helt selv præcis én rigtig, aktuel nyhedsordre ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Vælg emne, kategori, vinkel, prioritet og kildekrav selv. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller testen. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision));
+   const decision=await step.do('test-decide',()=>withCostContext(workflowCost,()=>model(this.env,'chief','Engangstest af Morgentidende v3. Du er Chefredaktør og vælger helt selv præcis én rigtig, aktuel nyhedsordre ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Vælg emne, kategori, vinkel, prioritet og kildekrav selv. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller testen. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision)));
    if(!decision.order)throw new Error('test_order_missing');
    const key=`commission:single-article-test-v1:${event.payload.tick}`;
    const order=await step.do('test-save-order',async()=>{
@@ -104,11 +107,11 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     if(!row)throw new Error('test_order_insert_failed');
     return row;
    });
-   await step.do('test-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
+   await step.do('test-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id,event.instanceId);await this.startProduction(order.id);return order.id;});
    return {status:'started',order_id:order.id,order:decision.order,automation_enabled:state.settings.enabled,test:'single-article-test-v1'};
   }
   if(event.payload.commission==='first-article-v1'){
-   const decision=await step.do('commission-decide',()=>model(this.env,'chief','Commissioning af Morgentidende v3. Vælg præcis én rigtig, aktuel nyhedsordre til avisens første v3-publicering ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller commissioning. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision));
+   const decision=await step.do('commission-decide',()=>withCostContext(workflowCost,()=>model(this.env,'chief','Commissioning af Morgentidende v3. Vælg præcis én rigtig, aktuel nyhedsordre til avisens første v3-publicering ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller commissioning. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision)));
    if(!decision.order)throw new Error('commission_order_missing');
    const key='commission:first-article-v1';
    const order=await step.do('commission-save-order',async()=>{
@@ -118,16 +121,16 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     if(!row)throw new Error('commission_order_insert_failed');
     return row;
    });
-   await step.do('commission-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
+   await step.do('commission-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id,event.instanceId);await this.startProduction(order.id);return order.id;});
    return {status:'started',order_id:order.id,order:decision.order,automation_enabled:state.settings.enabled};
   }
   if(!state.settings.enabled)return {status:'disabled'};
-  const decision=await step.do('decide',()=>model(this.env,'chief','Du er Chefredaktør på Morgentidende. Vurder den nuværende forside, produktionen, 72 timers mix og breaking-signaler. Vælg højst én konkret ordre eller kategori-/magasin-discovery. Returnér order:null hvis der ikke er behov. Undgå gentagelser. Prioritér bred geografisk og kildemæssig spredning; en vigtig lokal historie fra én avis er værdifuld, også uden overlap med andre medier. Scan er kun et signal; du afgør dansk relevans, lead eller almindelig artikel. Følg den konfigurerede redaktionelle politik.',state,ChiefDecision));
+  const decision=await step.do('decide',()=>withCostContext(workflowCost,()=>model(this.env,'chief','Du er Chefredaktør på Morgentidende. Vurder den nuværende forside, produktionen, 72 timers mix og breaking-signaler. Vælg højst én konkret ordre eller kategori-/magasin-discovery. Returnér order:null hvis der ikke er behov. Undgå gentagelser. Prioritér bred geografisk og kildemæssig spredning; en vigtig lokal historie fra én avis er værdifuld, også uden overlap med andre medier. Scan er kun et signal; du afgør dansk relevans, lead eller almindelig artikel. Følg den konfigurerede redaktionelle politik.',state,ChiefDecision)));
   if(decision.order){
    const order=await step.do('save-order',async()=>{
     const [row]=await rpc<OrderRow[]>(this.env,'v3_admit_order',{p_key:event.payload.tick,p_order:decision.order});return row??null;
    });
-   if(order)await step.do('start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
+   if(order)await step.do('start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id,event.instanceId);await this.startProduction(order.id);return order.id;});
   }
   await step.do('mark-signals',async()=>{
    for(const signal of state.breaking)await db(this.env,`v3_signals?id=eq.${encodeURIComponent(signal.id)}`,'PATCH',{processed_at:new Date().toISOString()});
