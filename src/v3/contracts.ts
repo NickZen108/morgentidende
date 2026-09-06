@@ -13,7 +13,28 @@ export const ClaimMetadata=z.object({
 export type ClaimMetadata=z.infer<typeof ClaimMetadata>;
 export const Draft = z.object({headline:z.string().min(10).max(200),deck:z.string().min(10).max(600),paragraphs:z.array(z.string().min(1)).min(2).max(40),category:Category,source_urls:z.array(z.string().url()).min(1),image_query:z.string().min(3).max(200),claims:z.array(ClaimMetadata).max(12).optional()});
 export type Draft = z.infer<typeof Draft>;
-export const DirectArticle = z.object({headline:z.string().min(10).max(200),deck:z.string().min(10).max(600),paragraphs:z.array(z.string().min(1)).min(2).max(40),category:Category,source_urls:z.array(z.string().url()).max(30).default([]),image_query:z.string().min(3).max(200),claims:z.array(ClaimMetadata).max(12).optional()}).strict();
+
+const DirectAssetBase={
+ credit:z.string().min(1).max(300),alt:z.string().min(1).max(600),caption:z.string().max(600).optional(),
+ rights_basis:z.enum(['cc','public_domain','publisher_permission','user_owned']),license:z.string().min(1).max(120),
+ license_url:z.string().url().optional(),source_url:z.string().url().optional()
+};
+export const DirectAsset=z.union([
+ z.object({...DirectAssetBase,url:z.string().url()}).strict(),
+ z.object({...DirectAssetBase,data_base64:z.string().min(8).max(3_000_000),mime:z.enum(['image/jpeg','image/png','image/webp'])}).strict()
+]);
+export type DirectAsset=z.infer<typeof DirectAsset>;
+export const DirectBlock=z.discriminatedUnion('type',[
+ z.object({type:z.literal('paragraph'),text:z.string().min(1).max(5000)}).strict(),
+ z.object({type:z.literal('subheading'),text:z.string().min(1).max(300)}).strict(),
+ z.object({type:z.enum(['image','graphic']),asset:DirectAsset}).strict()
+]);
+export type DirectBlock=z.infer<typeof DirectBlock>;
+export const DirectArticle = z.object({
+ headline:z.string().min(10).max(200),deck:z.string().min(10).max(600),paragraphs:z.array(z.string().min(1)).min(2).max(40),
+ blocks:z.array(DirectBlock).min(2).max(80).optional(),category:Category,source_urls:z.array(z.string().url()).max(30).default([]),
+ image_query:z.string().min(3).max(200),claims:z.array(ClaimMetadata).max(12).optional()
+}).strict();
 export type DirectArticle = z.infer<typeof DirectArticle>;
 export const DirectSubmission = z.object({kind:z.literal('direct_article'),article:DirectArticle,submitted_at:z.string()}).strict();
 export type DirectSubmission = z.infer<typeof DirectSubmission>;
@@ -23,7 +44,7 @@ export const ChatCommand = z.discriminatedUnion('type',[
  z.object({id:ChatCommandId,type:z.literal('order'),order:Order}).strict(),
  z.object({id:ChatCommandId,type:z.literal('commission'),count:z.number().int().min(1).max(20),topic:z.string().min(3).max(1000).optional()}).strict(),
  z.object({id:ChatCommandId,type:z.literal('publish_order'),order_id:z.string().uuid()}).strict(),
- z.object({id:ChatCommandId,type:z.literal('publish_article'),article:DirectArticle}).strict()
+ z.object({id:ChatCommandId,type:z.literal('publish_article'),article:DirectArticle,slot:Slot.default('lead'),hero:DirectAsset}).strict()
 ]);
 export type ChatCommand = z.infer<typeof ChatCommand>;
 export const JournalistResult = z.discriminatedUnion('kind',[
@@ -34,7 +55,7 @@ export const Review = z.object({matches_order:z.boolean(),headline_correct:z.boo
 export type Review = z.infer<typeof Review>;
 export const ChiefDecision = z.object({order:Order.nullable(),reason:z.string().max(1000)});
 export interface OrderRow {id:string;original_order:Order;status:string}
-export interface MediaRow {id:string;family_id:string;url:string;original_url:string;credit:string;alt:string;license_documentation:Record<string,unknown>;rights_verified:boolean;vision_verified:boolean;generated:boolean;tags:string[]}
+export interface MediaRow {id:string;family_id:string;url:string;original_url:string;credit:string;alt:string;license_documentation:Record<string,unknown>;rights_verified:boolean;vision_verified:boolean;generated:boolean;tags:string[];variants?:Record<string,string>}
 export function nextReviewAction(review:Review,attempt:number):'publish'|'retry'|'drop' {
  if(review.matches_order&&review.headline_correct&&!review.serious_error) return 'publish';
  return review.serious_error&&attempt===1?'retry':'drop';
