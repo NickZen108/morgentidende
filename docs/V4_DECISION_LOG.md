@@ -2,12 +2,23 @@
 
 Dette er den levende beslutningsfil for Morgentidende under v3-eksperimentfasen. Formålet er at bevare de beslutninger, erfaringer og senere justeringer, som skal kunne bruges som specifikation, når Morgentidende v4 bygges fra bunden i et nyt repo.
 
+## Prioritet for hvad der skal gemmes
+
+Beslutningsloggen er først og fremmest til de dele af Morgentidende, som er dyre at genopfinde fra hukommelsen og afgørende for avisens adfærd:
+
+1. **Avismotoren/pipelinen** — roller, rækkefølge, ansvar, research, faktatjek, retries, publicering, cadence, omkostninger og hvilke led der kan slås sammen eller fjernes.
+2. **Forsiden** — lead, opfølgere, prioritering, placering, artikeltyper, visuelle regler og relationer mellem historier.
+3. **Backend kun når den påvirker arbejdsgangen** — især hvordan artikler og ordrer sendes fra ChatGPT/chatten til Morgentidende, hvordan de går gennem Media/Chefredaktør/publicering, og hvordan status/fejl returneres.
+
+Små backend-, CSS- og implementationstekniske detaljer skal normalt **ikke** gemmes her, medmindre de repræsenterer en produktbeslutning, der bør genbruges i v4.
+
 ## Sådan vedligeholdes filen
 
 - Nye væsentlige beslutninger tilføjes med dato og status.
 - Når en beslutning ændres, slettes historikken ikke. Den gamle beslutning markeres `Erstattet`, og den nye beslutning bliver `Aktiv`.
 - Små implementationstekniske detaljer, som ikke bør arves til v4, holdes ude.
 - V4 skal som udgangspunkt følge alle beslutninger med status `Aktiv`, medmindre de genovervejes eksplicit.
+- Beslutninger om pipeline, forside og chat→avis-flow har højeste prioritet og skal opdateres løbende, når vi eksperimenterer.
 
 Statusser: `Aktiv` · `Eksperiment` · `Erstattet` · `Forkastet`
 
@@ -250,7 +261,35 @@ Frekvens som hvert 15. eller 30. minut bruges til test og feedback og skal ikke 
 
 ---
 
-## 9. Ting v4 specifikt skal genoverveje
+## 9. Chat → avis og backend-arbejdsgang
+
+### D-080 — Chatten skal kunne være et direkte redaktionelt kontrolpunkt
+**Dato:** 2026-09-06  
+**Status:** Aktiv
+
+V4 skal bevare muligheden for, at brugeren fra en ChatGPT-samtale kan bestille en artikel, sende en færdig artikel, vælge eller påvirke forsideplacering og få den ind i avisens normale system uden manuel kopiering til GitHub eller database.
+
+### D-081 — Færdige chatartikler skal kunne springe irrelevante produktionsled over
+**Dato:** 2026-09-06  
+**Status:** Aktiv
+
+Når artiklen allerede er researched og skrevet i chatten, skal backend ikke tvinge den gennem en fuld skrivepipeline igen. Den skal kunne sendes direkte videre til de relevante resterende led, typisk Media, nødvendig faktuel kontrol/Chefredaktør og publicering. Systemet skal undgå unødige omskrivninger af brugerens færdige artikel.
+
+### D-082 — Chat-flowet skal have tydelig status og fejlhåndtering
+**Dato:** 2026-09-06  
+**Status:** Aktiv
+
+Når chatten sender en ordre eller artikel til avisen, skal systemet kunne returnere en forståelig status: modtaget, i produktion, pauset, fejlet eller publiceret — helst med artikel-/ordre-id og live-link ved publicering. Fejl skal kunne genoptages uden at skabe dubletter.
+
+### D-083 — Backend-detaljer gemmes kun, når de ændrer redaktionel adfærd
+**Dato:** 2026-09-06  
+**Status:** Aktiv
+
+Konkrete tabeller, endpoint-navne, Worker-klasser og interne implementationer er ikke v4-beslutninger i sig selv. De skal kun dokumenteres her, når de fastlægger en vigtig egenskab ved arbejdsgangen, sikkerheden, økonomien eller redaktionens kontrol.
+
+---
+
+## 10. Ting v4 specifikt skal genoverveje
 
 Følgende er bevidst ikke låst permanent:
 
@@ -262,10 +301,11 @@ Følgende er bevidst ikke låst permanent:
 6. Den optimale udgivelsesfrekvens.
 7. Den endelige login-/abonnementsmodel.
 8. Hvor meget AI-brugen skal beskrives offentligt, hvis lovgivning, produktpositionering eller redaktionel strategi ændrer sig.
+9. Den præcise transportmekanisme fra ChatGPT til v4-backend; produktkravet om direkte chat→avis-flow skal bevares, men den tekniske løsning må vælges på ny.
 
 ---
 
-## 10. Ændringshistorik
+## 11. Ændringshistorik
 
 ### 2026-09-06
 - Første samlede v4-beslutningslog oprettet.
@@ -273,6 +313,8 @@ Følgende er bevidst ikke låst permanent:
 - Beslutning om mørk/lys-toggle og login i masthead tilføjet.
 - Beslutning om fjernelse af offentlig AI-footertekst tilføjet.
 - Eksisterende redaktionelle, designmæssige, faktatjek- og billedprincipper samlet som v4-grundlag.
+- Loggens prioritet præciseret: avismotor/pipeline og forside først; backend kun når det påvirker arbejdsgangen.
+- Chat→avis-flow tilføjet som særskilt v4-område.
 
 ---
 
@@ -282,6 +324,6 @@ Når v4 startes fra et tomt repo, skal denne fil læses før kode skrives. Førs
 
 1. Gennemgå alle `Aktiv`-beslutninger.
 2. Genovervej alle `Eksperiment`-beslutninger ud fra aktuelle modeller, priser og capabilities.
-3. Omsæt de aktive beslutninger til en ren kravspecifikation.
+3. Omsæt først pipeline-, forside- og chat→avis-beslutningerne til en ren kravspecifikation.
 4. Design datamodel og pipeline fra bunden i stedet for at kopiere v3-kode.
 5. Byg automatiske tests direkte ud fra de aktive produkt- og designregler.
