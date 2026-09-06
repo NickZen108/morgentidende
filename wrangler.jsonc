@@ -7,5 +7,5 @@
  "vars":{"SUPABASE_URL":"https://ginjcxsmmksdkinweyva.supabase.co","PUBLIC_ORIGIN":"https://morgentidende-v3.nicolaipetersen108.workers.dev"},
  "workflows":[{"binding":"PRODUCTION","name":"morgentidende-v3-production","class_name":"Production"},{"binding":"CHIEF","name":"morgentidende-v3-chief","class_name":"Chief"}],
  "r2_buckets":[{"binding":"MEDIA_BUCKET","bucket_name":"morgentidende-v3-media"}],
- "triggers":{"crons":["*/15 * * * *"]},"observability":{"enabled":true,"head_sampling_rate":1}
+ "triggers":{"crons":["0 * * * *"]},"observability":{"enabled":true,"head_sampling_rate":1}
 }
