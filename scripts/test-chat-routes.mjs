@@ -6,11 +6,12 @@ const replacements={
  './v3/chief':'export class Chief {}',
  './v3/production':'export class Production {}',
  './v3/chat-auth':"export class ChatAuthError extends Error {};export async function verifyChatToken(token){if(token!=='test-signed')throw new ChatAuthError();}",
+ './v3/direct-publish':'export async function publishDirect(env,command){globalThis.routeTest.direct.push(command);return {status:\'published\',order_id:\'b944f7e9-1c1d-442e-98bf-149863f35193\',headline:command.article.headline,slot:command.slot,article_url:\'https://paper.test/artikel/b944f7e9-1c1d-442e-98bf-149863f35193\'};}',
  './v3/db':'export const db=(...a)=>globalThis.routeTest.db(...a);export const rpc=(...a)=>globalThis.routeTest.rpc(...a);export const boundedText=(r)=>r.text();'
 };
 await fs.mkdir('reports',{recursive:true});
 await build({entryPoints:['src/index.ts'],outfile:'reports/chat-route-test.mjs',bundle:true,platform:'node',format:'esm',plugins:[{name:'boundaries',setup(b){
- b.onResolve({filter:/^(cloudflare:workers|\.\/v3\/(chief|production|chat-auth|db)|\.\/db)$/},args=>{
+ b.onResolve({filter:/^(cloudflare:workers|\.\/v3\/(chief|production|chat-auth|direct-publish|db)|\.\/db)$/},args=>{
   const key=args.path==='./db'?'./v3/db':args.path;
   return {path:key,namespace:'test'};
  });
@@ -19,8 +20,8 @@ await build({entryPoints:['src/index.ts'],outfile:'reports/chat-route-test.mjs',
 const {default:app}=await import('../reports/chat-route-test.mjs');
 const orderId='b944f7e9-1c1d-442e-98bf-149863f35193';
 const submission={kind:'direct_article',submitted_at:'2026-09-06',article:{headline:'A real submitted article',deck:'A sufficiently long deck',paragraphs:['First paragraph','Second paragraph'],category:'liv',source_urls:[],image_query:'A real photo'}};
-const created=new Map(),receipts=new Set();let createAttempts=0;const links=[];
-globalThis.routeTest={
+const created=new Map(),receipts=new Set();let createAttempts=0;const links=[],direct=[];
+globalThis.routeTest={direct,
  async rpc(env,name,args){
   if(name==='v3_chat_receipt'){if(receipts.has(args.p_id))return false;receipts.add(args.p_id);return true;}
   if(name==='v3_budget_state')return {limit_dkk:10,committed_dkk:0};
@@ -54,4 +55,8 @@ try{
  const exact=await (await send({id:'6dbfd87b-484c-4cdb-9b57-0b2d35aa21cd',type:'order',order:original})).json();
  assert.deepEqual(created.get(exact.workflow.id).exactOrder,original);
  console.log('PASS chat routes: exact order preserved through authenticated dispatch');
+ const publish={id:'0bbef265-c5ef-4b4e-b087-37b729ed8f20',type:'publish_article',slot:'lead',article:{headline:'Direct article is deterministic',deck:'A sufficiently long direct deck',paragraphs:['First direct paragraph','Second direct paragraph'],category:'indland',source_urls:[],image_query:'tractor field'},hero:{url:'https://images.example.test/tractor.jpg',credit:'Example',alt:'Traktor på mark',rights_basis:'cc',license:'CC BY 4.0',license_url:'https://creativecommons.org/licenses/by/4.0/',source_url:'https://example.test/photo'}};
+ const published=await (await send(publish)).json();
+ assert.equal(published.status,'published');assert.equal(published.slot,'lead');assert.equal(direct.length,1);assert.equal(createAttempts,before+1);assert.equal(direct[0].article.headline,publish.article.headline);
+ console.log('PASS chat routes: publish_article goes directly to deterministic publisher and preserves requested slot');
 }finally{globalThis.fetch=originalFetch;delete globalThis.routeTest;}
