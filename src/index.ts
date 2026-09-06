@@ -2,6 +2,7 @@ import {chatStatus,directWorkflowId,linkChatOrder} from './v3/chat-control';
 import {verifyChatToken,ChatAuthError} from './v3/chat-auth';
 import {db,rpc,boundedText} from './v3/db';
 import {ChatCommand,DirectSubmission,Order} from './v3/contracts';
+import {publishDirect} from './v3/direct-publish';
 import type {ChiefInput} from './v3/chief';
 import {WorkerEntrypoint} from 'cloudflare:workers';
 import {z} from 'zod';
@@ -25,10 +26,10 @@ async function authorized(request:Request,env:Env){
 async function verifiedChatCommand(request:Request){
  const commit=(request.headers.get('X-Morgentidende-Commit')??'').trim();
  if(!/^[a-f0-9]{40}$/.test(commit))throw new Error('chatops_bad_commit');
- const received=ChatCommand.parse(JSON.parse(await boundedText(request,200_000)));
+ const received=ChatCommand.parse(JSON.parse(await boundedText(request,4_000_000)));
  const canonicalResponse=await fetch(`https://raw.githubusercontent.com/NickZen108/morgentidende/${commit}/.chatops/command.json`,{headers:{'User-Agent':'Morgentidende-v3-ChatOps/1.0','Accept':'application/json'},signal:AbortSignal.timeout(15000)});
  if(!canonicalResponse.ok)throw new Error('chatops_commit_unverified');
- const canonical=ChatCommand.parse(JSON.parse(await boundedText(canonicalResponse,200_000)));
+ const canonical=ChatCommand.parse(JSON.parse(await boundedText(canonicalResponse,4_000_000)));
  if(JSON.stringify(canonical)!==JSON.stringify(received))throw new Error('chatops_payload_mismatch');
  return received;
 }
@@ -44,7 +45,7 @@ async function dispatchChatCommand(request:Request,env:Env){
  await verifyChatToken((request.headers.get('Authorization')??'').replace(/^Bearer /,''),commit);
  const command=await verifiedChatCommand(request);
  if(command.type==='status')return Response.json(await chatStatus(env,command));
- const workflowId=command.type==='commission'?`chatops-commission-${command.id}`:`chatops-direct-${command.id}`;
+ const workflowId=command.type==='commission'?`chatops-commission-${command.id}`:command.type==='publish_article'?`chatops-publish-${command.id}`:`chatops-direct-${command.id}`;
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(command))))).map(x=>x.toString(16).padStart(2,'0')).join('');
  if(!await rpc<boolean>(env,'v3_chat_receipt',{p_id:command.id,p_hash:hash,p_workflow:workflowId}))return Response.json({ok:true,already_dispatched:true,workflow_id:workflowId});
  const response=await dispatchVerifiedCommand(command,env);
@@ -70,16 +71,9 @@ async function dispatchVerifiedCommand(command:Exclude<ChatCommand,{type:'status
   const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,directOrderId:row.id});
   return Response.json({ok:true,type:command.type,order_id:row.id,workflow},{status:202});
  }
- const key=`chatops:article:${command.id}`;
- let [row]=await db<{id:string;status:string}[]>(env,`v3_orders?dedupe_key=eq.${encodeURIComponent(key)}&limit=1`);
- if(!row){
-  [row]=await db<{id:string;status:string}[]>(env,'v3_orders','POST',{dedupe_key:key,original_order:{kind:'direct_article',article:command.article,submitted_at:new Date().toISOString()}});
-  if(!row)throw new Error('chatops_direct_order_insert_failed');
- }
- await linkChatOrder(env,`chatops:${command.id}`,row.id);
- const workflowId=directWorkflowId(row.id);
- const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,directOrderId:row.id});
- return Response.json({ok:true,type:command.type,order_id:row.id,headline:command.article.headline,workflow},{status:202});
+ const result=await publishDirect(env,command);
+ await linkChatOrder(env,`chatops:${command.id}`,result.order_id);
+ return Response.json({ok:true,type:command.type,...result},{status:201});
 }
 export default {
  async scheduled(event,env){await env.CHIEF.create({id:`tick-${Math.floor(event.scheduledTime/900000)}`,params:{tick:`tick-${Math.floor(event.scheduledTime/900000)}`}});},
@@ -90,13 +84,13 @@ export default {
    if(url.pathname==='/api/chatops/dispatch'&&request.method==='POST')return await dispatchChatCommand(request,env);
    if(url.pathname.startsWith('/media/')){
     const object=await env.MEDIA_BUCKET.get(url.pathname.slice(7));
-    return object?new Response(object.body,{headers:{'Content-Type':'image/jpeg','Cache-Control':'public,max-age=86400','X-Content-Type-Options':'nosniff'}}):new Response('Not found',{status:404});
+    return object?new Response(object.body,{headers:{'Content-Type':object.httpMetadata?.contentType??'image/jpeg','Cache-Control':object.httpMetadata?.cacheControl??'public,max-age=86400','X-Content-Type-Options':'nosniff'}}):new Response('Not found',{status:404});
    }
-   if(url.pathname==='/api/frontpage'&&request.method==='GET')return Response.json(await db(env,'v3_frontpage?select=slot,article:v3_articles(id,slug,headline,deck,category,published_at,media:v3_media(url,alt,credit,generated))'),{headers:{'Cache-Control':'public,max-age=30'}});
+   if(url.pathname==='/api/frontpage'&&request.method==='GET')return Response.json(await db(env,'v3_frontpage?select=slot,article:v3_articles(id,slug,headline,deck,category,published_at,media:v3_media(url,alt,credit,generated,variants))'),{headers:{'Cache-Control':'public,max-age=30'}});
    if(url.pathname.startsWith('/api/article/')&&request.method==='GET'){
     const slug=url.pathname.slice('/api/article/'.length);
     if(!/^[a-f0-9-]{36}$/.test(slug))return new Response('Not found',{status:404});
-    const rows=await db<unknown[]>(env,`v3_articles?slug=eq.${slug}&select=slug,headline,deck,paragraphs,category,sources,published_at,media:v3_media(url,original_url,alt,credit,license_documentation,generated)`);
+    const rows=await db<unknown[]>(env,`v3_articles?slug=eq.${slug}&select=slug,headline,deck,paragraphs,blocks,category,sources,published_at,media:v3_media(url,original_url,alt,credit,license_documentation,generated,variants)`);
     return rows[0]?Response.json(rows[0]):new Response('Not found',{status:404});
    }
    if(url.pathname.startsWith('/api/admin/')){
