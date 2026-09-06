@@ -1,5 +1,5 @@
 {
-  "id": "5f9c43d1-6f5b-4fc8-b6fb-e27aeafcb4a0",
+  "id": "a13f4870-6ce6-4acd-8ea9-74143c1cdf65",
   "type": "publish_article",
   "article": {
     "headline": "Landmændene protesterer: Har de faktisk en pointe?",
@@ -27,8 +27,20 @@
     "source_urls": [
       "https://lf.dk/aktuelt/nyheder/2026/regeringen-truer-direkte-dansk-foedevareproduktion/",
       "https://via.ritzau.dk/pressemeddelelse/15122358/kvaelstofregler-kan-gore-danmark-afhaengigt-af-kornimport?lang=da&publisherId=13559978",
-      "https://mgtp.dk/nyheder/2026/sep/groentsagsproducenter-undtages-fra-ny-kvaelstofregulering-i-2027"
+      "https://mgtp.dk/nyheder/2026/sep/groentsagsproducenter-undtages-fra-ny-kvaelstofregulering-i-2027",
+      "https://blb.dk/2026/09/tak-for-opbakningen-til-demonstrationen-sammen-staar-vi-staerkt/"
     ],
-    "image_query": "Danish agriculture tractor field farmer Denmark"
+    "image_query": "dansk landbrug traktor mark Danmark"
+  },
+  "slot": "lead",
+  "hero": {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Case_IH_tractor_with_Hardi_field_sprayer%2C_Lolland.jpg",
+    "credit": "Lars Plougmann / Wikimedia Commons",
+    "alt": "Traktor med marksprøjte på en mark på Lolland",
+    "caption": "Arkivfoto: En Case IH-traktor med marksprøjte på Lolland. Fotoet er beskåret til avisens format.",
+    "rights_basis": "cc",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Case_IH_tractor_with_Hardi_field_sprayer,_Lolland.jpg"
   }
 }
