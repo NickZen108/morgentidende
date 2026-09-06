@@ -1,6 +1,5 @@
 {
-  "id": "f6db148d-c74c-4a6c-a2f5-7325765ff5b9",
-  "type": "commission",
-  "count": 1,
-  "topic": "TESTKØRSEL AF AVISMOTOREN. Vælg præcis én stærk, aktuel nyhed, som matcher den aktive redaktionelle policy i v3_settings: kun Indland/Udland, primært Udland, og 100 % fokus på de særlige interesseområder (islams udbredelse og samfundsmæssige/politiske konsekvenser; indvandrerkriminalitet og terror; immigration; dokumenterede integrationsproblemer; personlig frihed; ytringsfrihed; demokratiske rettigheder/institutioner; privatliv/overvågning). Historien skal være reel nyhed, ikke feature eller baggrund. Følg geografisk friskhed: Danmark normalt <=24 timer, Tyskland/Norden/nært Europa <=48 timer, fjernere regioner op til <=72 timer. Brug aktuelle signaler og webresearch, undgå fyldstof og dubletter. Kør hele normale kæde gennem Desk, Journalist, Media, Chefredaktør/review og Publish."
+  "id": "937f2a64-37aa-46c6-a6dd-d18444d931cb",
+  "type": "status",
+  "command_id": "f6db148d-c74c-4a6c-a2f5-7325765ff5b9"
 }
