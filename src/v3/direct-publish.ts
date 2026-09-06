@@ -1,5 +1,5 @@
 import {DirectAsset,DirectBlock} from './contracts';
-import {db,ensureFamily,BoundedTextError,rpc} from './db';
+import {db,ensureFamily,rpc} from './db';
 import {readBytes} from './photo-source';
 import {identifyBytes} from './image-identity';
 
