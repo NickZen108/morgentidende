@@ -1,5 +1,34 @@
 {
-  "id": "694f48e2-b495-480b-b2a2-a29f4130f215",
-  "type": "status",
-  "order_id": "3860eaa9-84d4-4aa5-bb5b-e4b528ff47c5"
+  "id": "e2d0bd7a-8c4e-4df4-a33d-5b0d4abf10f3",
+  "type": "publish_article",
+  "article": {
+    "headline": "Landmændene protesterer: Har de faktisk en pointe?",
+    "deck": "Den nye kvælstofregulering skal beskytte vandmiljøet, men landmændene advarer om mindre produktion, tabte arbejdspladser og større import. Hvor meget kan reglerne koste Danmark?",
+    "paragraphs": [
+      "Danske landmænd er gået på gaden mod den nye kvælstofregulering. Mere end 4.500 mennesker deltog mandag i Landbrug & Fødevarers stormøde i Odense, og dagen efter fortsatte protesterne ved Christiansborg, hvor omkring 300 traktorer kørte forbi Slotspladsen.",
+      "Kritikken er hård: Landmændene mener, at politikerne risikerer at gøre dansk fødevareproduktion mindre rentabel, koste arbejdspladser og flytte en del af produktionen til udlandet.",
+      "Har de en pointe?",
+      "Ja – i hvert fald delvist.",
+      "Den nye gødskningslov skal mindske udledningen af kvælstof til fjorde og kystvande. Det miljømæssige mål er klart. Men reguleringen kan samtidig begrænse, hvor intensivt jorden kan dyrkes, og dermed reducere udbyttet.",
+      "Landbrug & Fødevarer har beregnet, at dansk kornproduktion kan falde med 1,8 millioner ton. Ifølge organisationens analyse vil Danmark dermed kunne gå fra at producere 108 procent af sit eget kornforbrug til kun 86 procent – altså fra nettoeksportør til nettoimportør.",
+      "Beregningen kommer fra landbrugets egen interesseorganisation og skal derfor læses med det forbehold. Men den økonomiske mekanisme er reel: Danskerne spiser jo ikke mindre, bare fordi Danmark producerer mindre. En større del kan i stedet blive produceret i udlandet.",
+      "Dermed vil vi blot flytte noget af miljøbelastningen over grænsen. Omsætning, eksportindtægter og arbejdspladser kan følge med.",
+      "Landbruget står ikke alene. Fødevareproduktionen beskæftiger også medarbejdere på slagterier, mejerier, foderfabrikker, transportvirksomheder, maskinforhandlere og en lang række underleverandører. Hvis produktionen falder mærkbart, vil virkningen derfor kunne brede sig gennem hele fødevareklyngen.",
+      "Danmark er samtidig en stor eksportør af landbrugs- og fødevarer. Mindre dansk produktion kan derfor betyde færre eksportindtægter, mindre aktivitet i landdistrikterne og i sidste ende lavere skatteindtægter.",
+      "Usikkerheden omkring reglerne er så betydelig, at grøntsagsproducenter allerede er blevet midlertidigt undtaget i 2027. Regeringen og aftalepartierne erkender dermed, at bestemte dele af erhvervet kan få ekstraordinære problemer med den nye model.",
+      "Kan maden blive dyrere?",
+      "Det kan den.",
+      "Hvis danske landmænd får lavere udbytter eller højere produktionsomkostninger, kan det presse priserne op. Alternativet er større import, som kan holde priserne nede, men ikke alle danskere er vilde med, at skulle købe mad produceret i udlandet.",
+      "Forbrugerne kan altså ende med dyrere danske varer eller flere udenlandske varer på hylderne.",
+      "Landmændenes mest dramatiske advarsler er endnu ikke dokumenteret. Men deres centrale argument er svært at afvise: Danmark kan ende med at gøre sin egen fødevareproduktion mindre konkurrencedygtig og samtidig miste arbejdspladser, eksport og indtægter – uden nødvendigvis at reducere verdens samlede fødevareproduktion tilsvarende.",
+      "Spørgsmålet er derfor ikke kun, hvor meget kvælstof Danmark kan spare, men hvad det samlet set koster Danmark at gøre det."
+    ],
+    "category": "indland",
+    "source_urls": [
+      "https://lf.dk/aktuelt/nyheder/2026/regeringen-truer-direkte-dansk-foedevareproduktion/",
+      "https://via.ritzau.dk/pressemeddelelse/15122358/kvaelstofregler-kan-gore-danmark-afhaengigt-af-kornimport?lang=da&publisherId=13559978",
+      "https://mgtp.dk/nyheder/2026/sep/groentsagsproducenter-undtages-fra-ny-kvaelstofregulering-i-2027"
+    ],
+    "image_query": "danske landmænd traktorer protest Christiansborg kvælstofregulering 2026"
+  }
 }
