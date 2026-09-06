@@ -43,3 +43,4 @@ Anvend `docs/sql/v3_budget_and_safety.sql` før denne kode deployes. Migreringen
 Chatstyring: se [docs/chat-control.md](docs/chat-control.md) for færdige publiceringspakker, obligatorisk hero, billedrettigheder og resultatforespørgsler. De gamle chatkommandoer `order`, `commission` og `publish_order` er fjernet. Kræver også `docs/sql/v3_chat_control.sql`.
 
 Den direkte publiceringsvej kræver desuden `supabase/migrations/20260906154225_v3_direct_chat_receipt_guard.sql`. `tests/direct-chat-security.sql` tester kvitteringskravet og ruller alle testdata tilbage.
+Direkte publicering er yderligere afgrænset af `supabase/migrations/20260906154456_v3_direct_rpc_contract.sql`; anvend begge nye migrationer i versionsrækkefølge.

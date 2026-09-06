@@ -24,6 +24,6 @@ begin
  begin
   perform public.v3_publish_direct(normal_o,m,'news-4',payload);
   raise exception 'normal_without_review_was_published';
- exception when others then if sqlerrm<>'serious_review_error' then raise; end if; end;
+ exception when others then if sqlerrm<>'direct_order_required' then raise; end if; end;
 end $test$;
 rollback;
