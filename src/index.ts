@@ -1,9 +1,8 @@
-import {chatStatus,directWorkflowId,linkChatOrder} from './v3/chat-control';
+import {chatStatus,linkChatOrder} from './v3/chat-control';
 import {verifyChatToken,ChatAuthError} from './v3/chat-auth';
 import {db,rpc,boundedText} from './v3/db';
-import {ChatCommand,DirectSubmission,Order} from './v3/contracts';
+import {ChatCommand,Order} from './v3/contracts';
 import {publishDirect} from './v3/direct-publish';
-import type {ChiefInput} from './v3/chief';
 import {WorkerEntrypoint} from 'cloudflare:workers';
 import {z} from 'zod';
 import {timingSafeEqual} from 'node:crypto';
@@ -30,22 +29,15 @@ async function verifiedChatCommand(request:Request){
  const canonicalResponse=await fetch(`https://raw.githubusercontent.com/NickZen108/morgentidende/${commit}/.chatops/command.json`,{headers:{'User-Agent':'Morgentidende-v3-ChatOps/1.0','Accept':'application/json'},signal:AbortSignal.timeout(15000)});
  if(!canonicalResponse.ok)throw new Error('chatops_commit_unverified');
  const canonical=ChatCommand.parse(JSON.parse(await boundedText(canonicalResponse,4_000_000)));
- if(JSON.stringify(canonical)!==JSON.stringify(received))throw new Error('chatops_payload_mismatch');
+ if(JSON.stringify(canonical)!==JSON.stringify(received))throw new ChatAuthError();
  return received;
-}
-async function startChiefOnce(env:Env,id:string,params:ChiefInput){
- try{await env.CHIEF.create({id,params});return {id,started:true};}
- catch(error){
-  try{const instance=await env.CHIEF.get(id);const status=await instance.status();return {id,started:false,status};}
-  catch{throw error;}
- }
 }
 async function dispatchChatCommand(request:Request,env:Env){
  const commit=request.headers.get('X-Morgentidende-Commit')??'';
  await verifyChatToken((request.headers.get('Authorization')??'').replace(/^Bearer /,''),commit);
  const command=await verifiedChatCommand(request);
  if(command.type==='status')return Response.json(await chatStatus(env,command));
- const workflowId=command.type==='commission'?`chatops-commission-${command.id}`:command.type==='publish_article'?`chatops-publish-${command.id}`:`chatops-direct-${command.id}`;
+ const workflowId=`chatops-publish-${command.id}`;
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(command))))).map(x=>x.toString(16).padStart(2,'0')).join('');
  if(!await rpc<boolean>(env,'v3_chat_receipt',{p_id:command.id,p_hash:hash,p_workflow:workflowId}))return Response.json({ok:true,already_dispatched:true,workflow_id:workflowId});
  const response=await dispatchVerifiedCommand(command,env);
@@ -53,24 +45,6 @@ async function dispatchChatCommand(request:Request,env:Env){
  return response;
 }
 async function dispatchVerifiedCommand(command:Exclude<ChatCommand,{type:'status'}>,env:Env){
- if(command.type==='order'){
-  const workflow=await startChiefOnce(env,`chatops-direct-${command.id}`,{tick:`chatops:${command.id}`,commission:'exact-order-v1',exactOrder:command.order});
-  return Response.json({ok:true,type:command.type,workflow},{status:202});
- }
- if(command.type==='commission'){
-  const workflowId=`chatops-commission-${command.id}`;
-  const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,commission:'chatops-batch-v1',count:command.count,topic:command.topic});
-  return Response.json({ok:true,type:command.type,count:command.count,topic:command.topic??null,workflow},{status:202});
- }
- if(command.type==='publish_order'){
-  const [row]=await db<{id:string;status:string;original_order:unknown}[]>(env,`v3_orders?id=eq.${encodeURIComponent(command.order_id)}&limit=1`);
-  if(!row)throw new Error('chatops_direct_order_not_found');
-  DirectSubmission.parse(row.original_order);
-  await linkChatOrder(env,`chatops:${command.id}`,row.id);
-  const workflowId=directWorkflowId(row.id);
-  const workflow=await startChiefOnce(env,workflowId,{tick:`chatops:${command.id}`,directOrderId:row.id});
-  return Response.json({ok:true,type:command.type,order_id:row.id,workflow},{status:202});
- }
  const result=await publishDirect(env,command);
  await linkChatOrder(env,`chatops:${command.id}`,result.order_id);
  return Response.json({ok:true,type:command.type,...result},{status:201});
@@ -117,6 +91,7 @@ export default {
    if(url.pathname.startsWith('/api/'))return new Response('Not found',{status:404});
    if(url.pathname.startsWith('/artikel/'))return env.ASSETS.fetch(new Request(new URL('/index.html',url),request));
    return env.ASSETS.fetch(request);
-  }catch(error){if(error instanceof ChatAuthError)return Response.json({error:'unauthorized'},{status:401});console.error(JSON.stringify({event:'request_failed',message:error instanceof Error?error.message:'unknown'}));return Response.json({error:'request_failed'},{status:500});}
+  }catch(error){if(error instanceof z.ZodError||error instanceof SyntaxError)return Response.json({error:'invalid_request'},{status:400});if(error instanceof ChatAuthError)return Response.json({error:'unauthorized'},{status:401});console.error(JSON.stringify({event:'request_failed',message:error instanceof Error?error.message:'unknown'}));return Response.json({error:'request_failed'},{status:500});}
  }
 } satisfies ExportedHandler<Env>;
+

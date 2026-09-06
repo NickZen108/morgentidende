@@ -15,6 +15,7 @@ export const Draft = z.object({headline:z.string().min(10).max(200),deck:z.strin
 export type Draft = z.infer<typeof Draft>;
 
 const DirectAssetBase={
+ generated:z.boolean().default(false),
  credit:z.string().min(1).max(300),alt:z.string().min(1).max(600),caption:z.string().max(600).optional(),
  rights_basis:z.enum(['cc','public_domain','publisher_permission','user_owned']),license:z.string().min(1).max(120),
  license_url:z.string().url().optional(),source_url:z.string().url().optional()
@@ -41,9 +42,6 @@ export type DirectSubmission = z.infer<typeof DirectSubmission>;
 const ChatCommandId=z.string().uuid();
 export const ChatCommand = z.discriminatedUnion('type',[
  z.object({id:ChatCommandId,type:z.literal('status'),command_id:ChatCommandId.optional(),order_id:ChatCommandId.optional()}).strict(),
- z.object({id:ChatCommandId,type:z.literal('order'),order:Order}).strict(),
- z.object({id:ChatCommandId,type:z.literal('commission'),count:z.number().int().min(1).max(20),topic:z.string().min(3).max(1000).optional()}).strict(),
- z.object({id:ChatCommandId,type:z.literal('publish_order'),order_id:z.string().uuid()}).strict(),
  z.object({id:ChatCommandId,type:z.literal('publish_article'),article:DirectArticle,slot:Slot.default('lead'),hero:DirectAsset}).strict()
 ]);
 export type ChatCommand = z.infer<typeof ChatCommand>;

@@ -21,6 +21,7 @@ jobs:
       - run: node scripts/test-chief.mjs
       - run: node scripts/test-claim-review.mjs
       - run: node scripts/test-chat-routes.mjs
+      - run: node scripts/test-direct-publish.cjs
       - run: npx wrangler deploy --dry-run
       - run: npx wrangler deploy --config wrangler.scan.jsonc --dry-run
       - name: Verify publisher feeds without AI spending

@@ -1,12 +1,10 @@
-import {reviewWithEvidence} from './claim-review';
 import {linkChatOrder} from './chat-control';
 import {withCostContext,assignOrderCosts} from './budget';
 import {WorkflowEntrypoint,WorkflowEvent,WorkflowStep} from 'cloudflare:workers';
-import {ChiefDecision,DirectSubmission,Order,OrderRow,Review} from './contracts';
+import {ChiefDecision,OrderRow} from './contracts';
 import {db,rpc} from './db';
 import {model} from './models';
-import {selectMedia} from './media';
-export type ChiefInput={tick:string;commission?:'first-article-v1'|'single-article-test-v1'|'chatops-batch-v1'|'exact-order-v1';exactOrder?:Order;count?:number;topic?:string;directOrderId?:string};
+export type ChiefInput={tick:string;commission?:'first-article-v1'|'single-article-test-v1'};
 type EditorialState={settings:{enabled:boolean;max_orders_per_day:number;editorial_policy:string};breaking:{id:string}[]};
 export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
  async startProduction(id:string){
@@ -14,85 +12,11 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
   catch(error){try{await (await this.env.PRODUCTION.get(id)).status();}catch{throw error;}}
  }
  async run(event:WorkflowEvent<ChiefInput>,step:WorkflowStep){
-  return withCostContext({orderId:event.payload.directOrderId??null,workflowId:event.instanceId},()=>this.execute(event,step));
+  return withCostContext({orderId:null,workflowId:event.instanceId},()=>this.execute(event,step));
  }
  async execute(event:WorkflowEvent<ChiefInput>,step:WorkflowStep){
+  if(Object.keys(event.payload).some(key=>!['tick','commission'].includes(key))|| (event.payload.commission&&!['first-article-v1','single-article-test-v1'].includes(event.payload.commission)))throw new Error('unsupported_chief_input');
   const state=await step.do('state',()=>rpc<EditorialState>(this.env,'v3_editorial_state'));
-  if(event.payload.directOrderId){
-   const id=event.payload.directOrderId;
-   try{
-    const row=await step.do('direct-load',async()=>{
-     const [found]=await db<{id:string;status:string;original_order:DirectSubmission}[]>(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&limit=1`);
-     if(!found)throw new Error('direct_order_not_found');
-     if(found.status!=='published')await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}`,'PATCH',{status:'running',error_code:null});
-     return found;
-    });
-    if(row.status==='published')return {status:'already-published',order_id:id};
-    const submission=DirectSubmission.parse(row.original_order);
-    const article=submission.article;
-    const now=new Date().toISOString();
-    const dossier={
-     subject:article.headline,
-     facts:['Færdig artikel indsendt direkte til Media og Chefredaktør; Desk og Journalist er bevidst sprunget over.'],
-     uncertainties:[],opposing_views:[],
-     sources:article.source_urls.map(url=>({url,title:url,publisher:new URL(url).hostname,kind:'secondary' as const,retrieved_at:now,facts:['Kilde angivet i den direkte indsendte artikel.'],quotes:[]}))
-    };
-    await step.do('direct-save-attempt',async()=>{await db(this.env,'v3_attempts?on_conflict=order_id,attempt','POST',{order_id:id,attempt:1,stage:'media',dossier,draft:article});return true;});
-    const media=await step.do('direct-media',{retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'3 minutes'},async()=>{
-     const m=await selectMedia(this.env,article,`direct-${id}`,{original_order:submission,dossier});return {id:m.id,url:m.url,alt:m.alt,credit:m.credit,generated:m.generated};
-    });
-    const checked=await reviewWithEvidence(this.env,step,{id,attempt:1,prefix:'direct',article,media,original_order:submission,dossier});
-    if(checked.paused)return {status:'paused',order_id:id,reason:checked.reason};
-    const review=checked.review;
-    const approved=review.matches_order&&review.headline_correct&&!review.serious_error;
-    if(!approved){await step.do('direct-drop',async()=>{await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}`,'PATCH',{status:'dropped'});return true;});return {status:'dropped',order_id:id,reason:review.reason};}
-    const articleId=await step.do('direct-publish',()=>rpc<string>(this.env,'v3_publish',{p_order:id,p_attempt:1,p_slot:review.slot}));
-    return {status:'published',order_id:id,article_id:articleId,headline:article.headline,media_generated:media.generated};
-   }catch(error){
-    if(error instanceof Error&&error.message==='daily_budget_exhausted'){
-     await step.do('direct-pause-budget',async()=>{await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&status=neq.published`,'PATCH',{status:'paused',error_code:'daily_budget_exhausted'});return true;});
-     return {status:'paused',order_id:id,reason:'Dagsbudgettet kan ikke dække næste trin. Artiklen er gemt.'};
-    }
-    await step.do('direct-mark-failed',async()=>{await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&status=neq.published`,'PATCH',{status:'failed',error_code:error instanceof Error&&error.message==='daily_budget_exhausted'?'daily_budget_exhausted':'production_failed'});return true;});
-    throw error;
-   }
-  }
-  if(event.payload.commission==='exact-order-v1'){
-   const original=Order.parse(event.payload.exactOrder);
-   const key=`commission:exact:${event.payload.tick}`;
-   const order=await step.do('exact-save-order',async()=>{
-    const [existing]=await db<OrderRow[]>(this.env,`v3_orders?dedupe_key=eq.${encodeURIComponent(key)}&limit=1`);
-    if(existing)return existing;
-    const [created]=await db<OrderRow[]>(this.env,'v3_orders','POST',{dedupe_key:key,original_order:original});
-    if(!created)throw new Error('exact_order_insert_failed');return created;
-   });
-   await step.do('exact-start-production',async()=>{
-    await linkChatOrder(this.env,event.payload.tick,order.id);
-    await this.startProduction(order.id);return order.id;
-   });
-   return {status:'started',order_id:order.id,order:original,automation_enabled:state.settings.enabled};
-  }
-  if(event.payload.commission==='chatops-batch-v1'){
-   const count=Math.max(1,Math.min(20,event.payload.count??1));
-   const topic=event.payload.topic?.trim();
-   const started:{order_id:string;order:unknown}[]=[];
-   for(let i=0;i<count;i++){
-    const batchState=i===0?state:await step.do(`chatops-state-${i+1}`,()=>rpc<EditorialState>(this.env,'v3_editorial_state'));
-    const scope=topic?`Brugeren har bestemt emnet eller rammen: "${topic}". Vælg én aktuel, konkret og publicerbar historie inden for denne ramme.`:'Vælg selv emne, kategori og vinkel ud fra den aktuelle nyhedsdag.';
-    const decision=await step.do(`chatops-decide-${i+1}`,()=>model(this.env,'chief',`Chatstyret commissioning af Morgentidende v3, artikel ${i+1} af ${count}. ${scope} Vurder forsiden, de seneste 72 timers mix, breaking-signaler og allerede igangsatte ordrer. Undgå overlap med tidligere artikler i samme batch. Vælg kategori, vinkel, længde og kildekrav selv. Det skal være en rigtig artikel, ikke meta om AI, Cloudflare eller testen. Vælg ikke kommentar medmindre brugeren udtrykkeligt har bedt om det. Returnér præcis én ordre og ikke order:null.`,batchState,ChiefDecision));
-    if(!decision.order)throw new Error(`chatops_order_missing_${i+1}`);
-    const key=`commission:chatops-batch-v1:${event.payload.tick}:${i+1}`;
-    const order=await step.do(`chatops-save-${i+1}`,async()=>{
-     const existing=await db<OrderRow[]>(this.env,`v3_orders?dedupe_key=eq.${encodeURIComponent(key)}&limit=1`);
-     if(existing[0])return existing[0];
-     const [created]=await db<OrderRow[]>(this.env,'v3_orders','POST',{dedupe_key:key,original_order:decision.order});
-     if(!created)throw new Error(`chatops_order_insert_failed_${i+1}`);return created;
-    });
-    await step.do(`chatops-start-${i+1}`,async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
-    started.push({order_id:order.id,order:decision.order});
-   }
-   return {status:'started',count:started.length,orders:started,topic:topic??null,automation_enabled:state.settings.enabled};
-  }
   if(event.payload.commission==='single-article-test-v1'){
    const decision=await step.do('test-decide',()=>model(this.env,'chief','Engangstest af Morgentidende v3. Du er Chefredaktør og vælger helt selv præcis én rigtig, aktuel nyhedsordre ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Vælg emne, kategori, vinkel, prioritet og kildekrav selv. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller testen. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision));
    if(!decision.order)throw new Error('test_order_missing');
@@ -135,3 +59,4 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
   });
  }
 }
+
