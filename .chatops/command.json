@@ -1,6 +1,5 @@
 {
-  "id": "92f6530d-31e1-40d2-8f11-7b0e8b05fc27",
-  "type": "commission",
-  "count": 1,
-  "topic": "TEST EFTER COST-CONTEXT-RETTELSE. Vælg én stærk, aktuel Indland/Udland-nyhed, der matcher den aktive redaktionelle policy og friskhedsregler. Kør hele normale kæde gennem Desk, Journalist, Media, Chefredaktør/review og Publish. Ingen meta-artikel om testen."
+  "id": "0b36f043-b10c-497f-8bb2-803325241c1b",
+  "type": "status",
+  "command_id": "92f6530d-31e1-40d2-8f11-7b0e8b05fc27"
 }
