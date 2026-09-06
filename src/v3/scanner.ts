@@ -3,9 +3,15 @@ import {boundedText} from './db';
 import registry from '../../config/scan-feeds.json';
 import {diverseSignals} from './signal-selection';
 const feeds=registry.filter(feed=>feed.enabled);
+const EUROPE=new Set(['AL','AT','BE','BA','BG','BY','CH','CZ','DE','EE','ES','FI','FR','GB','GR','HR','HU','IE','IS','IT','LT','LU','LV','MD','ME','MK','NL','NO','PL','PT','RO','RS','SE','SI','SK','UA']);
 export interface FeedItem {url:string;title:string;published:number;publisher:string}
+export function freshnessHours(country:string){
+ if(country==='DK')return 24;
+ if(EUROPE.has(country))return 48;
+ return 72;
+}
 export function canonical(raw:string){const u=new URL(raw);for(const k of [...u.searchParams.keys()])if(k.startsWith('utm_')||['fbclid','gclid'].includes(k))u.searchParams.delete(k);u.hash='';return u.toString();}
-export function parseFeed(xml:string,publisher:string,now=Date.now()):FeedItem[]{
+export function parseFeed(xml:string,publisher:string,now=Date.now(),maxAgeHours=2):FeedItem[]{
  const parsed=new XMLParser({ignoreAttributes:false,processEntities:false}).parse(xml);
  if(!parsed.rss?.channel&&!parsed.feed&&!parsed['rdf:RDF']?.channel)throw new Error('not_rss_or_atom');
  const items=parsed.rss?.channel?.item??parsed.feed?.entry??parsed['rdf:RDF']?.item??[];
@@ -15,7 +21,7 @@ export function parseFeed(xml:string,publisher:string,now=Date.now()):FeedItem[]
   const url=typeof link==='string'?link:link?.['@_href'];
   const title=typeof item.title==='string'?item.title:(item.title as Record<string,string>)?.['#text'];
   const published=Date.parse(String(item.pubDate??item.published??item.updated??item['dc:date']??''));
-  if(!url||!title||!Number.isFinite(published)||published<now-2*3600000||published>now+300000)return [];
+  if(!url||!title||!Number.isFinite(published)||published<now-maxAgeHours*3600000||published>now+300000)return [];
   try{const normalized=canonical(url);if(!/^https?:\/\//.test(normalized))return [];return [{url:normalized,title:title.slice(0,400),published,publisher}];}catch{return [];}
  });
 }
@@ -38,7 +44,7 @@ async function scan(env:ScanEnv){
  const now=Date.now();let items:FeedItem[]=[];
  for(let i=0;i<feeds.length;i+=6){
   const batch=await Promise.allSettled(feeds.slice(i,i+6).map(async feed=>{
-   try{const response=await fetch(feed.url,{signal:AbortSignal.timeout(12000),headers:{'User-Agent':'Morgentidende/3.0 RSS'}});if(!response.ok)throw new Error('feed_http_error');const found=parseFeed(await boundedText(response),feed.publisher,now);await env.SCAN_DB.prepare('INSERT OR REPLACE INTO feed_health VALUES(?,?,?,?)').bind(feed.publisher,now,1,found.length).run();return found;}
+   try{const response=await fetch(feed.url,{signal:AbortSignal.timeout(12000),headers:{'User-Agent':'Morgentidende/3.0 RSS'}});if(!response.ok)throw new Error('feed_http_error');const found=parseFeed(await boundedText(response),feed.publisher,now,freshnessHours(feed.country));await env.SCAN_DB.prepare('INSERT OR REPLACE INTO feed_health VALUES(?,?,?,?)').bind(feed.publisher,now,1,found.length).run();return found;}
    catch{await env.SCAN_DB.prepare('INSERT OR REPLACE INTO feed_health VALUES(?,?,?,?)').bind(feed.publisher,now,0,0).run();return [];}
   }));
   for(const result of batch)if(result.status==='fulfilled')items.push(...result.value);

@@ -16,9 +16,10 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
  }
  async execute(event:WorkflowEvent<ChiefInput>,step:WorkflowStep){
   if(Object.keys(event.payload).some(key=>!['tick','commission'].includes(key))|| (event.payload.commission&&!['first-article-v1','single-article-test-v1'].includes(event.payload.commission)))throw new Error('unsupported_chief_input');
+  const workflowCost={orderId:null,workflowId:event.instanceId};
   const state=await step.do('state',()=>rpc<EditorialState>(this.env,'v3_editorial_state'));
   if(event.payload.commission==='single-article-test-v1'){
-   const decision=await step.do('test-decide',()=>model(this.env,'chief','Engangstest af Morgentidende v3. Du er Chefredaktør og vælger helt selv præcis én rigtig, aktuel nyhedsordre ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Vælg emne, kategori, vinkel, prioritet og kildekrav selv. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller testen. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision));
+   const decision=await step.do('test-decide',()=>withCostContext(workflowCost,()=>model(this.env,'chief','Engangstest af Morgentidende v3. Du er Chefredaktør og vælger helt selv præcis én rigtig, aktuel nyhedsordre ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Vælg emne, kategori, vinkel, prioritet og kildekrav selv. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller testen. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision)));
    if(!decision.order)throw new Error('test_order_missing');
    const key=`commission:single-article-test-v1:${event.payload.tick}`;
    const order=await step.do('test-save-order',async()=>{
@@ -28,11 +29,11 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     if(!row)throw new Error('test_order_insert_failed');
     return row;
    });
-   await step.do('test-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
+   await step.do('test-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id,event.instanceId);await this.startProduction(order.id);return order.id;});
    return {status:'started',order_id:order.id,order:decision.order,automation_enabled:state.settings.enabled,test:'single-article-test-v1'};
   }
   if(event.payload.commission==='first-article-v1'){
-   const decision=await step.do('commission-decide',()=>model(this.env,'chief','Commissioning af Morgentidende v3. Vælg præcis én rigtig, aktuel nyhedsordre til avisens første v3-publicering ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller commissioning. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision));
+   const decision=await step.do('commission-decide',()=>withCostContext(workflowCost,()=>model(this.env,'chief','Commissioning af Morgentidende v3. Vælg præcis én rigtig, aktuel nyhedsordre til avisens første v3-publicering ud fra forsiden, 72-timers-mix, breaking-signaler og den redaktionelle politik. Hvis breaking-signalerne ikke giver et stærkt konkret valg, lav en discovery-ordre i den kategori der bedst udfylder forsiden. Det skal være en almindelig nyhedsartikel, ikke en meta-artikel om Cloudflare, AI eller commissioning. Vælg ikke kommentar. Sigt efter ca. 350-500 ord. Returnér ikke order:null.',state,ChiefDecision)));
    if(!decision.order)throw new Error('commission_order_missing');
    const key='commission:first-article-v1';
    const order=await step.do('commission-save-order',async()=>{
@@ -42,16 +43,16 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     if(!row)throw new Error('commission_order_insert_failed');
     return row;
    });
-   await step.do('commission-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
+   await step.do('commission-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id,event.instanceId);await this.startProduction(order.id);return order.id;});
    return {status:'started',order_id:order.id,order:decision.order,automation_enabled:state.settings.enabled};
   }
   if(!state.settings.enabled)return {status:'disabled'};
-  const decision=await step.do('decide',()=>model(this.env,'chief','Du er Chefredaktør på Morgentidende. Vurder den nuværende forside, produktionen, 72 timers mix og breaking-signaler. Vælg højst én konkret ordre eller kategori-/magasin-discovery. Returnér order:null hvis der ikke er behov. Undgå gentagelser. Prioritér bred geografisk og kildemæssig spredning; en vigtig lokal historie fra én avis er værdifuld, også uden overlap med andre medier. Scan er kun et signal; du afgør dansk relevans, lead eller almindelig artikel. Følg den konfigurerede redaktionelle politik.',state,ChiefDecision));
+  const decision=await step.do('decide',()=>withCostContext(workflowCost,()=>model(this.env,'chief','Du er Chefredaktør på Morgentidende. Vurder den nuværende forside, produktionen, 72 timers mix og breaking-signaler. Vælg højst én konkret ordre eller kategori-/magasin-discovery. Returnér order:null hvis der ikke er behov. Undgå gentagelser. Prioritér bred geografisk og kildemæssig spredning; en vigtig lokal historie fra én avis er værdifuld, også uden overlap med andre medier. Scan er kun et signal; du afgør dansk relevans, lead eller almindelig artikel. Følg den konfigurerede redaktionelle politik.',state,ChiefDecision)));
   if(decision.order){
    const order=await step.do('save-order',async()=>{
     const [row]=await rpc<OrderRow[]>(this.env,'v3_admit_order',{p_key:event.payload.tick,p_order:decision.order});return row??null;
    });
-   if(order)await step.do('start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
+   if(order)await step.do('start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id,event.instanceId);await this.startProduction(order.id);return order.id;});
   }
   await step.do('mark-signals',async()=>{
    for(const signal of state.breaking)await db(this.env,`v3_signals?id=eq.${encodeURIComponent(signal.id)}`,'PATCH',{processed_at:new Date().toISOString()});
@@ -59,4 +60,3 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
   });
  }
 }
-
