@@ -1,5 +1,4 @@
 import {db,rpc,DatabaseEnv} from './db';
-export const directWorkflowId=(orderId:string)=>`direct-order-${orderId}`;
 export async function linkChatOrder(env:DatabaseEnv,tick:string,orderId:string){
  const match=/^chatops:([a-f0-9-]{36})$/.exec(tick);if(!match)return;
  await db(env,'v3_chat_orders?on_conflict=command_id,order_id','POST',{command_id:match[1],order_id:orderId});
@@ -22,7 +21,8 @@ export async function chatStatus(env:Env,query:{command_id?:string;order_id?:str
   const links=await db<{order_id:string}[]>(env,`v3_chat_orders?command_id=eq.${query.command_id}&limit=100`);
   ids=links.map(x=>x.order_id);
   const [receipt]=await db<{workflow_id:string;status:string}[]>(env,`v3_chat_receipts?id=eq.${query.command_id}&limit=1`);
-  if(receipt){try{workflow=await (await env.CHIEF.get(receipt.workflow_id)).status();}catch{workflow={dispatch_status:receipt.status};}}
+  if(receipt?.workflow_id.startsWith('chatops-publish-'))workflow={dispatch_status:receipt.status};
+  else if(receipt){try{workflow=await (await env.CHIEF.get(receipt.workflow_id)).status();}catch{workflow={dispatch_status:receipt.status};}}
  }
  const filter=ids?`id=in.(${ids.join(',')})&`:'';
  const orders=ids?.length===0?[]:await db<StatusOrder[]>(env,`v3_orders?${filter}select=id,status,error_code,created_at,original_order&order=created_at.desc&limit=20`);

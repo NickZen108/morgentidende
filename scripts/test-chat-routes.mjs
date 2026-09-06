@@ -46,17 +46,14 @@ async function send(command,signed=true){
 try{
  const first={id:'6feef265-c5ef-4b4e-b087-37b729ed8f19',type:'publish_order',order_id:orderId};
  assert.equal((await send(first,false)).status,401);assert.equal(createAttempts,0);
- const a=await (await send(first)).json();
- const b=await (await send({...first,id:'2263a5d5-c5ef-464e-b087-ababc2d22fc9'})).json();
- assert.equal(created.size,1);assert.equal(a.workflow.id,b.workflow.id);assert.equal(b.workflow.started,false);assert.equal(links.length,2);
- const before=createAttempts;const replay=await (await send(first)).json();assert.equal(replay.already_dispatched,true);assert.equal(createAttempts,before);
- console.log('PASS chat routes: unsigned denied, different commands share one article workflow, replay starts nothing');
- const original={instruction:'Keep this exact instruction and its angle.',category:'viden',mode:'specific',angle:'The specified angle',why_now:'A current event',words:400,primary_source_required:true,opposing_view_required:true};
- const exact=await (await send({id:'6dbfd87b-484c-4cdb-9b57-0b2d35aa21cd',type:'order',order:original})).json();
- assert.deepEqual(created.get(exact.workflow.id).exactOrder,original);
- console.log('PASS chat routes: exact order preserved through authenticated dispatch');
+ for(const command of [first,{id:first.id,type:'order',order:{}},{id:first.id,type:'commission',count:1}])assert.equal((await send(command)).status,400);
+ assert.equal(createAttempts,0);assert.equal(direct.length,0);
+ console.log('PASS chat routes: retired commands rejected before any AI or publishing');
  const publish={id:'0bbef265-c5ef-4b4e-b087-37b729ed8f20',type:'publish_article',slot:'lead',article:{headline:'Direct article is deterministic',deck:'A sufficiently long direct deck',paragraphs:['First direct paragraph','Second direct paragraph'],category:'indland',source_urls:[],image_query:'tractor field'},hero:{url:'https://images.example.test/tractor.jpg',credit:'Example',alt:'Traktor på mark',rights_basis:'cc',license:'CC BY 4.0',license_url:'https://creativecommons.org/licenses/by/4.0/',source_url:'https://example.test/photo'}};
  const published=await (await send(publish)).json();
- assert.equal(published.status,'published');assert.equal(published.slot,'lead');assert.equal(direct.length,1);assert.equal(createAttempts,before+1);assert.equal(direct[0].article.headline,publish.article.headline);
+ assert.equal(published.status,'published');assert.equal(published.slot,'lead');assert.equal(direct.length,1);assert.equal(createAttempts,0);assert.equal(direct[0].article.headline,publish.article.headline);
+ const replay=await (await send(publish)).json();assert.equal(replay.already_dispatched,true);assert.equal(direct.length,1);
+ const missingHero={...publish,id:'2263a5d5-c5ef-464e-b087-ababc2d22fc9'};delete missingHero.hero;assert.equal((await send(missingHero)).status,400);
+ assert.equal(direct[0].hero.generated,undefined);
  console.log('PASS chat routes: publish_article goes directly to deterministic publisher and preserves requested slot');
 }finally{globalThis.fetch=originalFetch;delete globalThis.routeTest;}

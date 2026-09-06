@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ChatCommand} from '../src/v3/contracts';
-import {orderResult,directWorkflowId,chatStatus} from '../src/v3/chat-control';
+import {orderResult,chatStatus} from '../src/v3/chat-control';
 const uuid='6feef265-c5ef-4b4e-b087-37b729ed8f19';
-test('specific command preserves original order and status accepts order and command pointers',()=>{
+test('retired order commands are rejected and status accepts order and command pointers',()=>{
  const order={instruction:'Skriv præcis om den vedtagne aftale med denne vinkel.',category:'indland',mode:'specific',angle:'Konsekvens for borgerne',why_now:'Aftalen er vedtaget',words:400,primary_source_required:true,opposing_view_required:true};
- assert.deepEqual(ChatCommand.parse({id:uuid,type:'order',order}),{id:uuid,type:'order',order});
+ assert.equal(ChatCommand.safeParse({id:uuid,type:'order',order}).success,false);
  assert.ok(ChatCommand.safeParse({id:uuid,type:'status',order_id:uuid}).success);
  assert.ok(ChatCommand.safeParse({id:uuid,type:'status',command_id:uuid}).success);
  assert.equal(ChatCommand.safeParse({id:uuid,type:'order',order:{...order,instruction:'x'}}).success,false);
@@ -17,7 +17,6 @@ test('published result wins over stale error, rejected result explains decision,
  assert.equal(published.status,'published');assert.equal(published.article_url,'https://paper.test/artikel/slug');
  const rejected=orderResult({...order,status:'dropped',error_code:null},{order_id:uuid,attempt:1,stage:'rejected',review:{reason:'Rubrikken stemmer ikke med kilden'}},undefined,'https://paper.test');
  assert.equal(rejected.status,'dropped');assert.equal(rejected.reason,'Rubrikken stemmer ikke med kilden');assert.equal(rejected.article_url,null);
- assert.notEqual(directWorkflowId(uuid),directWorkflowId('another-order'));
 });
 
 test('signed status data joins a command to its article and never returns the submitted body',async()=>{
@@ -41,3 +40,4 @@ test('signed status data joins a command to its article and never returns the su
   await assert.rejects(chatStatus(env as unknown as Env,{command_id:uuid,order_id:uuid}),/choose_command_or_order/);
  }finally{globalThis.fetch=saved;}
 });
+

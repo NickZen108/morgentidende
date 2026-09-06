@@ -14,9 +14,17 @@ function decodeBase64(value:string){
  const binary=atob(value);const out=new Uint8Array(binary.length);
  for(let i=0;i<binary.length;i++)out[i]=binary.charCodeAt(i);return out;
 }
-async function sourceBytes(asset:DirectAsset){
+export function checkedDirectImageUrl(raw:string,origin:string){
+ const url=new URL(raw);
+ const trusted=url.hostname==='upload.wikimedia.org' ||
+  (url.origin===new URL(origin).origin && url.pathname.startsWith('/media/'));
+ if(url.protocol!=='https:'||url.username||url.password||(url.port&&url.port!=='443')||!trusted)
+  throw new Error('direct_media_url_not_allowed');
+ return url.href;
+}
+async function sourceBytes(env:Env,asset:DirectAsset){
  if('data_base64' in asset)return {bytes:decodeBase64(asset.data_base64),mime:asset.mime,original:`chat-upload:${crypto.randomUUID()}`};
- const response=await fetch(asset.url,{headers:{'User-Agent':'Morgentidende/3.0 direct publisher'},signal:AbortSignal.timeout(20000)});
+ const response=await fetch(checkedDirectImageUrl(asset.url,env.PUBLIC_ORIGIN),{redirect:'error',headers:{'User-Agent':'Morgentidende/3.0 direct publisher'},signal:AbortSignal.timeout(20000)});
  if(!response.ok)throw new Error(`direct_media_fetch_${response.status}`);
  const mime=(response.headers.get('content-type')??'').split(';')[0].toLowerCase();
  if(!['image/jpeg','image/png','image/webp','image/gif','image/avif'].includes(mime))throw new Error('direct_media_format');
@@ -28,10 +36,10 @@ async function transform(env:Env,bytes:Uint8Array,role:'hero-desktop'|'hero-mobi
  const output=await input.transform(spec).output({format:'image/jpeg',quality:role==='inline'?88:82,anim:false});
  return readBytes(output.response(),4_000_000);
 }
-export type PublishedAsset={id:string;url:string;original_url:string;alt:string;credit:string;license_documentation:Record<string,unknown>;variants:Record<string,string>};
+export type PublishedAsset={id:string;url:string;original_url:string;alt:string;credit:string;license_documentation:Record<string,unknown>;generated:boolean;variants:Record<string,string>};
 async function processAsset(env:Env,asset:DirectAsset,role:'hero'|'inline'):Promise<PublishedAsset>{
  validateRights(asset);
- const source=await sourceBytes(asset);
+ const source=await sourceBytes(env,asset);
  const desktop=await transform(env,source.bytes,role==='hero'?'hero-desktop':'inline');
  const identity=await identifyBytes(desktop);
  const family=`direct:${identity.hash}`;
@@ -45,15 +53,15 @@ async function processAsset(env:Env,asset:DirectAsset,role:'hero'|'inline'):Prom
   await env.MEDIA_BUCKET.put(mobileKey,mobile,{httpMetadata:{contentType:'image/jpeg',cacheControl:'public,max-age=31536000,immutable'}});
   variants.mobile=`${env.PUBLIC_ORIGIN}/media/${mobileKey}`;
  }
- const license_documentation={direct_chat:true,rights_basis:asset.rights_basis,license:asset.license,license_url:asset.license_url??null,evidence:asset.source_url??('url' in asset?asset.url:'chat-upload'),verified_at:new Date().toISOString()};
+ const license_documentation={direct_chat:true,generated:asset.generated??false,rights_basis:asset.rights_basis,license:asset.license,license_url:asset.license_url??null,evidence:asset.source_url??('url' in asset?asset.url:'chat-upload'),verified_at:new Date().toISOString()};
  const original_url=source.original;
  const [row]=await db<{id:string}[]>(env,'v3_media?on_conflict=content_hash','POST',{
   family_id:family,content_hash:identity.hash,original_url,url:variants.desktop,credit:asset.credit,alt:asset.alt,
-  license_documentation,rights_verified:true,vision_verified:false,generated:asset.rights_basis==='user_owned',tags:['direct-chat',role],variants
+  license_documentation,rights_verified:true,vision_verified:false,generated:asset.generated??false,tags:['direct-chat',role],variants
  });
  if(!row)throw new Error('direct_media_insert_failed');
  await rpc(env,'v3_register_identity',{p_media:row.id,p_hash:identity.hash,p_fingerprints:identity.fingerprints});
- return {id:row.id,url:variants.desktop,original_url,alt:asset.alt,credit:asset.credit,license_documentation,variants};
+ return {id:row.id,url:variants.desktop,original_url,alt:asset.alt,credit:asset.credit,license_documentation,generated:asset.generated??false,variants};
 }
 async function processBlocks(env:Env,blocks:DirectBlock[]|undefined,paragraphs:string[]){
  const input=blocks??paragraphs.map(text=>({type:'paragraph' as const,text}));
@@ -74,7 +82,7 @@ export async function publishDirect(env:Env,command:{id:string;article:{headline
  }
  const existing=await db<{slug:string;headline:string}[]>(env,`v3_articles?order_id=eq.${order.id}&select=slug,headline&limit=1`);
  if(existing[0])return {status:'published',order_id:order.id,headline:existing[0].headline,article_url:`${env.PUBLIC_ORIGIN}/artikel/${existing[0].slug}`};
- await db(env,`v3_orders?id=eq.${order.id}`,'PATCH',{status:'running'});
+ await db(env,`v3_orders?id=eq.${order.id}&status=neq.published`,'PATCH',{status:'running'});
  try{
   const hero=await processAsset(env,command.hero,'hero');
   const blocks=await processBlocks(env,command.article.blocks,command.article.paragraphs);
@@ -82,5 +90,5 @@ export async function publishDirect(env:Env,command:{id:string;article:{headline
   const articleId=await rpc<string>(env,'v3_publish_direct',{p_order:order.id,p_media:hero.id,p_slot:command.slot,p_article:{headline:command.article.headline,deck:command.article.deck,paragraphs:command.article.paragraphs,blocks,category:command.article.category,sources}});
   const [article]=await db<{slug:string;headline:string}[]>(env,`v3_articles?id=eq.${articleId}&select=slug,headline&limit=1`);
   return {status:'published',order_id:order.id,article_id:articleId,headline:article?.headline??command.article.headline,slot:command.slot,hero:{url:hero.url,variants:hero.variants},article_url:`${env.PUBLIC_ORIGIN}/artikel/${article?.slug??order.id}`};
- }catch(error){await db(env,`v3_orders?id=eq.${order.id}`,'PATCH',{status:'failed',error_code:'direct_publish_failed'});throw error;}
+ }catch(error){await db(env,`v3_orders?id=eq.${order.id}&status=neq.published`,'PATCH',{status:'failed',error_code:'direct_publish_failed'});throw error;}
 }

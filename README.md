@@ -34,10 +34,13 @@ Media får original ordre og dossier, vælger billedsøgeord og prøver eget fot
 
 Samme billedfamilie har ubetinget 10 dages databasekarantæne. Publicering kontrollerer også identiske og visuelt lignende JPEG-varianter på tværs af adresser. Vilkårlige redigeringer og forskellige optagelser fra samme fotoserie kan ikke garanteres genkendt. Verificerede billedbytes gemmes i R2, så kildens indhold ikke kan ændres efter kontrollen.
 
-`serious_error=true` blokerer publicering i både kode og database. Normal produktion må starte ét frisk andet forsøg; derefter droppes artiklen. Direkte indsendte artikler omskrives ikke og afvises ved fejl.
+`serious_error=true` blokerer publicering i både kode og database. Normal produktion må starte ét frisk andet forsøg; derefter droppes artiklen. Færdige chatartikler følger en separat deterministisk publiceringsvej med obligatorisk hero; de sendes ikke til Media-agenten eller Chefredaktøren.
 
 ## Databaseændring
 
 Anvend `docs/sql/v3_budget_and_safety.sql` før denne kode deployes. Migreringen er anvendt i Supabase med transaktionelle budget- og replaytests. `tests/database.sql` kontrollerer publicering, alvorlige fejl, idempotens og billedkarantæne og ruller alt tilbage.
 
-Chatstyring: se [docs/chat-control.md](docs/chat-control.md) for præcise bestillinger, private artikelreferencer, kø og resultatforespørgsler. Kræver også `docs/sql/v3_chat_control.sql`.
+Chatstyring: se [docs/chat-control.md](docs/chat-control.md) for færdige publiceringspakker, obligatorisk hero, billedrettigheder og resultatforespørgsler. De gamle chatkommandoer `order`, `commission` og `publish_order` er fjernet. Kræver også `docs/sql/v3_chat_control.sql`.
+
+Den direkte publiceringsvej kræver desuden `supabase/migrations/20260906154225_v3_direct_chat_receipt_guard.sql`. `tests/direct-chat-security.sql` tester kvitteringskravet og ruller alle testdata tilbage.
+Direkte publicering er yderligere afgrænset af `supabase/migrations/20260906154456_v3_direct_rpc_contract.sql`; anvend begge nye migrationer i versionsrækkefølge.

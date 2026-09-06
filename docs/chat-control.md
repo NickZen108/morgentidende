@@ -1,64 +1,25 @@
-# Styr Morgentidende fra chatten
+# Chatpublicering
 
-Chatten sender kommandoer ved at committe en ny `.chatops/command.json` på grenen `chatops`. Brug et nyt UUID pr. ny kommando; genbrug samme UUID ved teknisk genafsendelse. Workflowet henter selv en kortlivet GitHub-identitet. Cloudflare API-token er ikke nødvendigt for chatkommandoer.
+Chatten accepterer kun `publish_article` og `status` via den signerede GitHub Actions-proces på chatops-branchen. Payload skal matche den konkrete Git-commit. De tidligere kommandoer `order`, `commission` og `publish_order` afvises. Chefredaktøren accepterer heller ikke de gamle workflow-inputs.
 
-## Fri bestilling
+## Faktisk kaldesti
 
-```json
-{"id":"NYT-UUID","type":"commission","count":2,"topic":"Aktuelle danske energinyheder"}
-```
+GitHub Actions → signatur og commit-kontrol → valideret færdig publiceringspakke → deterministisk billedbehandling → databasepublicering → forside.
 
-Udelad topic for frit redaktionelt valg. Dette er discovery, hvor Chefredaktøren vælger historier og vinkler.
+Ingen Desk, Journalist, Media-agent eller Chefredaktør kaldes fra chatpubliceringen. Automatisk redaktion bruger fortsat sin egen pipeline.
 
-## En præcis artikelbestilling
+## Publiceringspakken
 
-```json
-{
- "id":"NYT-UUID","type":"order",
- "order":{
-  "instruction":"BRUGERENS PRÆCISE INSTRUKTION, UÆNDRET",
-  "category":"indland","mode":"specific",
-  "angle":"Den aftalte vinkel","why_now":"Aktuel anledning",
-  "words":500,"primary_source_required":true,"opposing_view_required":true
- }
-}
-```
+Kommandoen indeholder UUID i `id`, `type: publish_article`, `article`, `slot` og obligatorisk `hero`. Artikel indeholder headline, deck, paragraphs, category, source_urls og image_query (sidstnævnte er et kompatibilitetsfelt). blocks kan indeholde paragraph, subheading, image og graphic.
 
-Denne ordre valideres og sendes gennem Chefredaktørens kode til Production uden modelomskrivning. Desk, Journalist, Media og slutkontrol får samme originalordre. Udfyld felterne efter brugerens instruktion; opfind ikke nye krav.
+Hvert billede har credit, alt, rights_basis, license og relevant license_url/source_url. `generated` er et selvstændigt boolean-felt, standard false. Sæt det til true for AI-genererede billeder; ejerskab siger intet om fremstillingsmetoden.
 
-## Færdig artikel
+URL-billeder skal hentes via HTTPS fra upload.wikimedia.org eller avisens egen /media/-sti. Omdirigeringer og URL'er med brugernavn/password afvises. Billeder fra andre kilder vedlægges som data_base64 med mime image/jpeg, image/png eller image/webp og kilde-/licensdokumentation. Hero forbliver obligatorisk.
 
-Gem den færdige DirectSubmission i Supabase `v3_orders.original_order`, som i det eksisterende direkte forløb. Send kun referencen på GitHub:
+`status` kan indeholde command_id eller order_id. Genbrug af en publiceringskommando med samme ID og uændret indhold kan genfinde den eksisterende artikel; ændret indhold kræver nyt ID.
 
-```json
-{"id":"NYT-UUID","type":"publish_order","order_id":"ORDRENS-UUID"}
-```
+## Databasegrænse
 
-Media vælger hero og Chefredaktøren afgør publicering. Teksten omskrives ikke. To kommandoer til samme ordre bruger nu samme Workflow-id; genafsendelse starter ikke en parallel billedsøgning. En korrigeret artikel bør gemmes som en ny ordre, så den tidligere vurdering bevares. Teknisk genoptagelse af en fejlet workflow er en særskilt driftsopgave.
+Direkte publicering kræver en matchende privat kvittering fra den autentificerede chatindgang. En ordre mærket direct_article_v2 er ikke i sig selv tilstrækkelig. Kvitteringer er ikke offentligt læsbare eller skrivbare.
 
-`publish_article` understøttes stadig, men lægger hele artikelteksten i Git-historikken. Brug derfor normalt den private Supabase-reference.
-
-## Hent resultatet
-
-```json
-{"id":"NYT-UUID","type":"status","command_id":"DEN-OPRINDELIGE-KOMMANDOS-UUID"}
-```
-
-Eller brug `order_id` for én bestemt artikel. Uden reference returneres de seneste 20 ordrer. Angiv kun én af command_id og order_id.
-
-Status indeholder:
-- Ordrestatus og senest gemte fase.
-- Publiceret rubrik og artikellink, hvis publiceret.
-- Chefredaktørens begrundelse, hvis afvist.
-- `budget_blocked`, hvis dagsbudgettet stoppede produktionen.
-- Fælles dagsbudget og eventuel workflowstatus.
-
-Læs resultatet i GitHub Actions-loggen. En grøn dispatch alene betyder **modtaget**, ikke **publiceret**. Følg op med status indtil ordren er publiceret, afvist eller stoppet. Status kalder ingen betalte modeller. GitHub Actions-loggen er offentlig i dette repo; status inkluderer ikke hele artikelteksten.
-
-## Kø og drift
-
-ChatOps bruger `queue: max`, så op til 100 kørsler kan vente i stedet for at erstatte hinanden. Over 100 ventende kørsler kræver genafsendelse. Hver kørsel læser sin egen commit, så senere kommandoer ikke ændrer tidligere ordrer.
-
-Dagsgrænsen er fortsat 10 DKK inklusive chatbestillinger. Budgetstop bliver ikke automatisk genoptaget ved midnat. Automatisk redaktionel produktion aktiveres ikke af disse ændringer.
-
-Databasen kræver `docs/sql/v3_chat_control.sql` før kodeudrulning. `scripts/test-chat-routes.mjs` tester adgangskontrol, genafsendelse og dobbeltbestillinger uden rigtige workflows eller modelkald.
+Den særskilte regel for inline-billeders genbrug er ikke ændret i denne rettelse.
