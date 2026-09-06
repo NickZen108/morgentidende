@@ -1,6 +1,6 @@
 import { z } from 'zod';
 export const Category = z.enum(['indland','udland','penge','kultur','viden','liv','kommentar']);
-export const Slot = z.enum(['lead','top-1','top-2','top-3','news-1','news-2','news-3','news-4','viden-1','viden-2','liv-1','liv-2']);
+export const Slot = z.enum(['lead','followup-1','followup-2','followup-3','followup-4','top-1','top-2','top-3','news-1','news-2','news-3','news-4','viden-1','viden-2','liv-1','liv-2']);
 export const Order = z.object({ instruction:z.string().min(10).max(3000), category:Category, mode:z.enum(['specific','discovery']), angle:z.string().max(1000), why_now:z.string().max(1000), words:z.number().int().min(150).max(1500), primary_source_required:z.boolean(), opposing_view_required:z.boolean() }).strict();
 export type Order = z.infer<typeof Order>;
 export const Source = z.object({url:z.string().url(),title:z.string(),publisher:z.string(),kind:z.enum(['primary','secondary']),retrieved_at:z.string(),facts:z.array(z.string()).min(1),quotes:z.array(z.string())});
