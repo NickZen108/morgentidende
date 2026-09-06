@@ -1,12 +1,17 @@
+import {linkChatOrder} from './chat-control';
 import {withCostContext,assignOrderCosts} from './budget';
 import {WorkflowEntrypoint,WorkflowEvent,WorkflowStep} from 'cloudflare:workers';
-import {ChiefDecision,DirectSubmission,OrderRow,Review} from './contracts';
+import {ChiefDecision,DirectSubmission,Order,OrderRow,Review} from './contracts';
 import {db,rpc} from './db';
 import {model} from './models';
 import {selectMedia} from './media';
-export type ChiefInput={tick:string;commission?:'first-article-v1'|'single-article-test-v1'|'chatops-batch-v1';count?:number;topic?:string;directOrderId?:string};
+export type ChiefInput={tick:string;commission?:'first-article-v1'|'single-article-test-v1'|'chatops-batch-v1'|'exact-order-v1';exactOrder?:Order;count?:number;topic?:string;directOrderId?:string};
 type EditorialState={settings:{enabled:boolean;max_orders_per_day:number;editorial_policy:string};breaking:{id:string}[]};
 export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
+ async startProduction(id:string){
+  try{await this.env.PRODUCTION.create({id,params:{orderId:id}});}
+  catch(error){try{await (await this.env.PRODUCTION.get(id)).status();}catch{throw error;}}
+ }
  async run(event:WorkflowEvent<ChiefInput>,step:WorkflowStep){
   return withCostContext({orderId:event.payload.directOrderId??null,workflowId:event.instanceId},()=>this.execute(event,step));
  }
@@ -18,7 +23,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     const row=await step.do('direct-load',async()=>{
      const [found]=await db<{id:string;status:string;original_order:DirectSubmission}[]>(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&limit=1`);
      if(!found)throw new Error('direct_order_not_found');
-     if(found.status!=='published')await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}`,'PATCH',{status:'running'});
+     if(found.status!=='published')await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}`,'PATCH',{status:'running',error_code:null});
      return found;
     });
     if(row.status==='published')return {status:'already-published',order_id:id};
@@ -47,9 +52,24 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     const articleId=await step.do('direct-publish',()=>rpc<string>(this.env,'v3_publish',{p_order:id,p_attempt:1,p_slot:review.slot}));
     return {status:'published',order_id:id,article_id:articleId,headline:article.headline,media_generated:media.generated};
    }catch(error){
-    await step.do('direct-mark-failed',async()=>{await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&status=neq.published`,'PATCH',{status:'failed'});return true;});
+    await step.do('direct-mark-failed',async()=>{await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&status=neq.published`,'PATCH',{status:'failed',error_code:error instanceof Error&&error.message==='daily_budget_exhausted'?'daily_budget_exhausted':'production_failed'});return true;});
     throw error;
    }
+  }
+  if(event.payload.commission==='exact-order-v1'){
+   const original=Order.parse(event.payload.exactOrder);
+   const key=`commission:exact:${event.payload.tick}`;
+   const order=await step.do('exact-save-order',async()=>{
+    const [existing]=await db<OrderRow[]>(this.env,`v3_orders?dedupe_key=eq.${encodeURIComponent(key)}&limit=1`);
+    if(existing)return existing;
+    const [created]=await db<OrderRow[]>(this.env,'v3_orders','POST',{dedupe_key:key,original_order:original});
+    if(!created)throw new Error('exact_order_insert_failed');return created;
+   });
+   await step.do('exact-start-production',async()=>{
+    await linkChatOrder(this.env,event.payload.tick,order.id);
+    await this.startProduction(order.id);return order.id;
+   });
+   return {status:'started',order_id:order.id,order:original,automation_enabled:state.settings.enabled};
   }
   if(event.payload.commission==='chatops-batch-v1'){
    const count=Math.max(1,Math.min(20,event.payload.count??1));
@@ -67,7 +87,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
      const [created]=await db<OrderRow[]>(this.env,'v3_orders','POST',{dedupe_key:key,original_order:decision.order});
      if(!created)throw new Error(`chatops_order_insert_failed_${i+1}`);return created;
     });
-    await step.do(`chatops-start-${i+1}`,async()=>{await assignOrderCosts(this.env,order.id);await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
+    await step.do(`chatops-start-${i+1}`,async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
     started.push({order_id:order.id,order:decision.order});
    }
    return {status:'started',count:started.length,orders:started,topic:topic??null,automation_enabled:state.settings.enabled};
@@ -83,7 +103,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     if(!row)throw new Error('test_order_insert_failed');
     return row;
    });
-   await step.do('test-start-production',async()=>{await assignOrderCosts(this.env,order.id);await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
+   await step.do('test-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
    return {status:'started',order_id:order.id,order:decision.order,automation_enabled:state.settings.enabled,test:'single-article-test-v1'};
   }
   if(event.payload.commission==='first-article-v1'){
@@ -97,7 +117,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     if(!row)throw new Error('commission_order_insert_failed');
     return row;
    });
-   await step.do('commission-start-production',async()=>{await assignOrderCosts(this.env,order.id);await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
+   await step.do('commission-start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
    return {status:'started',order_id:order.id,order:decision.order,automation_enabled:state.settings.enabled};
   }
   if(!state.settings.enabled)return {status:'disabled'};
@@ -106,7 +126,7 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
    const order=await step.do('save-order',async()=>{
     const [row]=await rpc<OrderRow[]>(this.env,'v3_admit_order',{p_key:event.payload.tick,p_order:decision.order});return row??null;
    });
-   if(order)await step.do('start-production',async()=>{await assignOrderCosts(this.env,order.id);await this.env.PRODUCTION.create({id:order.id,params:{orderId:order.id}});return order.id;});
+   if(order)await step.do('start-production',async()=>{await linkChatOrder(this.env,event.payload.tick,order.id);await assignOrderCosts(this.env,order.id);await this.startProduction(order.id);return order.id;});
   }
   await step.do('mark-signals',async()=>{
    for(const signal of state.breaking)await db(this.env,`v3_signals?id=eq.${encodeURIComponent(signal.id)}`,'PATCH',{processed_at:new Date().toISOString()});

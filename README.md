@@ -39,3 +39,5 @@ Samme billedfamilie har ubetinget 10 dages databasekarantæne. Publicering kontr
 ## Databaseændring
 
 Anvend `docs/sql/v3_budget_and_safety.sql` før denne kode deployes. Migreringen er anvendt i Supabase med transaktionelle budget- og replaytests. `tests/database.sql` kontrollerer publicering, alvorlige fejl, idempotens og billedkarantæne og ruller alt tilbage.
+
+Chatstyring: se [docs/chat-control.md](docs/chat-control.md) for præcise bestillinger, private artikelreferencer, kø og resultatforespørgsler. Kræver også `docs/sql/v3_chat_control.sql`.

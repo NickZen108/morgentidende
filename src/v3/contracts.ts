@@ -14,7 +14,8 @@ export const DirectSubmission = z.object({kind:z.literal('direct_article'),artic
 export type DirectSubmission = z.infer<typeof DirectSubmission>;
 const ChatCommandId=z.string().uuid();
 export const ChatCommand = z.discriminatedUnion('type',[
- z.object({id:ChatCommandId,type:z.literal('status')}).strict(),
+ z.object({id:ChatCommandId,type:z.literal('status'),command_id:ChatCommandId.optional(),order_id:ChatCommandId.optional()}).strict(),
+ z.object({id:ChatCommandId,type:z.literal('order'),order:Order}).strict(),
  z.object({id:ChatCommandId,type:z.literal('commission'),count:z.number().int().min(1).max(20),topic:z.string().min(3).max(1000).optional()}).strict(),
  z.object({id:ChatCommandId,type:z.literal('publish_order'),order_id:z.string().uuid()}).strict(),
  z.object({id:ChatCommandId,type:z.literal('publish_article'),article:DirectArticle}).strict()
