@@ -9,6 +9,10 @@ begin
  values('test-family','test-hash','https://example.org/test','https://example.org/test.jpg','Test','Test','{"license":"CC0","license_url":"https://example.org/license","evidence":"test","verified_at":"2026-09-05"}',true,true) returning id into m;
  insert into public.v3_attempts(order_id,attempt,stage,dossier,draft,review,media_id)
  select oid,1,'approved','{"sources":[]}'::jsonb,'{"headline":"Test headline","deck":"Test deck","paragraphs":["one","two"],"category":"indland"}'::jsonb,'{"matches_order":true,"headline_correct":true,"serious_error":false,"evidence_status":"verified","verification_version":1,"claim_checks":[{"status":"supported","source_verified":true}]}'::jsonb,m from unnest(array[o,o2]) oid;
+ update public.v3_orders set status='paused',original_order='{"kind":"direct_article","article":{"headline":"Paused title","category":"indland","paragraphs":["PRIVATE FULL BODY"]}}'::jsonb where id=o;
+ if not exists(select 1 from jsonb_array_elements(public.v3_editorial_state()->'in_production') item where item->>'id'=o::text and item->>'status'='paused') then raise exception 'paused_order_invisible'; end if;
+ if public.v3_editorial_state()::text like '%PRIVATE FULL BODY%' then raise exception 'state_contains_full_article';end if;
+ update public.v3_orders set status='running' where id=o;
  perform public.v3_register_identity(m,repeat('a',64),array[repeat('01',32)]);
  update public.v3_attempts set review=review||'{"serious_error":true}'::jsonb where order_id=o;
  begin
