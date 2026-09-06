@@ -54,6 +54,6 @@ try{
  assert.equal(published.status,'published');assert.equal(published.slot,'lead');assert.equal(direct.length,1);assert.equal(createAttempts,0);assert.equal(direct[0].article.headline,publish.article.headline);
  const replay=await (await send(publish)).json();assert.equal(replay.already_dispatched,true);assert.equal(direct.length,1);
  const missingHero={...publish,id:'2263a5d5-c5ef-464e-b087-ababc2d22fc9'};delete missingHero.hero;assert.equal((await send(missingHero)).status,400);
- assert.equal(direct[0].hero.generated,false);
+ assert.equal(direct[0].hero.generated,undefined);
  console.log('PASS chat routes: publish_article goes directly to deterministic publisher and preserves requested slot');
 }finally{globalThis.fetch=originalFetch;delete globalThis.routeTest;}

@@ -47,7 +47,9 @@ function fixture(options={}){
   });
   await probe('ownership does not imply generated, explicit generated value persists',async()=>{
    for(const generated of [false,true]){const f=fixture();await f.run({...base,hero:{...base.hero,rights_basis:'user_owned',generated}});assert.equal(f.writes.find(w=>w.content_hash).generated,generated);}
-   assert.equal(DirectAsset.parse({...base.hero,rights_basis:'user_owned'}).generated,false);
+   assert.equal(DirectAsset.parse({...base.hero,rights_basis:'user_owned'}).generated,undefined);
+   const legacy=fixture();await legacy.run({...base,hero:{...base.hero,rights_basis:'user_owned'}});assert.equal(legacy.writes.find(w=>w.content_hash).generated,false);
+   assert.deepEqual(ChatCommand.parse(base),base);
   });
   await probe('hero remains mandatory',async()=>{const {hero,...command}=base;assert.equal(ChatCommand.safeParse(command).success,false);});
   await probe('sequential retry does not transform images again',async()=>{const f=fixture();await f.run();const count=f.puts.length;await f.run();assert.equal(f.puts.length,count);});

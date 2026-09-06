@@ -53,15 +53,15 @@ async function processAsset(env:Env,asset:DirectAsset,role:'hero'|'inline'):Prom
   await env.MEDIA_BUCKET.put(mobileKey,mobile,{httpMetadata:{contentType:'image/jpeg',cacheControl:'public,max-age=31536000,immutable'}});
   variants.mobile=`${env.PUBLIC_ORIGIN}/media/${mobileKey}`;
  }
- const license_documentation={direct_chat:true,generated:asset.generated,rights_basis:asset.rights_basis,license:asset.license,license_url:asset.license_url??null,evidence:asset.source_url??('url' in asset?asset.url:'chat-upload'),verified_at:new Date().toISOString()};
+ const license_documentation={direct_chat:true,generated:asset.generated??false,rights_basis:asset.rights_basis,license:asset.license,license_url:asset.license_url??null,evidence:asset.source_url??('url' in asset?asset.url:'chat-upload'),verified_at:new Date().toISOString()};
  const original_url=source.original;
  const [row]=await db<{id:string}[]>(env,'v3_media?on_conflict=content_hash','POST',{
   family_id:family,content_hash:identity.hash,original_url,url:variants.desktop,credit:asset.credit,alt:asset.alt,
-  license_documentation,rights_verified:true,vision_verified:false,generated:asset.generated,tags:['direct-chat',role],variants
+  license_documentation,rights_verified:true,vision_verified:false,generated:asset.generated??false,tags:['direct-chat',role],variants
  });
  if(!row)throw new Error('direct_media_insert_failed');
  await rpc(env,'v3_register_identity',{p_media:row.id,p_hash:identity.hash,p_fingerprints:identity.fingerprints});
- return {id:row.id,url:variants.desktop,original_url,alt:asset.alt,credit:asset.credit,license_documentation,generated:asset.generated,variants};
+ return {id:row.id,url:variants.desktop,original_url,alt:asset.alt,credit:asset.credit,license_documentation,generated:asset.generated??false,variants};
 }
 async function processBlocks(env:Env,blocks:DirectBlock[]|undefined,paragraphs:string[]){
  const input=blocks??paragraphs.map(text=>({type:'paragraph' as const,text}));

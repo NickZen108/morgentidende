@@ -15,7 +15,7 @@ export const Draft = z.object({headline:z.string().min(10).max(200),deck:z.strin
 export type Draft = z.infer<typeof Draft>;
 
 const DirectAssetBase={
- generated:z.boolean().default(false),
+ generated:z.boolean().optional(),
  credit:z.string().min(1).max(300),alt:z.string().min(1).max(600),caption:z.string().max(600).optional(),
  rights_basis:z.enum(['cc','public_domain','publisher_permission','user_owned']),license:z.string().min(1).max(120),
  license_url:z.string().url().optional(),source_url:z.string().url().optional()
