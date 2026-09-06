@@ -3,9 +3,8 @@
 -- Direct/chat/manual orders do not consume the automated engine's daily allowance.
 
 update public.v3_settings
-set enabled = true,
-    max_orders_per_day = 6,
-    editorial_policy = 'AUTOMATISK AVISMOTOR: Producer kun aktuelle nyheder i kategorierne Udland og Indland, med klar overvægt på Udland. Dagligt mål er 5-6 stærke publicerbare nyheder, normalt ca. 4 Udland, 1 Indland og en sjette fleksibel nyhed efter dagens styrke. Dette er et kvalitetsmål, ikke en tvangskvote: returnér order:null frem for at bestille fyldstof eller en middelmådig historie. Ingen Penge-, Kultur-, Viden-, Liv- eller Kommentar-artikler fra automotoren. Ingen evergreen/features/livsstof. Prioritér væsentlige, aktuelle historier med dansk relevans eller stor international betydning, bred geografisk og kildemæssig spredning, og undgå dubletter/opfølgninger uden nye oplysninger. Fordel som udgangspunkt historierne over dagen i stedet for at bruge dagskvoten hurtigt: normalt ikke en ny automatisk ordre hvis en anden automatisk artikel netop er bestilt eller publiceret inden for cirka to timer, medmindre en klart vigtig breaking-historie gør en ekstra publicering nødvendig. Brug auto_news_today, last_order_at og last_published_at i state til at holde tempo og mix. Artikler publiceret direkte fra ChatGPT er et separat spor og tæller ikke med i automotorens 5-6 nyheder.'
+set max_orders_per_day = 6,
+    editorial_policy = 'AUTOMATISK AVISMOTOR: Producer kun aktuelle nyheder i kategorierne Udland og Indland, med klar overvægt på Udland. Dagligt mål er 5-6 stærke publicerbare nyheder, normalt ca. 4 Udland, 1 Indland og en sjette fleksibel nyhed efter dagens styrke. Dette er et kvalitetsmål, ikke en tvangskvote: returnér order:null frem for at bestille fyldstof eller en middelmådig historie. Ingen Penge-, Kultur-, Viden-, Liv- eller Kommentar-artikler fra automotoren. Ingen evergreen/features/livsstof. Prioritér væsentlige, aktuelle historier med dansk relevans eller stor international betydning, bred geografisk og kildemæssig spredning, og undgå dubletter/opfølgninger uden nye oplysninger. Artikler publiceret direkte fra ChatGPT er et separat spor og tæller ikke med i automotorens 5-6 nyheder.'
 where id = true;
 
 create or replace function public.v3_admit_order(p_key text,p_order jsonb) returns setof public.v3_orders
@@ -109,17 +108,6 @@ select jsonb_build_object(
      join public.v3_orders o on o.id=a.order_id
      where o.dedupe_key like 'tick-%'
        and a.category='indland'
-       and a.published_at >= date_trunc('day',now() at time zone 'Europe/Copenhagen') at time zone 'Europe/Copenhagen'
-   ),
-   'last_order_at',(
-     select max(o.created_at) from public.v3_orders o
-     where o.dedupe_key like 'tick-%'
-       and o.created_at >= date_trunc('day',now() at time zone 'Europe/Copenhagen') at time zone 'Europe/Copenhagen'
-   ),
-   'last_published_at',(
-     select max(a.published_at) from public.v3_articles a
-     join public.v3_orders o on o.id=a.order_id
-     where o.dedupe_key like 'tick-%'
        and a.published_at >= date_trunc('day',now() at time zone 'Europe/Copenhagen') at time zone 'Europe/Copenhagen'
    )
  ),
