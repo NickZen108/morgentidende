@@ -2,6 +2,7 @@ import {build} from 'esbuild';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const replacements={
+ './claim-review':`export async function reviewWithEvidence(env,step,input){const t=globalThis.productionTest;const review=await t.model(env,'chief','test boundary',input);await t.db(env,'v3_attempts','PATCH',{review,draft:input.article,stage:review.serious_error?'rejected':'approved'});return {paused:false,review};}`,
  'cloudflare:workers':'export class WorkflowEntrypoint {constructor(ctx,env){this.env=env;}}',
  './budget':`export const withCostContext=(context,fn)=>fn();export const budgetedAI=(env,...args)=>env.AI.run(...args);`,
  './models':`export const model=(...args)=>globalThis.productionTest.model(...args);
@@ -11,7 +12,7 @@ export const modelResponseText=(result)=>result.output_text??result.output?.flat
 };
 await fs.mkdir('reports',{recursive:true});
 await build({entryPoints:['src/v3/production.ts'],outfile:'reports/production-test.mjs',bundle:true,platform:'node',format:'esm',plugins:[{name:'workflow-boundaries',setup(b){
- b.onResolve({filter:/^(cloudflare:workers|\.\/(models|media|db|budget))$/},args=>args.importer.endsWith('production.ts')?{path:args.path,namespace:'test'}:undefined);
+ b.onResolve({filter:/^(cloudflare:workers|\.\/(models|media|db|budget|claim-review))$/},args=>args.importer.endsWith('production.ts')?{path:args.path,namespace:'test'}:undefined);
  b.onLoad({filter:/.*/,namespace:'test'},args=>({contents:replacements[args.path],loader:'js'}));
 }}]});
 const {Production}=await import('../reports/production-test.mjs');

@@ -1,3 +1,4 @@
+import {reviewWithEvidence} from './claim-review';
 import {linkChatOrder} from './chat-control';
 import {withCostContext,assignOrderCosts} from './budget';
 import {WorkflowEntrypoint,WorkflowEvent,WorkflowStep} from 'cloudflare:workers';
@@ -40,13 +41,9 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     const media=await step.do('direct-media',{retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'3 minutes'},async()=>{
      const m=await selectMedia(this.env,article,`direct-${id}`,{original_order:submission,dossier});return {id:m.id,url:m.url,alt:m.alt,credit:m.credit,generated:m.generated};
     });
-    const review=await step.do('direct-chief-review',{retries:{limit:1,delay:'5 seconds',backoff:'constant'},timeout:'2 minutes'},async()=>{
-     const freshState=await rpc(this.env,'v3_editorial_state');
-     const result=await model(this.env,'chief','Du er Chefredaktør på Morgentidende. Dette er en færdig artikel indsendt direkte af ejeren og den må ikke omskrives eller sendes til Desk/Journalist. Media har valgt hero. Kontrollér med web search de væsentligste faktuelle påstande hvis nødvendigt, vurder om artiklen kan publiceres som indsendt, om rubrikken er dækkende, og om der er en alvorlig faktuel, juridisk eller redaktionel fejl. serious_error skal være true ved en sådan alvorlig fejl. Vælg samtidig en gyldig forsideplads ud fra state. Returnér kun Review-strukturen.',{direct_submission:true,article,media,state:freshState},Review,true);
-     const approved=result.matches_order&&result.headline_correct&&!result.serious_error;
-     await db(this.env,`v3_attempts?order_id=eq.${encodeURIComponent(id)}&attempt=eq.1`,'PATCH',{draft:article,media_id:media.id,review:result,stage:approved?'approved':'rejected'});
-     return result;
-    });
+    const checked=await reviewWithEvidence(this.env,step,{id,attempt:1,prefix:'direct',article,media,original_order:submission,dossier});
+    if(checked.paused)return {status:'paused',order_id:id,reason:checked.reason};
+    const review=checked.review;
     const approved=review.matches_order&&review.headline_correct&&!review.serious_error;
     if(!approved){await step.do('direct-drop',async()=>{await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}`,'PATCH',{status:'dropped'});return true;});return {status:'dropped',order_id:id,reason:review.reason};}
     const articleId=await step.do('direct-publish',()=>rpc<string>(this.env,'v3_publish',{p_order:id,p_attempt:1,p_slot:review.slot}));
