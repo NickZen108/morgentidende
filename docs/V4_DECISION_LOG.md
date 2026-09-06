@@ -8,7 +8,7 @@ Beslutningsloggen er først og fremmest til de dele af Morgentidende, som er dyr
 
 1. **Avismotoren/pipelinen** — roller, rækkefølge, ansvar, research, faktatjek, retries, publicering, cadence, omkostninger og hvilke led der kan slås sammen eller fjernes.
 2. **Forsiden** — lead, opfølgere, prioritering, placering, artikeltyper, visuelle regler og relationer mellem historier.
-3. **Backend kun når den påvirker arbejdsgangen** — især hvordan artikler og ordrer sendes fra ChatGPT/chatten til Morgentidende, hvordan de går gennem Media/Chefredaktør/publicering, og hvordan status/fejl returneres.
+3. **Backend kun når den påvirker arbejdsgangen** — især hvordan artikler og ordrer sendes fra ChatGPT/chatten til Morgentidende, og hvordan status/fejl returneres.
 
 Små backend-, CSS- og implementationstekniske detaljer skal normalt **ikke** gemmes her, medmindre de repræsenterer en produktbeslutning, der bør genbruges i v4.
 
@@ -269,11 +269,13 @@ Frekvens som hvert 15. eller 30. minut bruges til test og feedback og skal ikke 
 
 V4 skal bevare muligheden for, at brugeren fra en ChatGPT-samtale kan bestille en artikel, sende en færdig artikel, vælge eller påvirke forsideplacering og få den ind i avisens normale system uden manuel kopiering til GitHub eller database.
 
-### D-081 — Færdige chatartikler skal kunne springe irrelevante produktionsled over
+### D-081 — Færdige chatartikler går direkte til Publish
 **Dato:** 2026-09-06  
 **Status:** Aktiv
 
-Når artiklen allerede er researched og skrevet i chatten, skal backend ikke tvinge den gennem en fuld skrivepipeline igen. Den skal kunne sendes direkte videre til de relevante resterende led, typisk Media, nødvendig faktuel kontrol/Chefredaktør og publicering. Systemet skal undgå unødige omskrivninger af brugerens færdige artikel.
+Når brugeren beder om at få en artikel fra chatten udgivet, er artiklen allerede et færdigt redaktionelt produkt. ChatGPT skal selv vedlægge et relevant, gratis og lovligt anvendeligt foto med nødvendige rettighedsdata. Hele pakken — artikel, billede, billedkredit/licens, kategori, relation til lead/opfølger og ønsket forsideplacering — sendes direkte til Publish. Den må ikke først gennem Journalist, Desk, Media eller Chefredaktør som separate pipeline-led, medmindre brugeren specifikt beder om en sådan kontrol.
+
+Publish må gerne udføre de tekniske handlinger, der er nødvendige for at gemme/transformere billedfilen og registrere artiklen, men dette er en del af publiceringsoperationen og ikke et selvstændigt redaktionelt Media-led.
 
 ### D-082 — Chat-flowet skal have tydelig status og fejlhåndtering
 **Dato:** 2026-09-06  
@@ -286,6 +288,12 @@ Når chatten sender en ordre eller artikel til avisen, skal systemet kunne retur
 **Status:** Aktiv
 
 Konkrete tabeller, endpoint-navne, Worker-klasser og interne implementationer er ikke v4-beslutninger i sig selv. De skal kun dokumenteres her, når de fastlægger en vigtig egenskab ved arbejdsgangen, sikkerheden, økonomien eller redaktionens kontrol.
+
+### D-084 — En billedfejl må ikke få en færdig chatartikel til at forsvinde
+**Dato:** 2026-09-06  
+**Status:** Aktiv
+
+Hvis det medsendte foto fejler under hentning, transformation eller lagring, skal Publish returnere den konkrete fejl og bevare den færdige artikel til retry. Systemet må ikke skjule årsagen bag en generisk fejl eller kassere artiklen. Ved behov kan ChatGPT levere et nyt lovligt foto og genoptage den samme publicering uden dubletter.
 
 ---
 
@@ -301,7 +309,7 @@ Følgende er bevidst ikke låst permanent:
 6. Den optimale udgivelsesfrekvens.
 7. Den endelige login-/abonnementsmodel.
 8. Hvor meget AI-brugen skal beskrives offentligt, hvis lovgivning, produktpositionering eller redaktionel strategi ændrer sig.
-9. Den præcise transportmekanisme fra ChatGPT til v4-backend; produktkravet om direkte chat→avis-flow skal bevares, men den tekniske løsning må vælges på ny.
+9. Den præcise transportmekanisme fra ChatGPT til v4-backend; produktkravet om direkte chat→Publish-flow skal bevares, men den tekniske løsning må vælges på ny.
 
 ---
 
@@ -315,6 +323,8 @@ Følgende er bevidst ikke låst permanent:
 - Eksisterende redaktionelle, designmæssige, faktatjek- og billedprincipper samlet som v4-grundlag.
 - Loggens prioritet præciseret: avismotor/pipeline og forside først; backend kun når det påvirker arbejdsgangen.
 - Chat→avis-flow tilføjet som særskilt v4-område.
+- Chat→Publish præciseret: ChatGPT leverer selv færdig artikel + lovligt foto; ingen separat Media/Journalist/Desk/Chefredaktør-rundtur.
+- Regel tilføjet om, at billedfejl skal være retrybare og aldrig må få en færdig chatartikel til at forsvinde.
 
 ---
 
