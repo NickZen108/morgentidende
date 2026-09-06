@@ -104,6 +104,7 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
    }
    if(!draft)throw new Error('draft_missing');
    const article=draft;
+   await step.do(`${prefix}-save-draft`,async()=>{await db(this.env,`v3_attempts?order_id=eq.${id}&attempt=eq.${attempt}`,'PATCH',{draft:article,stage:'media'});return true;});
    const media=await step.do(`${prefix}-media`,MEDIA_STEP,async()=>{const m=await selectMedia(this.env,article,`${id}-${attempt}`,{original_order:order.original_order,dossier});return {id:m.id,url:m.url,alt:m.alt,credit:m.credit};});
    const checked=await reviewWithEvidence(this.env,step,{id,attempt,prefix,article,media,original_order:order.original_order,dossier});
    if(checked.paused)return {status:'paused',order_id:id,reason:checked.reason};
@@ -114,6 +115,10 @@ export class Production extends WorkflowEntrypoint<Env,ProductionInput>{
   }
   await step.do('drop-order',async()=>{await db(this.env,`v3_orders?id=eq.${id}`,'PATCH',{status:'dropped'});return true;});
   } catch(error) {
+   if(error instanceof Error&&error.message==='daily_budget_exhausted'){
+    await step.do('pause-budget',async()=>{await db(this.env,`v3_orders?id=eq.${id}&status=neq.published`,'PATCH',{status:'paused',error_code:'daily_budget_exhausted'});return true;});
+    return {status:'paused',order_id:id,reason:'Dagsbudgettet kan ikke dække næste trin. Ordren er gemt.'};
+   }
    await step.do('mark-failed',async()=>{await db(this.env,`v3_orders?id=eq.${id}&status=neq.published`,'PATCH',{status:'failed',error_code:error instanceof Error&&error.message==='daily_budget_exhausted'?'daily_budget_exhausted':'production_failed'});return true;});
    throw error;
   }

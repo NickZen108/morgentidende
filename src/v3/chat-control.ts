@@ -11,7 +11,7 @@ export function orderResult(order:StatusOrder,attempt:Attempt|undefined,article:
  return {order_id:order.id,status:article?'published':order.error_code==='daily_budget_exhausted'?'budget_blocked':order.status,
  phase:attempt?.stage??null,headline:article?.headline??order.original_order.article?.headline??null,
  instruction:order.original_order.instruction??null,
- reason:article?null:order.error_code==='daily_budget_exhausted'?'Dagsbudgettet kan ikke dække næste kald. Ordren kræver genoptagelse.':order.error_code==='verification_unresolved'?'Artiklen afventer dokumentation for en eller flere centrale påstande. Den er ikke afvist.':order.status==='failed'?'Produktionen stoppede med en teknisk fejl.':attempt?.review?.reason??null,
+ reason:article?null:order.error_code==='daily_budget_exhausted'?'Dagsbudgettet kan ikke dække næste kald. Ordren kræver genoptagelse.':order.error_code==='verification_unresolved'?(attempt?.review?.reason??'Artiklen afventer dokumentation for centrale påstande. Den er ikke afvist.'):order.status==='failed'?'Produktionen stoppede med en teknisk fejl.':attempt?.review?.reason??null,
  article_url:article?`${origin}/artikel/${article.slug}`:null,created_at:order.created_at};
 }
 export async function chatStatus(env:Env,query:{command_id?:string;order_id?:string}){

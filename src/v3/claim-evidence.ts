@@ -19,10 +19,11 @@ export function groundedReview(assessment:z.infer<typeof Assessment>,article:{he
  });
  for(const [id,text] of required){if(!checks.some(c=>c.id===id&&normalize(c.text)===normalize(text)))checks.push({id,text,status:'unresolved',source_url:'',source_quote:'',reason:'Påstanden mangler en vurdering.',source_verified:false,source_retrieved_at:null,source_sha256:null});}
  const contradicted=checks.some(c=>c.status==='contradicted');
+ if(!assessment.headline_correct&&!contradicted&&!checks.some(c=>c.status==='unresolved'))checks.push({id:'headline-verification',text:article.headline,status:'unresolved',source_url:'',source_quote:'',reason:'Rubrikken kræver målrettet dokumentation.',source_verified:false,source_retrieved_at:null,source_sha256:null});
  const orderMismatch=!assessment.matches_order&&normalize(assessment.order_mismatch_quote).length>=20&&articleText.includes(normalize(assessment.order_mismatch_quote));
  const unresolved=checks.some(c=>c.status==='unresolved')||(!assessment.headline_correct&&!contradicted)||(!assessment.matches_order&&!orderMismatch);
  // An unsupported allegation cannot trigger rejection or a fresh article attempt.
- return {matches_order:assessment.matches_order,headline_correct:assessment.headline_correct,serious_error:!unresolved&&(contradicted||orderMismatch),reason:unresolved?'Afventer kildekontrol: '+checks.filter(c=>c.status==='unresolved').map(c=>c.text).join('; ').slice(0,800):assessment.reason,slot:assessment.slot,evidence_status:unresolved?'unresolved' as const:'verified' as const,verification_version:1,claim_checks:checks};
+ return {matches_order:assessment.matches_order,headline_correct:assessment.headline_correct,serious_error:!unresolved&&(contradicted||orderMismatch),reason:unresolved?'Afventer kildekontrol: '+(checks.filter(c=>c.status==='unresolved').map(c=>c.text).join('; ')||'Ordrematchet kunne ikke afgøres.').slice(0,800):assessment.reason,slot:assessment.slot,evidence_status:unresolved?'unresolved' as const:'verified' as const,verification_version:1,claim_checks:checks};
 }
 
 export function publicSourceUrl(value:string){

@@ -49,6 +49,10 @@ export class Chief extends WorkflowEntrypoint<Env,ChiefInput>{
     const articleId=await step.do('direct-publish',()=>rpc<string>(this.env,'v3_publish',{p_order:id,p_attempt:1,p_slot:review.slot}));
     return {status:'published',order_id:id,article_id:articleId,headline:article.headline,media_generated:media.generated};
    }catch(error){
+    if(error instanceof Error&&error.message==='daily_budget_exhausted'){
+     await step.do('direct-pause-budget',async()=>{await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&status=neq.published`,'PATCH',{status:'paused',error_code:'daily_budget_exhausted'});return true;});
+     return {status:'paused',order_id:id,reason:'Dagsbudgettet kan ikke dække næste trin. Artiklen er gemt.'};
+    }
     await step.do('direct-mark-failed',async()=>{await db(this.env,`v3_orders?id=eq.${encodeURIComponent(id)}&status=neq.published`,'PATCH',{status:'failed',error_code:error instanceof Error&&error.message==='daily_budget_exhausted'?'daily_budget_exhausted':'production_failed'});return true;});
     throw error;
    }

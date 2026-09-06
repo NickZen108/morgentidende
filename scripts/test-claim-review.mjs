@@ -17,7 +17,7 @@ const article={headline:'Europæiske forsvarsaktier er steget 450%',deck:'Stigni
 const step={async do(name,a,b){return (typeof a==='function'?a:b)();}};
 const savedFetch=globalThis.fetch;
 try{
- for(const scenario of ['supported','fabricated-metadata','unavailable','desk-resolves','budget','contradicted','missing-claim','lost-on-followup']){
+ for(const scenario of ['supported','fabricated-metadata','unavailable','desk-resolves','budget','initial-budget','contradicted','missing-claim','lost-on-followup']){
   const writes=[];let desks=0,chiefs=0;
   globalThis.fetch=async(input)=>{
    if(scenario==='unavailable')return new Response('Unavailable',{status:503});
@@ -28,7 +28,7 @@ try{
    async db(env,path,method,body){writes.push({path,body});return [];},
    async model(env,role,prompt,input){
     if(role==='desk'){desks++;if(scenario==='budget')throw new Error('daily_budget_exhausted');return {urls:[url+'/verified'],finding:'Targeted source located'};}
-    chiefs++;
+    chiefs++;if(scenario==='initial-budget')throw new Error('daily_budget_exhausted');
     assert.match(prompt,/Manglende kilde/);assert.deepEqual(input.article,article);
     const unresolved=scenario==='budget'||(scenario==='desk-resolves'&&chiefs===1)||(scenario==='lost-on-followup'&&chiefs===1);
     const missing=scenario==='missing-claim'||(scenario==='lost-on-followup'&&chiefs>1);
@@ -36,12 +36,12 @@ try{
    }
   };
   const result=await reviewWithEvidence({},step,{id:'order',attempt:1,prefix:scenario,article,original_order:{kind:'direct_article',article},dossier:{},media:{id:'media'}});
-  const pauses=['fabricated-metadata','unavailable','budget','missing-claim','lost-on-followup'].includes(scenario);
+  const pauses=['fabricated-metadata','unavailable','budget','initial-budget','missing-claim','lost-on-followup'].includes(scenario);
   assert.equal(result.paused,pauses,scenario);
   assert.ok(writes.some(x=>x.body.draft?.claims),'metadata must survive persistence');
   assert.ok(desks<=3);
   if(pauses){assert.ok(writes.some(x=>x.body.status==='paused'));assert.ok(!writes.some(x=>['dropped','failed'].includes(x.body.status)));assert.ok(!writes.some(x=>x.body.stage==='approved'));}
-  if(scenario==='budget'){assert.ok(writes.some(x=>x.body.error_code==='daily_budget_exhausted'));assert.equal(chiefs,1);}
+  if(['budget','initial-budget'].includes(scenario)){assert.ok(writes.some(x=>x.body.error_code==='daily_budget_exhausted'));assert.equal(chiefs,1);}
   if(scenario==='supported'){assert.equal(desks,0);assert.equal(result.review.serious_error,false);}
   if(scenario==='desk-resolves'){assert.equal(desks,1);assert.equal(result.review.claim_checks[0].source_verified,true);}
   if(scenario==='contradicted'){assert.equal(result.review.serious_error,true);assert.equal(desks,0);}
