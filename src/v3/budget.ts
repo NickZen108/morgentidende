@@ -8,8 +8,16 @@ export function rethrowBudget(error:unknown){if(error instanceof BudgetExceeded)
 // 10 DKK/USD plus 25% reserve; free allowances are deliberately not spent twice.
 export const DKK_PER_USD=12.5;
 export type Usage={input_tokens?:number;output_tokens?:number;prompt_tokens?:number;completion_tokens?:number;total_tokens?:number};
+function activeCostContext(stage:string){
+ const current=context.getStore();
+ if(current)return current;
+ // Cloudflare Workflow step callbacks may resume outside Node AsyncLocalStorage.
+ // Failing the whole newsroom because accounting context was lost is worse than
+ // recording an explicitly unscoped reservation. Budget enforcement still runs.
+ return {orderId:null,workflowId:`unscoped:${stage}:${crypto.randomUUID()}`};
+}
 export async function paidCall<T>(env:DatabaseEnv,stage:string,model:string,maxUsd:number,fn:()=>Promise<T>,cost:(result:T)=>{usd:number;usage:unknown}|null):Promise<T>{
- const ctx=context.getStore();if(!ctx)throw new Error('cost_context_required');
+ const ctx=activeCostContext(stage);
  const id=crypto.randomUUID(),maxDkk=Math.ceil(maxUsd*DKK_PER_USD*1e6)/1e6;
  if(!await rpc<boolean>(env,'v3_reserve_cost',{p_id:id,p_order:ctx.orderId,p_workflow:ctx.workflowId,p_stage:stage,p_model:model,p_max_dkk:maxDkk}))throw new BudgetExceeded();
  let result:T;
@@ -59,6 +67,9 @@ export async function budgetedAI(env:DatabaseEnv&{AI:Ai},name:string,input:Recor
 
 export function costContext(){return context.getStore();}
 export async function assignOrderCosts(env:DatabaseEnv,orderId:string){
- const ctx=context.getStore();if(!ctx)throw new Error('cost_context_required');
+ const ctx=context.getStore();
+ // If Workflow resumed outside ALS, the reservation was stored as unscoped.
+ // Do not abort commissioning solely because attribution cannot be repaired safely.
+ if(!ctx)return;
  await db(env,`v3_costs?workflow_id=eq.${encodeURIComponent(ctx.workflowId)}&order_id=is.null`,'PATCH',{order_id:orderId});
 }
